@@ -218,6 +218,8 @@ abstract class HTMLTableParser
 
         for (Spec spec : specs)
         {
+            if (obj == null)
+                break;
             try
             {
                 spec.column.setValue(cells.get(spec.index), obj, languageHint);
@@ -227,7 +229,7 @@ abstract class HTMLTableParser
                 errors.add(new IOException(MessageFormat.format(Messages.MsgParsingFailedWithHTML, cells.toString())));
             }
         }
-        
+
         return obj;
     }
 
