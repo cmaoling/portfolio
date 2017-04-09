@@ -107,14 +107,10 @@ public class HTMLTableEventParser extends HTMLTableParser
             {
                 event.setType(SecurityEvent.Type.STOCK_SPLIT);                
             }
-            else if (type.matches("Euro-Umstellung") || type.matches("Bezugsrecht")) 
+            else
             {
                 event.setType(SecurityEvent.Type.STOCK_OTHER);                
                 event.setDetails(type + ": ");
-            }
-            else 
-            {
-                obj = null;
             }
         }
     }
