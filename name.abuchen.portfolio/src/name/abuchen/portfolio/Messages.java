@@ -21,6 +21,7 @@ public class Messages extends NLS
     public static String ColumnPaidFees;
     public static String ColumnPaidTaxes;
     public static String ColumnTransfers;
+    public static String CSVColumn_Amount;
     public static String CSVColumn_Date;
     public static String CSVColumn_Fees;
     public static String CSVColumn_InboundTransferals;
@@ -41,16 +42,20 @@ public class Messages extends NLS
     public static String CSVColumn_GrossAmount;
     public static String CSVColumn_Note;
     public static String CSVColumn_OutboundTransferals;
+    public static String CSVColumn_TransactionAccount;
     public static String CSVColumn_TransactionCurrency;
+    public static String CSVColumn_TransactionPeerAccount;
     public static String CSVColumn_Transferals;
     public static String CSVDefAccountTransactions;
     public static String CSVDefHistoricalQuotes;
+    public static String CSVDefMoneysuiteTransactions;
     public static String CSVDefPortfolioTransactions;
     public static String CSVDefSecurities;
     public static String CSVFormatApostrophe;
     public static String CSVFormatDDMMYY;
     public static String CSVFormatDDMMYYYY;
     public static String CSVFormatDDMMYYYY1;
+    public static String CSVFormatISO;
     public static String CSVFormatNumberGermany;
     public static String CSVFormatNumberUS;
     public static String CSVFormatYYYYMMDD;
