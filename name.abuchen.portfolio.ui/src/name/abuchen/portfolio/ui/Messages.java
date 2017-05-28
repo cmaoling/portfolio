@@ -26,9 +26,13 @@ public class Messages extends NLS
     public static String BookmarksListView_bookmark;
     public static String BookmarksListView_delete;
     public static String BookmarksListView_insertBefore;
+    public static String BookmarksListView_LabelAttributeReplacements;
+    public static String BookmarksListView_LabelDefaultReplacements;
+    public static String BookmarksListView_LabelReplaceFirstAvailable;
     public static String MenuMoveDown;
     public static String MenuMoveUp;
     public static String BookmarksListView_NewBookmark;
+    public static String BookmarksListView_replacements;
     public static String BookmarksListView_title;
     public static String BookmarksListView_url;
     public static String BtnLabelApply;
@@ -422,6 +426,7 @@ public class Messages extends NLS
     public static String LabelSecurityTransfer;
     public static String LabelSemiVolatility;
     public static String LabelSettings;
+    public static String LabelShowOnlyOneYear;
     public static String LabelDividendPerShare;    
     public static String LabelDividends;
     public static String LabelDividendsByMonthAndVehicle;
