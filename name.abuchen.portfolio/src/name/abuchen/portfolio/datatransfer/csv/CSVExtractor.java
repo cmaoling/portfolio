@@ -109,6 +109,7 @@ public abstract class CSVExtractor implements Extractor
         String value = getText(name, rawValues, field2column);
         if (value == null)
             return null;
+        System.err.println("CSVxtractor.getEnum: value: " + value.toString());
         FieldFormat ff = field2column.get(name).getFormat();
 
         if (ff != null && ff.getFormat() != null)
