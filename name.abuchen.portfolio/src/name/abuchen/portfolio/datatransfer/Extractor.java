@@ -12,6 +12,7 @@ import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.Annotated;
 import name.abuchen.portfolio.model.BuySellEntry;
+import name.abuchen.portfolio.model.MoneysuiteTransaction;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
@@ -53,6 +54,17 @@ public interface Extractor
                             AccountTransaction.Type.SELL, //
                             AccountTransaction.Type.TRANSFER_IN, //
                             AccountTransaction.Type.TRANSFER_OUT) //
+                            .contains(transaction.getType()))
+                throw new UnsupportedOperationException();
+            this.transaction = transaction;
+        }
+
+        public TransactionItem(MoneysuiteTransaction transaction)
+        {
+            if (EnumSet.of(MoneysuiteTransaction.Type.BUY, //
+                            MoneysuiteTransaction.Type.SELL, //
+                            MoneysuiteTransaction.Type.TRANSFER_IN, //
+                            MoneysuiteTransaction.Type.TRANSFER_OUT) //
                             .contains(transaction.getType()))
                 throw new UnsupportedOperationException();
             this.transaction = transaction;

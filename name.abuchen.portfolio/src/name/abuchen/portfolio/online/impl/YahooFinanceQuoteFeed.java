@@ -38,7 +38,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.online.QuoteFeed;
 
-public class YahooFinanceQuoteFeed implements QuoteFeed
+public class YahooFinanceQuoteFeed extends QuoteFeed
 {
     /* package */ interface CSVColumn // NOSONAR
     {
@@ -73,7 +73,7 @@ public class YahooFinanceQuoteFeed implements QuoteFeed
         }
     }
 
-    public static final String ID = "YAHOO"; //$NON-NLS-1$
+    public static final String ID = YAHOO; //$NON-NLS-1$
 
     private static final String LATEST_URL = "https://download.finance.yahoo.com/d/quotes.csv?s={0}&f=sl1d1hgpv"; //$NON-NLS-1$
     // s = symbol
