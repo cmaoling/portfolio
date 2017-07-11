@@ -25,6 +25,7 @@ import name.abuchen.portfolio.ui.dialogs.SecurityPriceDialog;
 import name.abuchen.portfolio.ui.wizards.datatransfer.CSVImportWizard;
 import name.abuchen.portfolio.ui.wizards.datatransfer.ImportQuotesWizard;
 import name.abuchen.portfolio.ui.wizards.security.EditSecurityDialog;
+import name.abuchen.portfolio.util.QuoteFromTransactionExtractor;
 
 public class QuotesContextMenu
 {
@@ -130,6 +131,21 @@ public class QuotesContextMenu
                 owner.notifyModelUpdated();
             }
         });
+        
+        manager.add(new Action(Messages.SecurityMenuCreateQuotesFromTransactions)
+        {
+            @Override
+            public void run()
+            {
+                QuoteFromTransactionExtractor qte = new QuoteFromTransactionExtractor(owner.getClient());
+                if (qte.extractQuotes(security))
+                {
+                    owner.markDirty();
+                    owner.notifyModelUpdated();
+                }
+            }
+        });
+        
 
         manager.add(new Separator());
 
@@ -140,6 +156,7 @@ public class QuotesContextMenu
             {
                 FileDialog fileDialog = new FileDialog(Display.getDefault().getActiveShell(), SWT.SAVE);
                 fileDialog.setFileName(security.getName() + ".csv"); //$NON-NLS-1$
+                fileDialog.setOverwrite(true);
                 String fileName = fileDialog.open();
 
                 if (fileName == null)

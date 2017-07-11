@@ -97,19 +97,13 @@ import name.abuchen.portfolio.money.Values;
         }
     }
 
-    private List<Item> extract(String filename, String text, List<Exception> errors)
+    private final List<Item> extract(String filename, String text, List<Exception> errors)
     {
         try
         {
             checkBankIdentifier(filename, text);
 
-            List<Item> items = new ArrayList<>();
-
-            for (DocumentType type : documentTypes)
-            {
-                if (type.matches(text))
-                    type.parse(filename, items, text);
-            }
+            List<Item> items = parseDocumentTypes(documentTypes, filename, text);
 
             if (items.isEmpty())
             {
@@ -132,6 +126,16 @@ import name.abuchen.portfolio.money.Values;
             errors.add(e);
             return Collections.emptyList();
         }
+    }
+    
+    protected final List<Item> parseDocumentTypes(List<DocumentType> documentTypes, String filename, String text) {
+        List<Item> items = new ArrayList<>();
+        for (DocumentType type : documentTypes)
+        {
+            if (type.matches(text))
+                type.parse(filename, items, text);
+        }
+        return items;
     }
 
     private void checkBankIdentifier(String filename, String text)
@@ -199,7 +203,7 @@ import name.abuchen.portfolio.money.Values;
         return unit == null ? client.getBaseCurrency() : unit.getCurrencyCode();
     }
 
-                    /* protected */long asAmount(String value)
+    /* protected */long asAmount(String value)
     {
         try
         {
@@ -211,7 +215,7 @@ import name.abuchen.portfolio.money.Values;
         }
     }
 
-                    /* protected */BigDecimal asExchangeRate(String value)
+    /* protected */BigDecimal asExchangeRate(String value)
     {
         try
         {
@@ -223,7 +227,7 @@ import name.abuchen.portfolio.money.Values;
         }
     }
 
-                    /* protected */LocalDate asDate(String value)
+    /* protected */LocalDate asDate(String value)
     {
         return LocalDate.parse(value, DATE_FORMAT);
     }

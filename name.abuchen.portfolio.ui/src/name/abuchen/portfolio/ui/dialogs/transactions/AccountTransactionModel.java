@@ -123,6 +123,7 @@ public class AccountTransactionModel extends AbstractModel
             }
 
             t = new AccountTransaction();
+            t.setCurrencyCode(getAccountCurrencyCode());
             account.addTransaction(t);
         }
 
@@ -132,7 +133,6 @@ public class AccountTransactionModel extends AbstractModel
         t.setAmount(total);
         t.setType(type);
         t.setNote(note);
-        t.setCurrencyCode(getAccountCurrencyCode());
 
         t.clearUnits();
 

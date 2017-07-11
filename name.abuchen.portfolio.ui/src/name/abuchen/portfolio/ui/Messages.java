@@ -26,9 +26,13 @@ public class Messages extends NLS
     public static String BookmarksListView_bookmark;
     public static String BookmarksListView_delete;
     public static String BookmarksListView_insertBefore;
+    public static String BookmarksListView_LabelAttributeReplacements;
+    public static String BookmarksListView_LabelDefaultReplacements;
+    public static String BookmarksListView_LabelReplaceFirstAvailable;
     public static String MenuMoveDown;
     public static String MenuMoveUp;
     public static String BookmarksListView_NewBookmark;
+    public static String BookmarksListView_replacements;
     public static String BookmarksListView_title;
     public static String BookmarksListView_url;
     public static String BtnLabelApply;
@@ -331,6 +335,8 @@ public class Messages extends NLS
     public static String LabelAssetChart;
     public static String LabelAvailableAttributes;
     public static String LabelChartDetailDividends;
+    public static String LabelChartDetailSMA50;
+    public static String LabelChartDetailSMA200;
     public static String LabelChartDetailEvents;
     public static String LabelChartDetailInvestments;
     public static String LabelClientClearCustomItems;
@@ -406,13 +412,16 @@ public class Messages extends NLS
     public static String LabelSecurities;
     public static String LabelSecurityPerformance;
     public static String LabelSecurityTransfer;
+    public static String LabelSelectYear;
     public static String LabelSemiVolatility;
     public static String LabelSettings;
+    public static String LabelShowOnlyOneYear;
     public static String LabelDividendPerShare;    
     public static String LabelDividends;
     public static String LabelDividendsByMonthAndVehicle;
     public static String LabelDividendsPerMonth;
     public static String LabelDividendsPerYear;
+    public static String LabelDividendsSelectStartYear;
     public static String LabelHeading;
     public static String LabelHeatmap;
     public static String LabelHistoricalReturnsAndVolatiltity;
@@ -448,6 +457,7 @@ public class Messages extends NLS
     public static String LabelVolatility;
     public static String LabelWithoutClassification;
     public static String LabelXDays;
+    public static String LabelYear;
     public static String MarkSecurityPageDescription;
     public static String MarkSecurityPageTitle;
     public static String MenuAddAll;
@@ -531,6 +541,7 @@ public class Messages extends NLS
     public static String MsgDialogNotAValidISIN;
     public static String MsgEmbeddedBrowserError;
     public static String MsgErrorConvertedAmount;
+    public static String MsgErrorDividendsYearBetween1900AndNow;
     public static String MsgErrorExchangeMissing;
     public static String MsgErrorNotAValidDate;
     public static String MsgErrorOpeningFile;
@@ -622,6 +633,7 @@ public class Messages extends NLS
     public static String SecurityMenuBuy;
     public static String SecurityMenuConfigureOnlineUpdate;
     public static String SecurityMenuCreateManually;
+    public static String SecurityMenuCreateQuotesFromTransactions;
     public static String SecurityMenuDeleteAllPrices;
     public static String SecurityMenuDeletePrice;
     public static String SecurityMenuDeleteSecurity;

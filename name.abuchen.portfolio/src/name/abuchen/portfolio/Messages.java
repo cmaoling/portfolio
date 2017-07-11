@@ -23,6 +23,7 @@ public class Messages extends NLS
     public static String ColumnTransfers;
     public static String CSVColumn_Date;
     public static String CSVColumn_Fees;
+    public static String CSVColumn_InboundTransferals;
     public static String CSVColumn_ISIN;
     public static String CSVColumn_Quote;
     public static String CSVColumn_SecurityName;
@@ -39,6 +40,7 @@ public class Messages extends NLS
     public static String CSVColumn_ExchangeRate;
     public static String CSVColumn_GrossAmount;
     public static String CSVColumn_Note;
+    public static String CSVColumn_OutboundTransferals;
     public static String CSVColumn_TransactionCurrency;
     public static String CSVColumn_Transferals;
     public static String CSVDefAccountTransactions;
@@ -130,6 +132,7 @@ public class Messages extends NLS
     public static String MsgCheckUnsupportedCurrency;
     public static String MsgDeltaWithoutAssets;
     public static String MsgErrorDecrypting;
+    public static String MsgErrorDownloadYahoo;
     public static String MsgErrorDuplicateISIN;
     public static String MsgErrorDuplicateName;
     public static String MsgErrorDuplicateTicker;
@@ -137,9 +140,11 @@ public class Messages extends NLS
     public static String MsgErrorEncrypting;
     public static String MsgErrorIllegalForexUnit;
     public static String MsgErrorMissingValueMatches;
+    public static String MsgErrorNoCrumbFound;
     public static String MsgErrorNotAllPatternMatched;
     public static String MsgErrorNotAValidDate;
     public static String MsgErrorsConvertingValue;
+    public static String MsgErrorUnexpectedStatusCode;
     public static String MsgErrorUnitCurrencyMismatch;
     public static String MsgFileNotFound;
     public static String MsgIncorrectPassword;
