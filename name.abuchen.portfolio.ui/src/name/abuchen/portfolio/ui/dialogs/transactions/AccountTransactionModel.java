@@ -1,7 +1,6 @@
 package name.abuchen.portfolio.ui.dialogs.transactions;
 
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 
@@ -156,8 +155,7 @@ public class AccountTransactionModel extends AbstractModel
         }
         if (type == AccountTransaction.Type.DIVIDENDS)
         {
-                SecurityEvent event = new SecurityEvent(date, SecurityEvent.Type.STOCK_DIVIDEND, getFxCurrencyCode(), dividendAmount); //$NON-NLS-1$
-                security.addEvent(event);
+                security.addEvent((new SecurityEvent(date, SecurityEvent.Type.STOCK_DIVIDEND)).setAmount(getFxCurrencyCode(), dividendAmount));
         }
 
     }
@@ -243,6 +241,14 @@ public class AccountTransactionModel extends AbstractModel
         this.dividendAmount = calculateDividendAmount();
 
         this.note = transaction.getNote();
+
+    }
+
+    public void setEvent(SecurityEvent event)
+    {
+        this.date = event.getDate();
+        this.dividendAmount = event.getAmount().getValue();
+        this.grossAmount = calculateGrossAmount4Total();
     }
 
     @Override
@@ -373,8 +379,10 @@ public class AccountTransactionModel extends AbstractModel
     {
         firePropertyChange(Properties.shares.name(), this.shares, this.shares = shares);
 
-        firePropertyChange(Properties.dividendAmount.name(), this.dividendAmount,
-                        this.dividendAmount = calculateDividendAmount());
+        if (this.dividendAmount.equals(BigDecimal.ZERO))
+            firePropertyChange(Properties.dividendAmount.name(), this.dividendAmount,this.dividendAmount = calculateDividendAmount());
+        else
+            firePropertyChange(Properties.fxGrossAmount.name(), this.fxGrossAmount,this.fxGrossAmount = calculateGrossAmount4Dividend());
     }
 
     public long getFxGrossAmount()
@@ -404,8 +412,11 @@ public class AccountTransactionModel extends AbstractModel
     public void setDividendAmount(BigDecimal amount)
     {
         triggerDividendAmount(amount);
-        long myGrossAmount = calculateGrossAmount4Dividend();
-        setFxGrossAmount(myGrossAmount);
+        if (getShares() > 0 || getFxGrossAmount() > 0)
+        {
+            long myGrossAmount = calculateGrossAmount4Dividend();
+            setFxGrossAmount(myGrossAmount);
+        }
     }
 
     public void triggerDividendAmount(BigDecimal amount)

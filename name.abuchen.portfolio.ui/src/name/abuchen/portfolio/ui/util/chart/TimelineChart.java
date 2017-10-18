@@ -240,7 +240,7 @@ public class TimelineChart extends Chart
 
             e.gc.setLineStyle(SWT.LINE_SOLID);
             e.gc.setForeground(marker.color);
-            e.gc.setLineWidth(2);
+            e.gc.setLineWidth(4);
             e.gc.drawLine(x, 0, x, e.height);
             e.gc.drawText(marker.label, textX, e.height - 20 - labelStackY, true);
 

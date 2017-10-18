@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.TemporalAmount;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -59,6 +60,8 @@ public class SecuritiesChart
         CLOSING(Messages.LabelChartDetailClosingIndicator + SEPERATOR), //
         INVESTMENT(Messages.LabelChartDetailInvestments), //
         DIVIDENDS(Messages.LabelChartDetailDividends), //
+        SPLITS(Messages.LabelChartDetailSplits), //
+        RIGHTS(Messages.LabelChartDetailRights), //
         EVENTS(Messages.LabelChartDetailEvents + SEPERATOR), //
         SMA50(Messages.LabelChartDetailSMA50), //
         SMA200(Messages.LabelChartDetailSMA200), //
@@ -364,6 +367,12 @@ public class SecuritiesChart
         if (chartConfig.contains(ChartDetails.DIVIDENDS))
             addDividendMarkerLines();
 
+        if (chartConfig.contains(ChartDetails.SPLITS))
+            addSplitMarkerLines();
+
+        if (chartConfig.contains(ChartDetails.RIGHTS))
+            addRightMarkerLines();
+
         if (chartConfig.contains(ChartDetails.EVENTS))
             addEventMarkerLines();
 
@@ -418,6 +427,7 @@ public class SecuritiesChart
 
     private void addDividendMarkerLines()
     {
+        List<LocalDate> dates = new ArrayList<LocalDate>();
         client.getAccounts().stream().flatMap(a -> a.getTransactions().stream()) //
                         .filter(t -> t.getType() == AccountTransaction.Type.DIVIDENDS)
                         .filter(t -> t.getSecurity() == security)
@@ -425,6 +435,7 @@ public class SecuritiesChart
                         .forEach(t -> {
                             Color color = Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA);
 
+                            dates.add(t.getDate());
                             if (t.getShares() == 0L)
                             {
                                 chart.addMarkerLine(t.getDate(), color, "\u2211 " + t.getGrossValue().toString()); //$NON-NLS-1$
@@ -442,14 +453,49 @@ public class SecuritiesChart
                             }
                         });
 
+        security.getEvents(SecurityEvent.Type.STOCK_DIVIDEND).stream() //
+        .filter(e -> chartPeriod == null || chartPeriod.isBefore(e.getDate())) //
+        .forEach(e -> {
+            boolean busy = false;
+            for (LocalDate d : dates)
+            {
+                if (d.equals(e.getDate()))
+                    busy = true;
+            }
+            if (!busy)
+                chart.addMarkerLine(e.getDate(), Display.getDefault().getSystemColor(SWT.COLOR_GRAY), e.getAmount().getValue().toString());
+        });
     }
 
     private void addEventMarkerLines()
     {
-        security.getEvents().stream() //
+        security.getEvents(SecurityEvent.Type.STOCK_OTHER).stream() //
                         .filter(e -> chartPeriod == null || chartPeriod.isBefore(e.getDate())) //
                         .forEach(e -> chart.addMarkerLine(e.getDate(), 
-                                                          Display.getDefault().getSystemColor(e.getType() == SecurityEvent.Type.STOCK_SPLIT ? SWT.COLOR_DARK_GRAY : SWT.COLOR_MAGENTA), e.getDetails()));
+                                                          Display.getDefault().getSystemColor(SWT.COLOR_BLUE), 
+                                                          e.getExplaination()
+                                                          )
+                                );
+    }
+
+    private void addRightMarkerLines()
+    {
+        security.getEvents(SecurityEvent.Type.STOCK_RIGHT).stream() //
+        .filter(e -> chartPeriod == null || chartPeriod.isBefore(e.getDate())) //
+        .forEach(e -> chart.addMarkerLine(e.getDate(),
+                                          Display.getDefault().getSystemColor(SWT.COLOR_GRAY),
+                                          e.getExplaination()
+                                          )
+                 );
+    }
+
+    private void addSplitMarkerLines()
+    {
+        security.getEvents(SecurityEvent.Type.STOCK_SPLIT).stream() //
+                        .filter(e -> chartPeriod == null || chartPeriod.isBefore(e.getDate())) //
+                        .forEach(e -> chart.addMarkerLine(e.getDate(),
+                                                          Display.getDefault().getSystemColor(SWT.COLOR_GRAY),
+                                                          e.getRatioString()));
     }
 
     private void addBollingerBandsMarkerLines(int bollingerBandsDays, double bollingerBandsFactor)

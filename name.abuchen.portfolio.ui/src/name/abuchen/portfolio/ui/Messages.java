@@ -217,6 +217,7 @@ public class Messages extends NLS
     public static String ConsumerPriceIndexMenuDelete;
     public static String CSVImportErrorMissingFields;
     public static String CSVImportInformationOptionalFields;
+    public static String CSVImportLabelDefaultHeader;
     public static String CSVImportLabelDelimiter;
     public static String CSVImportLabelDoubleClickHere;
     public static String CSVImportLabelEditMapping;
@@ -226,6 +227,8 @@ public class Messages extends NLS
     public static String CSVImportLabelFileCSV;
     public static String CSVImportLabelFirstLineIsHeader;
     public static String CSVImportLabelFormat;
+    public static String CSVImportLabelHeader;
+    public static String CSVImportLabelManualHeader;
     public static String CSVImportLabelMappedToField;
     public static String CSVImportLabelProvidedValue;
     public static String CSVImportLabelSkipLines;
@@ -353,6 +356,8 @@ public class Messages extends NLS
     public static String LabelChartDetailBollingerBands;
     public static String LabelChartDetailBollingerBandsLower;
     public static String LabelChartDetailBollingerBandsUpper;
+    public static String LabelChartDetailRights;
+    public static String LabelChartDetailSplits;
     public static String LabelClientClearCustomItems;
     public static String LabelClientFilterDialogMessage;
     public static String LabelClientFilterDialogTitle;
@@ -501,11 +506,13 @@ public class Messages extends NLS
     public static String MenuCreatePortfolioOrTransaction;
     public static String MenuDeleteDashboardColumn;
     public static String MenuDeleteWidget;
+    public static String MenuEditEvent;
     public static String MenuEditInvestmentPlan;
     public static String MenuEditTransaction;
     public static String MenuExportChartData;
     public static String MenuExportData;
     public static String MenuExportDiagram;
+    public static String MenuGenerateTransaction;
     public static String MenuLabelSetAsStartPage;
     public static String MenuNewDashboardColumn;
     public static String MenuNewReportingPeriod;
@@ -541,6 +548,9 @@ public class Messages extends NLS
     public static String MenuTaxonomySortTreeBy;
     public static String MenuTaxonomyWeightFix;
     public static String MenuTransactionDelete;
+    public static String MenuTransactionHide;
+    public static String MenuTransactionRevertSplit;
+    public static String MenuTransactionShowHidden;
     public static String MenuUseDashboardDefaultReportingPeriod;
     public static String MessageDialogProviderAnswerKeep;
     public static String MessageDialogProviderAnswerReplace;

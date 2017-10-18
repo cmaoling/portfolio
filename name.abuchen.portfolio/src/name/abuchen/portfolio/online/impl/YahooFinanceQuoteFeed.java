@@ -75,6 +75,7 @@ public class YahooFinanceQuoteFeed extends QuoteFeed
         }
     }
 
+
     private static final String LATEST_URL = "https://download.finance.yahoo.com/d/quotes.csv?s={0}&f=sl1d1hgpv"; //$NON-NLS-1$
     // s = symbol
     // l1 = last trade (price only)

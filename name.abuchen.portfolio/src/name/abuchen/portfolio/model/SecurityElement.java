@@ -38,6 +38,17 @@ public class SecurityElement extends Object
         this.value = value;
     }
 
+//    @Override
+//    public int hashCode()
+//    {
+//        final int prime = 31;
+//        int result = 1;
+//        long value = getValue();
+//        result = prime * result + ((date == null) ? 0 : date.hashCode());
+//        result = prime * result + (int) (value ^ (value >>> 32));
+//        return result;
+//    }
+
     @Override
     @SuppressWarnings("nls")
     public String toString()

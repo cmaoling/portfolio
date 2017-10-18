@@ -35,12 +35,12 @@ public class EventsTableViewer
 
         TableColumn column = new TableColumn(tableViewer.getTable(), SWT.None);
         column.setText(Messages.ColumnDate);
-        layout.setColumnData(column, new ColumnPixelData(80, true));
+        layout.setColumnData(column, new ColumnPixelData(120, true));
 
         column = new TableColumn(tableViewer.getTable(), SWT.None);
         column.setText(Messages.ColumnEventType);
         column.setAlignment(SWT.LEFT);
-        layout.setColumnData(column, new ColumnPixelData(80, true));
+        layout.setColumnData(column, new ColumnPixelData(200, true));
 
         column = new TableColumn(tableViewer.getTable(), SWT.None);
         column.setText(Messages.ColumnEventDetails);
@@ -105,7 +105,7 @@ public class EventsTableViewer
                     case 1:
                         return e.getType() == SecurityEvent.Type.NONE ? null : e.getType().toString();
                     case 2:
-                        return e.getDetails() == SecurityEvent.NONE ? null : e.getDetails();
+                        return e.getType() == SecurityEvent.Type.NONE ? null : e.getExplaination();
                     default:
                         throw new IllegalArgumentException(String.valueOf(columnIndex));
                 }
