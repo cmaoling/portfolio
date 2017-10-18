@@ -3,8 +3,6 @@ package name.abuchen.portfolio.ui.dialogs.transactions;
 import java.text.MessageFormat;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
 import org.eclipse.core.databinding.AggregateValidationStatus;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.UpdateValueStrategy;
@@ -193,21 +191,6 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
         this.model = model;
     }
 
-    @PostConstruct
-    public void registerValidationStatusListener()
-    {
-        this.context.addValidationStatusProvider(new MultiValidator()
-        {
-            IObservableValue observable = BeanProperties.value("calculationStatus").observe(model); //$NON-NLS-1$
-
-            @Override
-            protected IStatus validate()
-            {
-                return (IStatus) observable.getValue();
-            }
-        });
-    }
-
     @Override
     public void create()
     {
@@ -248,6 +231,16 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
 
         createFormElements(editArea);
 
+        IObservableValue<IStatus> calculationStatus = BeanProperties.value("calculationStatus").observe(model); //$NON-NLS-1$
+        this.context.addValidationStatusProvider(new MultiValidator()
+        {
+            @Override
+            protected IStatus validate()
+            {
+                return calculationStatus.getValue();
+            }
+        });
+
         context.bindValue(PojoProperties.value("status").observe(status), //$NON-NLS-1$
                         new AggregateValidationStatus(context, AggregateValidationStatus.MAX_SEVERITY));
 
@@ -270,6 +263,11 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
         {
             model.applyChanges();
             model.resetToNewTransaction();
+
+            // clear error message because users will confuse it with the
+            // previously (successfully created) transaction
+            setErrorMessage(null);
+
             getDialogArea().setFocus();
         }
         else

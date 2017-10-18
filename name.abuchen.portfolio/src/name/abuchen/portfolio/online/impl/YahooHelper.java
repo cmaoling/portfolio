@@ -35,7 +35,7 @@ import name.abuchen.portfolio.money.Values;
         if (isNotApplicable(s)) //$NON-NLS-1$
             return -1;
         BigDecimal v = (BigDecimal) FMT_PRICE.get().parse(s);
-        return v.multiply(Values.Quote.getBigDecimalFactor()).longValue();
+        return v.multiply(Values.Quote.getBigDecimalFactor()).setScale(0, BigDecimal.ROUND_HALF_UP).longValue();
     }
 
     static double asDouble(String s) throws ParseException

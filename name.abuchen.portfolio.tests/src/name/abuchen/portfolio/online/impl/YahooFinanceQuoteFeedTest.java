@@ -12,7 +12,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 
 import org.junit.Test;
 
@@ -73,13 +75,13 @@ public class YahooFinanceQuoteFeedTest
         assertThat(latest.getDate(), equalTo(LocalDate.of(2011, Month.SEPTEMBER, 29)));
         assertThat(latest.getHigh(), is(Values.Quote.factorize(13.75)));
         assertThat(latest.getLow(), is(Values.Quote.factorize(13.70)));
-        assertThat(latest.getVolume(), is(10037));
+        assertThat(latest.getVolume(), is(10037L));
         assertThat(latest.getPreviousClose(), is(Values.Quote.factorize(12.71)));
 
         latest = securities.get(1).getLatest();
         assertThat(latest.getHigh(), is(-1L));
         assertThat(latest.getLow(), is(-1L));
-        assertThat(latest.getVolume(), is(-1));
+        assertThat(latest.getVolume(), is(-1L));
 
         latest = securities.get(3).getLatest();
         assertThat(latest.getDate(), equalTo(LocalDate.now()));
@@ -120,55 +122,65 @@ public class YahooFinanceQuoteFeedTest
     @Test
     public void testParsingHistoricalQuotes() throws IOException
     {
-        YahooFinanceQuoteFeed feed = new YahooFinanceQuoteFeed()
+        String responseBody = null;
+        try (Scanner scanner = new Scanner(getClass().getResourceAsStream("response_yahoo_historical.txt"), "UTF-8"))
         {
-            @Override
-            protected InputStream openStream(String wknUrl) throws IOException
-            {
-                return getClass().getResourceAsStream("response_yahoo_historical.txt");
-            }
-        };
+            responseBody = scanner.useDelimiter("\\A").next();
+        }
 
         Security security = new Security();
         security.setTickerSymbol("DAI.DE");
 
-        feed.updateHistoricalQuotes(security, new ArrayList<Exception>());
+        YahooFinanceQuoteFeed feed = new YahooFinanceQuoteFeed();
+        List<LatestSecurityPrice> prices = feed.getHistoricalQuotes(responseBody, new ArrayList<Exception>());
+        Collections.sort(prices, new SecurityPrice.ByDate());
 
-        assertThat(security.getPrices().size(), is(2257));
+        assertThat(prices.size(), is(2257));
 
-        assertThat(security.getPrices().get(0), //
-                        equalTo(new SecurityPrice(LocalDate.of(2003, Month.JANUARY, 1),
-                                        Values.Quote.factorize(29.35))));
+        LatestSecurityPrice price = new LatestSecurityPrice(LocalDate.of(2003, Month.JANUARY, 1), //
+                        Values.Quote.factorize(29.35), //
+                        Values.Quote.factorize(29.35), //
+                        Values.Quote.factorize(29.35), //
+                        0);
+        assertThat(prices.get(0), equalTo(price));
 
-        assertThat(security.getPrices().get(security.getPrices().size() - 1), equalTo(
-                        new SecurityPrice(LocalDate.of(2011, Month.SEPTEMBER, 22), Values.Quote.factorize(32.74))));
+        price = new LatestSecurityPrice(LocalDate.of(2011, Month.SEPTEMBER, 22), Values.Quote.factorize(32.74), //
+                        Values.Quote.factorize(34.16), //
+                        Values.Quote.factorize(32.35), //
+                        10825200);
+        assertThat(prices.get(prices.size() - 1), equalTo(price));
     }
 
     @Test
     public void testParsingHistoricalAdjustedCloseQuotes() throws IOException
     {
-        YahooFinanceAdjustedCloseQuoteFeed feed = new YahooFinanceAdjustedCloseQuoteFeed()
+        String responseBody = null;
+        try (Scanner scanner = new Scanner(getClass().getResourceAsStream("response_yahoo_historical.txt"), "UTF-8"))
         {
-            @Override
-            protected InputStream openStream(String wknUrl) throws IOException
-            {
-                return getClass().getResourceAsStream("response_yahoo_historical.txt");
-            }
-        };
+            responseBody = scanner.useDelimiter("\\A").next();
+        }
 
         Security security = new Security();
         security.setTickerSymbol("DAI.DE");
 
-        feed.updateHistoricalQuotes(security, new ArrayList<Exception>());
+        YahooFinanceAdjustedCloseQuoteFeed feed = new YahooFinanceAdjustedCloseQuoteFeed();
+        List<LatestSecurityPrice> prices = feed.getHistoricalQuotes(responseBody, new ArrayList<Exception>());
+        Collections.sort(prices, new SecurityPrice.ByDate());
 
-        assertThat(security.getPrices().size(), is(2257));
+        assertThat(prices.size(), is(2257));
 
-        assertThat(security.getPrices().get(0), //
-                        equalTo(new SecurityPrice(LocalDate.of(2003, Month.JANUARY, 1),
-                                        Values.Quote.factorize(22.55))));
+        LatestSecurityPrice price = new LatestSecurityPrice(LocalDate.of(2003, Month.JANUARY, 1), //
+                        Values.Quote.factorize(22.55), //
+                        Values.Quote.factorize(29.35), //
+                        Values.Quote.factorize(29.35), //
+                        0);
+        assertThat(prices.get(0), equalTo(price));
 
-        assertThat(security.getPrices().get(security.getPrices().size() - 1), equalTo(
-                        new SecurityPrice(LocalDate.of(2011, Month.SEPTEMBER, 22), Values.Quote.factorize(32.74))));
+        price = new LatestSecurityPrice(LocalDate.of(2011, Month.SEPTEMBER, 22), Values.Quote.factorize(32.74), //
+                        Values.Quote.factorize(34.16), //
+                        Values.Quote.factorize(32.35), //
+                        10825200);
+        assertThat(prices.get(prices.size() - 1), equalTo(price));
     }
 
     @Test

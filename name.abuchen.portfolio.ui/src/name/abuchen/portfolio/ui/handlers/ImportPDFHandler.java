@@ -22,17 +22,20 @@ import org.eclipse.swt.widgets.Shell;
 
 import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.IBFlexStatementExtractor;
+import name.abuchen.portfolio.datatransfer.pdf.BaaderBankPDFExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.BankSLMPDFExctractor;
 import name.abuchen.portfolio.datatransfer.pdf.ComdirectPDFExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.CommerzbankPDFExctractor;
 import name.abuchen.portfolio.datatransfer.pdf.ConsorsbankPDFExctractor;
 import name.abuchen.portfolio.datatransfer.pdf.DABPDFExctractor;
+import name.abuchen.portfolio.datatransfer.pdf.DegiroPDFExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.DeutscheBankPDFExctractor;
 import name.abuchen.portfolio.datatransfer.pdf.DkbPDFExtractor;
-import name.abuchen.portfolio.datatransfer.pdf.FlatexPDFExtractor;
+import name.abuchen.portfolio.datatransfer.pdf.FinTechGroupBankPDFExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.INGDiBaExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.OnvistaPDFExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.SBrokerPDFExtractor;
+import name.abuchen.portfolio.datatransfer.pdf.UnicreditPDFExtractor;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPart;
@@ -96,6 +99,8 @@ public class ImportPDFHandler
     {
         switch (type)
         {
+            case "baaderbank": //$NON-NLS-1$
+                return new BaaderBankPDFExtractor(client);
             case "bankslm": //$NON-NLS-1$
                 return new BankSLMPDFExctractor(client);
             case "comdirect": //$NON-NLS-1$
@@ -108,16 +113,20 @@ public class ImportPDFHandler
                 return new DABPDFExctractor(client);
             case "db": //$NON-NLS-1$
                 return new DeutscheBankPDFExctractor(client);
+            case "degiro": //$NON-NLS-1$
+                return new DegiroPDFExtractor(client);
             case "dkb": //$NON-NLS-1$
                 return new DkbPDFExtractor(client);
-            case "flatex": //$NON-NLS-1$
-                return new FlatexPDFExtractor(client);
+            case "fintechgroupbank": //$NON-NLS-1$
+                return new FinTechGroupBankPDFExtractor(client);
             case "ingdiba": //$NON-NLS-1$
                 return new INGDiBaExtractor(client);
             case "onvista": //$NON-NLS-1$
                 return new OnvistaPDFExtractor(client);
             case "sbroker": //$NON-NLS-1$
                 return new SBrokerPDFExtractor(client);
+            case "unicredit": //$NON-NLS-1$
+                return new UnicreditPDFExtractor(client);
             case "ib": //$NON-NLS-1$
                 return new IBFlexStatementExtractor(client);
             default:

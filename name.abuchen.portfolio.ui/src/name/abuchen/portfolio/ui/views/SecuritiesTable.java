@@ -14,8 +14,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.TableColumnLayout;
-import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.resource.LocalResourceManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -87,8 +85,6 @@ public final class SecuritiesTable implements ModificationListener
     private TableViewer securities;
 
     private ShowHideColumnHelper support;
-    private LocalResourceManager resources;
-    private Color warningColor;
 
     public SecuritiesTable(Composite parent, AbstractFinanceView view)
     {
@@ -97,9 +93,6 @@ public final class SecuritiesTable implements ModificationListener
         Composite container = new Composite(parent, SWT.NONE);
         TableColumnLayout layout = new TableColumnLayout();
         container.setLayout(layout);
-
-        this.resources = new LocalResourceManager(JFaceResources.getResources(), container);
-        this.warningColor = resources.createColor(Colors.WARNING.swt());
 
         this.securities = new TableViewer(container, SWT.FULL_SELECTION | SWT.MULTI);
 
@@ -325,7 +318,7 @@ public final class SecuritiesTable implements ModificationListener
                     return null;
 
                 LocalDate sevenDaysAgo = LocalDate.now().minusDays(7);
-                return latest.getDate().isBefore(sevenDaysAgo) ? warningColor : null;
+                return latest.getDate().isBefore(sevenDaysAgo) ? Colors.WARNING : null;
             }
         });
         column.setSorter(ColumnViewerSorter.create((o1, o2) -> {
@@ -372,7 +365,7 @@ public final class SecuritiesTable implements ModificationListener
 
                 SecurityPrice latest = prices.get(prices.size() - 1);
                 if (!((Security) element).isRetired() && latest.getDate().isBefore(LocalDate.now().minusDays(7)))
-                    return warningColor;
+                    return Colors.WARNING;
                 else
                     return null;
             }

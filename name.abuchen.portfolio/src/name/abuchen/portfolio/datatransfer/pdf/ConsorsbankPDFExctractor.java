@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Optional;
 
+//import name.abuchen.portfolio.datatransfer.Extractor.TransactionItem;
 import name.abuchen.portfolio.datatransfer.pdf.PDFParser.Block;
 import name.abuchen.portfolio.datatransfer.pdf.PDFParser.DocumentType;
 import name.abuchen.portfolio.datatransfer.pdf.PDFParser.Transaction;
@@ -14,6 +15,7 @@ import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.Transaction.Unit;
 import name.abuchen.portfolio.model.Transaction.Unit.Type;
+import name.abuchen.portfolio.money.CurrencyUnit;
 import name.abuchen.portfolio.money.Money;
 
 public class ConsorsbankPDFExctractor extends AbstractPDFExtractor
@@ -30,6 +32,7 @@ public class ConsorsbankPDFExctractor extends AbstractPDFExtractor
         addSellTransaction();
         addDividendTransaction();
         addIncomeTransaction();
+        addTaxAdjustmentTransaction();
     }
 
     @SuppressWarnings("nls")
@@ -58,13 +61,16 @@ public class ConsorsbankPDFExctractor extends AbstractPDFExtractor
                         .find("Einheit Umsatz( F\\Dlligkeit)?") //
                         .match("^ST (?<shares>[\\d.]+(,\\d+)?).*$") //
                         .assign((t, v) -> t.setShares(asShares(v.get("shares"))))
+                        
+                        .section("date")
+                        .match("KAUF AM (?<date>\\d+\\.\\d+\\.\\d{4}+).*")
+                        .assign((t,v) -> t.setDate(asDate(v.get("date"))))
 
-                        .section("date", "amount", "currency")
-                        .match("Wert (?<date>\\d+.\\d+.\\d{4}+) (?<currency>\\w{3}+) (?<amount>[\\d.]+,\\d+)") //
+                        .section("amount", "currency")
+                        .match("Wert \\d+.\\d+.\\d{4}+ (?<currency>\\w{3}+) (?<amount>[\\d.]+,\\d+)") //
                         .assign((t, v) -> {
                             t.setAmount(asAmount(v.get("amount")));
                             t.setCurrencyCode(asCurrencyCode(v.get("currency")));
-                            t.setDate(asDate(v.get("date")));
                         })
 
                         .wrap(BuySellEntryItem::new);
@@ -139,12 +145,15 @@ public class ConsorsbankPDFExctractor extends AbstractPDFExtractor
                         .match("^ST (?<shares>[\\d.]+(,\\d+)?).*$") //
                         .assign((t, v) -> t.setShares(asShares(v.get("shares"))))
 
-                        .section("date", "amount", "currency")
-                        .match("Wert (?<date>\\d+.\\d+.\\d{4}+) (?<currency>\\w{3}+) (?<amount>[\\d.]+,\\d+)") //
+                        .section("date")
+                        .match("VERKAUF AM (?<date>\\d+\\.\\d+\\.\\d{4}+).*")
+                        .assign((t,v) -> t.setDate(asDate(v.get("date"))))
+
+                        .section("amount", "currency")
+                        .match("Wert \\d+.\\d+.\\d{4}+ (?<currency>\\w{3}+) (?<amount>[\\d.]+,\\d+)") //
                         .assign((t, v) -> {
                             t.setAmount(asAmount(v.get("amount")));
                             t.setCurrencyCode(asCurrencyCode(v.get("currency")));
-                            t.setDate(asDate(v.get("date")));
                         })
 
                         .wrap(BuySellEntryItem::new);
@@ -383,6 +392,43 @@ public class ConsorsbankPDFExctractor extends AbstractPDFExtractor
                         .match("(^.*)(Eig. Spesen) (?<currency>\\w{3}+) (?<expenses>\\d{1,3}(\\.\\d{3})*(,\\d{2})?)")
                         .assign((t, v) -> t.getPortfolioTransaction().addUnit(new Unit(Unit.Type.FEE,
                                         Money.of(asCurrencyCode(v.get("currency")), asAmount(v.get("expenses"))))));
+    }
+    
+    @SuppressWarnings("nls")
+    private void addTaxAdjustmentTransaction()
+    {
+        
+        DocumentType type = new DocumentType("Nachträgliche Verlustverrechnung");
+        this.addDocumentTyp(type);
+        
+        Block block = new Block(" Erstattung/Belastung \\(-\\) von Steuern");
+        type.addBlock(block);
+        block.set(new Transaction<AccountTransaction>().subject(() -> {
+            AccountTransaction t = new AccountTransaction();
+            t.setType(AccountTransaction.Type.TAX_REFUND);
+            t.setCurrencyCode(CurrencyUnit.EUR); // nirgends im Dokument ist die Währung aufgeführt.
+            return t;
+        })
+                        
+                        // Den Steuerausgleich buchen wir mit Wertstellung 10.07.2017
+                        .section("date")
+                        .match(" *Den Steuerausgleich buchen wir mit Wertstellung (?<date>\\d+.\\d+.\\d{4}) .*")
+                        .assign((t, v) -> t.setDate(asDate(v.get("date"))))
+
+                        // Erstattung/Belastung (-) von Steuern
+                        // Anteil                             100,00%
+                        // KapSt Person 1                                 :                79,89
+                        // SolZ  Person 1                                 :                 4,36
+                        // KiSt  Person 1                                 :                 6,36
+                        // ======================================================================
+                        //                                                                 90,61
+                        .section("amount")
+                        .find(" *Erstattung/Belastung \\(-\\) von Steuern *")
+                        .find(" *=* *")
+                        .match(" *(?<amount>[\\d.]+,\\d{2}) *")
+                        .assign((t, v) -> t.setAmount(asAmount(v.get("amount"))))
+                        
+                        .wrap(t -> new TransactionItem(t)));
     }
 
     @Override
