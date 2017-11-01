@@ -28,7 +28,17 @@ import name.abuchen.portfolio.money.Money;
     /* package */ CSVAccountTransactionExtractor(Client client)
     {
         super(client, Messages.CSVDefAccountTransactions);
+        addFields();        
+    }
 
+    CSVAccountTransactionExtractor(Client client, String label)
+    {
+        super(client, label);
+        addFields();
+    }
+    
+    List<Field> addFields()
+    {
         List<Field> fields = getFields();
         fields.add(new DateField(Messages.CSVColumn_Date));
         fields.add(new Field(Messages.CSVColumn_ISIN).setOptional(true));
@@ -41,8 +51,9 @@ import name.abuchen.portfolio.money.Money;
         fields.add(new AmountField(Messages.CSVColumn_Shares).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_Note).setOptional(true));
         fields.add(new AmountField(Messages.CSVColumn_Taxes).setOptional(true));
+        return fields;
     }
-
+    
     @Override
     void extract(List<Item> items, String[] rawValues, Map<String, Column> field2column) throws ParseException
     {

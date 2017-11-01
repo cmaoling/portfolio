@@ -120,6 +120,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
     private final boolean onlySecurityPrices;
 
     private TableViewer tableViewer;
+    private Spinner skipLines = null;
 
     public CSVImportDefinitionPage(CSVImporter importer, boolean onlySecurityPrices)
     {
@@ -131,7 +132,9 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         this.onlySecurityPrices = onlySecurityPrices;
 
         if (onlySecurityPrices)
-            importer.setExtractor(importer.getSecurityPriceExtractor());
+            this.changeExtractor(importer.getSecurityPriceExtractor());
+        else
+            this.changeExtractor(importer.getExtractor());
     }
 
     public CSVImporter getImporter()
@@ -187,7 +190,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
 
         Label lblSkipLines = new Label(container, SWT.NONE);
         lblSkipLines.setText(Messages.CSVImportLabelSkipLines);
-        final Spinner skipLines = new Spinner(container, SWT.BORDER);
+        skipLines = new Spinner(container, SWT.BORDER);
         skipLines.setMinimum(0);
         skipLines.addModifyListener(new ModifyListener()
         {
@@ -328,11 +331,22 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         }
     }
 
+    private void changeExtractor(CSVExtractor def)
+    {
+            importer.setExtractor(def);
+            importer.setEncoding(Charset.forName(def.getDefaultEncoding()));
+            importer.setSkipLines(def.getDefaultSkipLines());
+            if (skipLines != null)
+            {
+                skipLines.setSelection(def.getDefaultSkipLines());
+            }
+    }
+    
     private void onTargetChanged(CSVExtractor def)
     {
         if (!def.equals(importer.getExtractor()))
         {
-            importer.setExtractor(def);
+            this.changeExtractor(def);
             doProcessFile();
         }
     }
@@ -702,7 +716,17 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
                         FieldFormat f = column.getFormat();
                         if (f == null || !(f.getFormat() instanceof EnumMapFormat))
                         {
+                            System.err.println("CSVImportDef.ef: " + ef.toString());
+                            System.err.println("CSVImportDef.de: " + definition.toString());
                             f = new FieldFormat(null, ef.createFormat());
+                            //System.err.println("CSVImportDef.im: " + importer.toString());
+
+//                            EnumMapFormat<AccountTransaction.Type> format = field.createFormat();
+//                            definition
+//                            format.map().put(AccountTransaction.Type.FEES_REFUND, "Gebührenerstattung");
+//                            format.map().put(AccountTransaction.Type.FEES, "Gebühren");
+//                            typeColumn.setFormat(new FieldFormat(Messages.CSVColumn_Type, format));
+                         
                             column.setFormat(f);
                         }
 

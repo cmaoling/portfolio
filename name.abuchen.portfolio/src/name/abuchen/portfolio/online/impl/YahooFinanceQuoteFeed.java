@@ -20,6 +20,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -366,6 +367,7 @@ public class YahooFinanceQuoteFeed extends QuoteFeed
                 }
                 catch (NumberFormatException | ParseException | DateTimeParseException e)
                 {
+                    System.err.println("Yahoo.QuoteFeed: " + responseBody.toString());
                     errors.add(new IOException(MessageFormat.format(Messages.MsgErrorsConvertingValue, line), e));
                 }
 

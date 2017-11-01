@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,26 @@ public abstract class CSVExtractor implements Extractor
         throw new UnsupportedOperationException();
     }
 
+    public int getDefaultSkipLines()
+    {
+        return 1;
+    }
+
+    public String getDefaultEncoding()
+    {
+        return "UTF-8";
+    }
+
+    public <E extends Enum<E>> EnumMap<E, String> getDefaultEnum(Class<E> enumType)
+    {
+        return null;
+    }
+
+    public String[] getDefaultHeader()
+    {
+        return null;
+    }
+    
     protected String getText(String name, String[] rawValues, Map<String, Column> field2column)
     {
         Column column = field2column.get(name);

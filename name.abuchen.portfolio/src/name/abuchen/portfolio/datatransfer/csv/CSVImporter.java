@@ -212,7 +212,7 @@ public class CSVImporter
 
     public static class EnumField<M extends Enum<M>> extends CSVImporter.Field
     {
-        private final Class<M> enumType;
+        private Class<M> enumType;
 
         /* package */ EnumField(String name, Class<M> enumType)
         {
@@ -229,6 +229,7 @@ public class CSVImporter
         {
             return new EnumMapFormat<>(enumType);
         }
+        
     }
 
     public static class EnumMapFormat<M extends Enum<M>> extends Format
@@ -242,12 +243,8 @@ public class CSVImporter
             enumMap = new EnumMap<>(enumType);
             for (M element : enumType.getEnumConstants())
             {
-                System.err.println("CSVImporter.EnumMapFormat: enumType              : " + enumType.getName());
-                System.err.println("CSVImporter.EnumMapFormat: MoneysuiteType.class  : " + MoneysuiteTransaction.Type.class.getName());
-                if (MoneysuiteTransaction.Type.class.equals(enumType))
-                    enumMap.put(element, ((MoneysuiteTransaction.Type) element).MapTo());
-                else
-                    enumMap.put(element, element.toString());
+                enumMap.put(element, element.toString());
+                System.err.println("CSVImporter.EnumMapFormat: " + enumType.toString());
             }
         }
 
@@ -400,11 +397,10 @@ public class CSVImporter
         this.inputFile = file;
 
         this.extractors = Collections.unmodifiableList(Arrays.asList(new CSVAccountTransactionExtractor(client),
-                        new CSVPortfolioTransactionExtractor(client), new CSVMoneysuiteTransactionExtractor(client), new CSVSecurityExtractor(client),
+                        new CSVPortfolioTransactionExtractor(client), new CSVDibaAccountTransactionExtractor(client), new CSVSecurityExtractor(client),
                         new CSVSecurityPriceExtractor(client)));
         //this.currentExtractor = extractors.get(0);
         this.setExtractor(extractors.get(2));
-        this.setEncoding(Charset.forName("UTF-8"));
     }
 
     public Client getClient()
@@ -501,15 +497,14 @@ public class CSVImporter
             }
             else if (this.header.equals(Header.Type.DEFAULT))
             {
-                if (CSVMoneysuiteTransactionExtractor.class.equals(this.currentExtractor.getClass()))
+                if (this.currentExtractor.getDefaultHeader() != null)
                 {
                     System.err.println("CSVImporter.processFile(): DEFAULT: " + this.currentExtractor.toString());
-                    CSVMoneysuiteTransactionExtractor extractor = (CSVMoneysuiteTransactionExtractor) this.currentExtractor;
-                    header = extractor.getDefaultHeader();
+                    header = this.currentExtractor.getDefaultHeader();
                 }
                 else
                 {
-                    System.err.println("CSVImporter.processFile(): UNKNOWN: " + this.currentExtractor.getClass().toString() + " vs. " + CSVMoneysuiteTransactionExtractor.class.toString());
+                    System.err.println("CSVImporter.processFile(): UNKNOWN: " + this.currentExtractor.getClass().toString() + ": " + line);
                     header = line;                    
                 }
             }
@@ -576,7 +571,8 @@ public class CSVImporter
                     }
                     else if (field instanceof EnumField<?>)
                     {
-                        column.setFormat(new FieldFormat(null, ((EnumField<?>) field).createFormat()));
+                        System.err.println("CSVImporter.mapToImportDefinition(): EnumField: " + field.getClass().getTypeName().toString());
+                       column.setFormat(new FieldFormat(null, ((EnumField<?>) field).createFormat()));
                     }
 
                     iter.remove();

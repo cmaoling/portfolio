@@ -49,6 +49,7 @@ public class Messages extends NLS
     public static String CSVColumn_TransactionPeerAccount;
     public static String CSVColumn_Transferals;
     public static String CSVDefAccountTransactions;
+    public static String CSVDefDibaAccountTransactions;
     public static String CSVDefHistoricalQuotes;
     public static String CSVDefMoneysuiteTransactions;
     public static String CSVDefPortfolioTransactions;
