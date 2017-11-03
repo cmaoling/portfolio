@@ -22,7 +22,7 @@ import name.abuchen.portfolio.money.Money;
     private Client client;
     private SecurityCache securityCache;
     private String label;
-    private List<Field> fields;
+    protected List<Field> fields;
 
     /* package */ BaseCSVExtractor(Client client, String label)
     {
@@ -92,7 +92,7 @@ import name.abuchen.portfolio.money.Money;
     {
         Security security = null;
 
-        String isin = getText(Messages.CSVColumn_ISIN, rawValues, field2column);
+        String isin = getISIN(Messages.CSVColumn_ISIN, rawValues, field2column);
         String tickerSymbol = getText(Messages.CSVColumn_TickerSymbol, rawValues, field2column);
         String wkn = getText(Messages.CSVColumn_WKN, rawValues, field2column);
         String name = getText(Messages.CSVColumn_SecurityName, rawValues, field2column);
@@ -110,6 +110,11 @@ import name.abuchen.portfolio.money.Money;
             });
         }
 
+        if (security != null)
+        {
+            System.err.println("BaseCSVExtratctor:getSecurity sec " + security.toString() + "[" + name.toString() + "]");
+        }
+
         return security;
     }
 
@@ -122,6 +127,7 @@ import name.abuchen.portfolio.money.Money;
         else
         {
             String key = isin != null ? isin : tickerSymbol != null ? tickerSymbol : wkn;
+            // extract name based on isin/tickerSymbol etc.
             return MessageFormat.format(Messages.CSVImportedSecurityLabel, key);
         }
     }

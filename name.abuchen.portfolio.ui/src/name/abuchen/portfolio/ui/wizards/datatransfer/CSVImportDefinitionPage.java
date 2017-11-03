@@ -77,7 +77,11 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumMapFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.FieldFormat;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Header;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.HeaderSet;
+import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
 import name.abuchen.portfolio.ui.util.FormDataFactory;
@@ -116,20 +120,31 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         }
     }
 
+    private final Client client;
     private final CSVImporter importer;
     private final boolean onlySecurityPrices;
 
-    private TableViewer tableViewer;
-    private Spinner skipLines = null;
+    private HeaderSet headerset = new HeaderSet();
 
-    public CSVImportDefinitionPage(CSVImporter importer, boolean onlySecurityPrices)
+    private Spinner skipLinesSpinner = null;
+    private ComboViewer encodingComboViewer = null;
+    private ComboViewer headeringComboViewer = null;
+
+    private TableViewer tableViewer;
+
+    public CSVImportDefinitionPage(Client client, CSVImporter importer, boolean onlySecurityPrices)
     {
         super("importdefinition"); //$NON-NLS-1$
         setTitle(Messages.CSVImportWizardTitle);
         setDescription(Messages.CSVImportWizardDescription);
 
+        this.client = client;
         this.importer = importer;
         this.onlySecurityPrices = onlySecurityPrices;
+
+        headerset.add(Header.Type.MANUAL, Messages.CSVImportLabelManualHeader);
+        headerset.add(Header.Type.DEFAULT, Messages.CSVImportLabelDefaultHeader);
+        headerset.add(Header.Type.FIRST, Messages.CSVImportLabelFirstLineIsHeader);
 
         if (onlySecurityPrices)
             this.changeExtractor(importer.getSecurityPriceExtractor());
@@ -190,8 +205,10 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
 
         Label lblSkipLines = new Label(container, SWT.NONE);
         lblSkipLines.setText(Messages.CSVImportLabelSkipLines);
-        skipLines = new Spinner(container, SWT.BORDER);
+        skipLinesSpinner = new Spinner(container, SWT.BORDER);
+        final Spinner skipLines = skipLinesSpinner; //new Spinner(container, SWT.BORDER);
         skipLines.setMinimum(0);
+        skipLines.setSelection(importer.getSkipLines());
         skipLines.addModifyListener(new ModifyListener()
         {
             @Override
@@ -204,7 +221,8 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         Label lblEncoding = new Label(container, SWT.NONE);
         lblEncoding.setText(Messages.CSVImportLabelEncoding);
         Combo cmbEncoding = new Combo(container, SWT.READ_ONLY);
-        ComboViewer encoding = new ComboViewer(cmbEncoding);
+        encodingComboViewer = new ComboViewer(cmbEncoding);
+        ComboViewer encoding = encodingComboViewer;
         encoding.setContentProvider(ArrayContentProvider.getInstance());
         encoding.setInput(Charset.availableCharsets().values().toArray());
         encoding.setSelection(new StructuredSelection(importer.getEncoding()));
@@ -213,14 +231,11 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         Label lblHeader = new Label(container, SWT.NONE);
         lblHeader.setText(Messages.CSVImportLabelHeader);
         Combo cmbHeader = new Combo(container, SWT.READ_ONLY);
-        ComboViewer headering = new ComboViewer(cmbHeader);
+        headeringComboViewer  = new ComboViewer(cmbHeader);
+        ComboViewer headering = headeringComboViewer; 
         headering.setContentProvider(ArrayContentProvider.getInstance());
-        headering.setInput(new Header[] {
-                        new Header(Header.Type.MANUAL, Messages.CSVImportLabelManualHeader),
-                        new Header(Header.Type.FIRST, Messages.CSVImportLabelFirstLineIsHeader),
-                        new Header(Header.Type.DEFAULT, Messages.CSVImportLabelDefaultHeader)
-                        });
-        cmbHeader.select(2);
+        headering.setInput(headerset.get());
+        headering.setSelection(new StructuredSelection(importer.getHeader()));
         headering.addSelectionChangedListener(this);
 
         Composite compositeTable = new Composite(container, SWT.NONE);
@@ -307,7 +322,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
     public void selectionChanged(SelectionChangedEvent event)
     {
         Object element = ((IStructuredSelection) event.getSelectionProvider().getSelection()).getFirstElement();
-        System.err.println("CSVImportDefinition.selectionChanged: : " + element.toString());
+        //System.err.println("CSVImportDefinition.selectionChanged: : " + element.toString());
 
         if (element instanceof CSVExtractor)
         {
@@ -325,7 +340,6 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         }
         else if (element instanceof Header)
         {
-            System.err.println("CSVImportDefinition.selectionChanged: HEADER ");
             importer.setHeader((Header) element);
             doProcessFile();
         }
@@ -336,10 +350,16 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
             importer.setExtractor(def);
             importer.setEncoding(Charset.forName(def.getDefaultEncoding()));
             importer.setSkipLines(def.getDefaultSkipLines());
-            if (skipLines != null)
-            {
-                skipLines.setSelection(def.getDefaultSkipLines());
-            }
+            importer.setHeader(headerset.get(def.getDefaultHeadering()));
+
+            if (skipLinesSpinner != null)
+                skipLinesSpinner.setSelection(importer.getSkipLines());
+
+            if (encodingComboViewer != null)
+                encodingComboViewer.setSelection(new StructuredSelection(importer.getEncoding()));
+
+            if (headeringComboViewer != null)
+                headeringComboViewer.setSelection(new StructuredSelection(importer.getHeader()));
     }
     
     private void onTargetChanged(CSVExtractor def)
@@ -359,7 +379,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
 
     private void onColumnSelected(int columnIndex)
     {
-        ColumnConfigDialog dialog = new ColumnConfigDialog(getShell(), importer.getExtractor(),
+        ColumnConfigDialog dialog = new ColumnConfigDialog(client, getShell(), importer.getExtractor(),
                         importer.getColumns()[columnIndex]);
         dialog.open();
 
@@ -583,12 +603,14 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
 
         private CSVExtractor definition;
         private Column column;
+        private final Client client;
 
-        protected ColumnConfigDialog(Shell parentShell, CSVExtractor definition, Column column)
+        protected ColumnConfigDialog(Client client, Shell parentShell, CSVExtractor definition, Column column)
         {
             super(parentShell);
             setShellStyle(getShellStyle() | SWT.SHEET);
 
+            this.client = client;
             this.definition = definition;
             this.column = column;
         }
@@ -707,8 +729,14 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
                         else
                             valueFormats.setSelection(new StructuredSelection(valueFormats.getElementAt(0)));
                     }
+                    else if (field instanceof ISINField)
+                    {
+                        //System.err.println("CSVImportDefinitionPage.mappedTo.addSelectionChangedListener(): ISINField  -");
+                        column.setFormat(new FieldFormat(null, ((ISINField) field).createFormat(client.getSecurities())));
+                    }
                     else if (field instanceof EnumField)
                     {
+                        System.err.println("CSVImportDefinitionPage.mappedTo.addSelectionChangedListener(): EnumField  -");
                         layout.topControl = keyArea;
 
                         EnumField<?> ef = (EnumField<?>) field;
@@ -719,14 +747,6 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
                             System.err.println("CSVImportDef.ef: " + ef.toString());
                             System.err.println("CSVImportDef.de: " + definition.toString());
                             f = new FieldFormat(null, ef.createFormat());
-                            //System.err.println("CSVImportDef.im: " + importer.toString());
-
-//                            EnumMapFormat<AccountTransaction.Type> format = field.createFormat();
-//                            definition
-//                            format.map().put(AccountTransaction.Type.FEES_REFUND, "Gebührenerstattung");
-//                            format.map().put(AccountTransaction.Type.FEES, "Gebühren");
-//                            typeColumn.setFormat(new FieldFormat(Messages.CSVColumn_Type, format));
-                         
                             column.setFormat(f);
                         }
 

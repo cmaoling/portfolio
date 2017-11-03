@@ -10,11 +10,14 @@ import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.FieldFormat;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Header;
 import name.abuchen.portfolio.money.Values;
 
 public abstract class CSVExtractor implements Extractor
@@ -38,7 +41,12 @@ public abstract class CSVExtractor implements Extractor
 
     public int getDefaultSkipLines()
     {
-        return 1;
+        return 0;
+    }
+
+    public Header.Type getDefaultHeadering()
+    {
+        return Header.Type.FIRST;
     }
 
     public String getDefaultEncoding()
@@ -68,6 +76,29 @@ public abstract class CSVExtractor implements Extractor
             return null;
 
         String value = rawValues[columnIndex];
+        return value != null && value.trim().length() == 0 ? null : value;
+    }
+
+    protected String getISIN(String name, String[] rawValues, Map<String, Column> field2column)
+    {
+        Column column = field2column.get(name);
+        if (column == null)
+            return null;
+
+        int columnIndex = column.getColumnIndex();
+
+        if (columnIndex < 0 || columnIndex >= rawValues.length)
+            return null;
+
+        String value = rawValues[columnIndex];
+
+        Pattern pattern = Pattern.compile(" ([A-Z]{2}[A-Z0-9]{9}\\d) ");
+        Matcher matcher = pattern.matcher(value);
+        if (matcher.find())
+        {
+            value= matcher.group(1);
+        }
+
         return value != null && value.trim().length() == 0 ? null : value;
     }
 
@@ -130,7 +161,6 @@ public abstract class CSVExtractor implements Extractor
         String value = getText(name, rawValues, field2column);
         if (value == null)
             return null;
-        System.err.println("CSVxtractor.getEnum: value: " + value.toString());
         FieldFormat ff = field2column.get(name).getFormat();
 
         if (ff != null && ff.getFormat() != null)

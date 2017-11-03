@@ -12,7 +12,11 @@ import org.eclipse.swt.graphics.Image;
 import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.actions.InsertAction;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter;
+import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.money.CurrencyConverter;
+import name.abuchen.portfolio.money.CurrencyConverterImpl;
+import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.ui.ConsistencyChecksJob;
@@ -86,7 +90,7 @@ public class CSVImportWizard extends Wizard
     @Override
     public void addPages()
     {
-        definitionPage = new CSVImportDefinitionPage(importer, target != null);
+        definitionPage = new CSVImportDefinitionPage(client, importer, target != null);
         addPage(definitionPage);
 
         reviewPage = new ReviewExtractedItemsPage(client, new ExtractorProxy(importer), preferences,

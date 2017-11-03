@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVStrategy;
@@ -33,7 +35,10 @@ import org.apache.commons.csv.CSVStrategy;
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.Extractor.Item;
 import name.abuchen.portfolio.model.Client;
-import name.abuchen.portfolio.model.MoneysuiteTransaction;
+import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.model.Account;
+import name.abuchen.portfolio.model.Portfolio;
+
 
 public class CSVImporter
 {
@@ -212,7 +217,7 @@ public class CSVImporter
 
     public static class EnumField<M extends Enum<M>> extends CSVImporter.Field
     {
-        private Class<M> enumType;
+        private final Class<M> enumType;
 
         /* package */ EnumField(String name, Class<M> enumType)
         {
@@ -225,11 +230,15 @@ public class CSVImporter
             return enumType;
         }
 
+        public EnumMapFormat<M> createFormat(EnumMap<M, String> enumMap)
+        {
+            return new EnumMapFormat<>(enumType, enumMap);
+        }
+
         public EnumMapFormat<M> createFormat()
         {
-            return new EnumMapFormat<>(enumType);
+            return new EnumMapFormat<>(enumType, null);
         }
-        
     }
 
     public static class EnumMapFormat<M extends Enum<M>> extends Format
@@ -238,13 +247,20 @@ public class CSVImporter
 
         private EnumMap<M, String> enumMap;
 
-        public EnumMapFormat(Class<M> enumType)
+        public EnumMapFormat(Class<M> enumType, EnumMap<M, String> enumMap)
         {
-            enumMap = new EnumMap<>(enumType);
+            this.enumMap = new EnumMap<>(enumType);
             for (M element : enumType.getEnumConstants())
             {
-                enumMap.put(element, element.toString());
-                System.err.println("CSVImporter.EnumMapFormat: " + enumType.toString());
+                    if ((enumMap != null) && enumMap.containsKey(element)) {
+                        //System.err.println("CSVImporter.EnumMapFormat: overwrite : " + enumMap.get(element).toString());
+                        this.enumMap.put(element, enumMap.get(element).toString());
+                    }
+                    else
+                    {
+                        //System.err.println("CSVImporter.EnumMapFormat: element : " + element.toString());
+                        this.enumMap.put(element, element.toString());
+                    }
             }
         }
 
@@ -288,7 +304,7 @@ public class CSVImporter
                 if (p >= 0)
                 {
                     pos.setIndex(source.length());
-                    System.err.println("CSVImporter.parseObject: source: " + source + " compare " +entry.getValue() +  "=> return : " + entry.getKey());
+                    //System.err.println("CSVImporter.EnumMapFormat:parseObject: source: " + source + " compare " +entry.getValue() +  "=> return : " + entry.getKey());
                     return entry.getKey();
                 }
             }
@@ -303,17 +319,47 @@ public class CSVImporter
         /* package */ ISINField(String name)
         {
             super(name);
-            System.err.println("CSVImporter.ISINField: name " + name);
+            //System.err.println("CSVImporter.ISINField: name " + name);
+        }
+
+        public ISINFormat createFormat(List<Security> securityList)
+        {
+            //System.err.println("CSVImporter.ISINField:createFormat ");
+            return new ISINFormat(securityList);
         }
     }
 
     public static class ISINFormat extends Format
     {
         private static final long serialVersionUID = 1L;
+        private List<String> isinList = new ArrayList<String>();
+        //private List<Security> SecurityList = new ArrayList<Security>();
+        private static final String ISINpattern = "[A-Z]{2}[A-Z0-9]{9}\\d";
 
-        public ISINFormat()
+        public ISINFormat(List<Security> securityList)
         {
-            System.err.println("CSVImporter.ISINFormat:");
+            //this.SecurityList = SecurityList;
+            for (Security security : securityList)
+            {
+                if (security.getIsin() != null)
+                {
+                    //System.err.println("CSVImporter.ISINFormat(): security: " + security.toString() + "  [" + security.getIsin() + "] " + security.getUUID());
+                    String ISIN = security.getIsin().trim();
+                    if (CheckISIN(ISIN))
+                    {
+                        //System.err.println("CSVImporter.ISINFormat ISIN <" + ISIN + "> VALID");
+                        this.isinList.add(ISIN);
+                    }
+                    //else
+                    //{
+                    //    System.err.println("CSVImporter.ISINFormat ISIN <" + ISIN + "> INVALID");
+                    //}
+                }
+                //else
+                //{
+                //    System.err.println("CSVImporter.ISINFormat noISIN");
+                //}
+            }
         }
 
         @Override
@@ -325,23 +371,137 @@ public class CSVImporter
 
             return toAppendTo.append(s);
         }
+        /**
+         * Calculates the Double-Add-Double from String src (length 11 chars)
+         * alternatively checks validity (length 12 chars, result 0 if valid else undefinied.
+         * http://www.foxtrot-uniform-charlie-kilo.eu/programming/java-eu/isin-check.html
+         * https://rosettacode.org/wiki/Validate_International_Securities_Identification_Number#Java
+         */
+        public static boolean luhnTest(String number)
+        {
+            int s1 = 0, s2 = 0;
+            String reverse = new StringBuffer(number).reverse().toString();
+            for(int i = 0 ;i < reverse.length();i++)
+            {
+                int digit = Character.digit(reverse.charAt(i), 10);
+                if(i % 2 == 0)
+                {//this is for odd digits, they are 1-indexed in the algorithm
+                    s1 += digit;
+                }
+                else
+                {//add 2 * digit for 0-4, add 2 * digit - 9 for 5-9
+                    s2 += 2 * digit;
+                    if(digit >= 5)
+                    {
+                        s2 -= 9;
+                    }
+                }
+            }
+            return (s1 + s2) % 10 == 0;
+        }
+
+        static boolean CheckISIN(String isin)
+        {
+            isin = isin.trim().toUpperCase();
+            if (!isin.matches("^"+ ISINpattern + "$"))
+                return false;
+            StringBuilder sb = new StringBuilder();
+            for (char c : isin.substring(0, 12).toCharArray())
+                sb.append(Character.digit(c, 36));
+
+            return luhnTest(sb.toString());
+        }
+         /** END **/
 
         @Override
         public Object parseObject(String source, ParsePosition pos)
         {
+            //System.err.println("CSVImporter.ISINFormat:parseObject: source: " + source);
+            int parseSuccessIndex = source.length();
+            source = source.trim();
             if (pos == null)
                 throw new NullPointerException();
+            Object rObj = null;
+
+            Pattern pattern = Pattern.compile(" (" + ISINpattern + ") ");
+            Matcher matcher = pattern.matcher(source);
+            boolean success = false;
+            if (matcher.find())
+            {
+                //System.err.println("CSVImporter.ISINFormat:parseObject matcher " + matcher.group(1));
+                source  = matcher.group(1);
+            }
 
             if (source.equals("NA0123456789"))
             {
-                    return (Object) "DEADBEEF";
+                success = true;
+                //System.err.println("CSVImporter.ISINFormat:parseObject dummy " + source);
+                rObj = (Object) "DEADBEEF";
             }
-
-            return null;
+            else if (CheckISIN(source))
+            {
+                if (isinList.contains((String) source))
+                {
+                    success = true;
+                    //System.err.println("CSVImporter.ISINFormat:parseObject valid+known <" + source + ">");
+                    rObj = (Object) source.toString();
+                }
+                //else
+                //{
+                //    System.err.println("CSVImporter.ISINFormat:parseObject unknown <" + source + ">");
+                //    for (String ISIN : isinList)
+                //    {
+                //        System.err.println("                                        ISIN <" + ISIN + ">");
+                //    }
+                //}
+            }
+            //else
+            //{
+            //    System.err.println("CSVImporter.ISINFormat:parseObject invalid <" + source + ">");
+            //}
+            if (success)
+                pos.setIndex(parseSuccessIndex);
+            return rObj;
         }
     }
-    
-    
+
+    public static final class HeaderSet
+    {
+        private final List<Header> headerset = new ArrayList<Header>();
+
+        public HeaderSet()
+        {
+        }
+
+        public void add(Header.Type type, String label)
+        {
+            headerset.add(new Header (type, label));
+        }
+        
+        public Header[] get()
+        {
+            return headerset.toArray(new Header[0]);
+        }
+
+        public Header get(Header.Type type)
+        {
+            if (!headerset.isEmpty())
+            {
+                for (Header header : headerset)
+                {
+                    if (header.type.equals(type))
+                        return header;                    
+                }
+            }
+            return null;
+        }
+               
+        public String toString()
+        {
+            return Arrays.toString(this.get());
+        }
+    }
+
     public static final class Header
     {
         private final Type type;
@@ -385,8 +545,8 @@ public class CSVImporter
 
     private char delimiter = ';';
     private Charset encoding = Charset.forName("UTF-8");
-    private int skipLines = 0;
-    private Header.Type header = Header.Type.DEFAULT;
+    private int skipLines = -1;
+    private Header header = new Header (Header.Type.DEFAULT, "<none>");
 
     private Column[] columns;
     private List<String[]> values;
@@ -400,7 +560,7 @@ public class CSVImporter
                         new CSVPortfolioTransactionExtractor(client), new CSVDibaAccountTransactionExtractor(client), new CSVSecurityExtractor(client),
                         new CSVSecurityPriceExtractor(client)));
         //this.currentExtractor = extractors.get(0);
-        this.setExtractor(extractors.get(2));
+        this.setExtractor(extractors.get(0));
     }
 
     public Client getClient()
@@ -420,8 +580,10 @@ public class CSVImporter
 
     public void setExtractor(CSVExtractor extractor)
     {
-        System.err.println("CSVImporter.setExtractor: extractor : " + extractor.toString());
+        //System.err.println("CSVImporter.setExtractor: extractor : " + extractor.toString());
         this.currentExtractor = extractor;
+        this.skipLines = extractor.getDefaultSkipLines();
+        this.setEncoding(Charset.forName(extractor.getDefaultEncoding()));
     }
 
     public CSVExtractor getExtractor()
@@ -441,7 +603,6 @@ public class CSVImporter
 
     public void setEncoding(Charset encoding)
     {
-        System.err.println("CSVImporter.setEncoding: encoding: <" + encoding.toString() + ">");
         this.encoding = encoding;
     }
 
@@ -456,9 +617,19 @@ public class CSVImporter
         this.skipLines = skipLines;
     }
 
+    public int getSkipLines()
+    {
+        return this.skipLines;
+    }
+
     public void setHeader(Header header)
     {
-        this.header = header.getHeaderType();
+        this.header = header;
+    }
+
+    public Header getHeader()
+    {
+        return this.header;
     }
 
     public List<String[]> getRawValues()
@@ -490,33 +661,28 @@ public class CSVImporter
             List<String[]> input = new ArrayList<>();
             String[] header = null;
             String[] line = parser.getLine();
-            if (this.header.equals(Header.Type.FIRST))
+            //System.err.println("CSVImporter.processFile(): header: " + this.header.toString());
+            if (this.header.getHeaderType().equals(Header.Type.FIRST))
             {
-                System.err.println("CSVImporter.processFile(): FIRST: " + this.currentExtractor.toString());
+                //System.err.println("CSVImporter.processFile(): FIRST: " + this.currentExtractor.toString());
                 header = line;
             }
-            else if (this.header.equals(Header.Type.DEFAULT))
+            else if (this.header.getHeaderType().equals(Header.Type.DEFAULT))
             {
-                if (this.currentExtractor.getDefaultHeader() != null)
-                {
-                    System.err.println("CSVImporter.processFile(): DEFAULT: " + this.currentExtractor.toString());
-                    header = this.currentExtractor.getDefaultHeader();
-                }
-                else
-                {
-                    System.err.println("CSVImporter.processFile(): UNKNOWN: " + this.currentExtractor.getClass().toString() + ": " + line);
+                header = this.currentExtractor.getDefaultHeader();
+                // Backup, if no default header defined, but selected return same as first
+                if (header == null)
                     header = line;                    
-                }
             }
             else
             {
-                System.err.println("CSVImporter.processFile(): OTHER: " + this.currentExtractor.toString());
+                //System.err.println("CSVImporter.processFile(): OTHER: " + this.currentExtractor.toString());
                 header = new String[line.length];
                 for (int ii = 0; ii < header.length; ii++)
                     header[ii] = MessageFormat.format(Messages.CSVImportGenericColumnLabel, ii + 1);
                 input.add(line);
             }
-            System.err.println("CSVImporter.processFile(): header: " + Arrays.toString(header));
+            //System.err.println("CSVImporter.processFile(): header: " + Arrays.toString(header));
 
             while ((line = parser.getLine()) != null)
                 input.add(line);
@@ -545,6 +711,7 @@ public class CSVImporter
 
     private void mapToImportDefinition()
     {
+        //System.err.println("===============mapToImportDefinition===============");
         List<Field> list = new LinkedList<>(currentExtractor.getFields());
 
         for (Column column : columns)
@@ -569,10 +736,34 @@ public class CSVImporter
                     {
                         column.setFormat(AmountField.FORMATS[0]);
                     }
+                    else if (field instanceof ISINField)
+                    {
+                        column.setFormat(new FieldFormat(null, ((ISINField) field).createFormat(client.getSecurities())));
+                    }
+//                    else if (field instanceof AccountField)
+//                    {
+//                        List<String> accountList = new ArrayList<String>();
+//                        List<Account> activeAccounts = client.getActiveAccounts();
+//                        for (Account account : activeAccounts)
+//                        {
+//                            System.err.println("ReviewExtractedData.extract: account: " + account.toString());
+//                            accountList.add(account.toString());
+//                        }
+//                        List<Portfolio> activePortfolios = client.getActivePortfolios();
+//                        for (Portfolio portfolio : activePortfolios)
+//                        {
+//                            System.err.println("ReviewExtractedData.extract: portfolio: " + portfolio.toString());
+//                            accountList.add(portfolio.toString());
+//                        }
+//                        column.setFormat(new FieldFormat(null, ((AccountField) field).createFormat(accountList)));
+//                    }
                     else if (field instanceof EnumField<?>)
                     {
-                        System.err.println("CSVImporter.mapToImportDefinition(): EnumField: " + field.getClass().getTypeName().toString());
-                       column.setFormat(new FieldFormat(null, ((EnumField<?>) field).createFormat()));
+                        column.setFormat(new FieldFormat(null, ((EnumField<?>) field).createFormat(currentExtractor.getDefaultEnum(((EnumField) field).getEnumType()))));
+//                        if (currentExtractor.getDefaultEnum(((EnumField) field).getEnumType()) != null)
+//                            column.setFormat(new FieldFormat(null, ((EnumField<?>) field).createFormat(currentExtractor.getDefaultEnum(((EnumField) field).getEnumType()))));
+//                        else
+//                            column.setFormat(new FieldFormat(null, ((EnumField<?>) field).createFormat()));                            
                     }
 
                     iter.remove();
@@ -606,7 +797,10 @@ public class CSVImporter
         int index = column.getColumnIndex();
         for (String[] rawValues : values)
         {
-            String value = rawValues[index];
+            String value = null; 
+            // check if Array of Strings has sufficient amount of elemets
+            if (rawValues.length > index)
+                value = rawValues[index];
             // check if value is set and is not empty (ignore whitespace)
             if ((value != null) && (!value.trim().isEmpty()))
                 return value;

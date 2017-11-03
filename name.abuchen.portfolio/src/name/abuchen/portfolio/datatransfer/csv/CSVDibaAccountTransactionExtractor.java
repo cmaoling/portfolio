@@ -13,6 +13,7 @@ import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.AmountField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.DateField;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Header;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
@@ -31,8 +32,6 @@ import name.abuchen.portfolio.money.Money;
     /* package */ CSVDibaAccountTransactionExtractor(Client client)
     {
         super(client, Messages.CSVDefDibaAccountTransactions);
-        List<Field> fields = addFields();
-        
     }
 
     @Override
@@ -50,11 +49,28 @@ import name.abuchen.portfolio.money.Money;
     @Override
     public <E extends Enum<E>> EnumMap<E, String> getDefaultEnum(Class<E> enumType)
     {
-        final EnumMap<E, String> enumMap = new EnumMap<>(enumType);
-        enumMap.put((E) Type.DEPOSIT, "Gutschrift");
-        enumMap.put((E) Type.INTEREST, "Abschluss");
-        enumMap.put((E) Type.REMOVAL, "Überweisung");
-        return enumMap;
+
+        if (enumType.equals(AccountTransaction.Type.class))
+        {
+            //System.err.println(">>>> CSVDibaAccountTransactionExtratctor:getDefaultEnum enumType IF " + enumType.toString());
+            final EnumMap<E, String> enumMap = new EnumMap<>(enumType);
+            enumMap.put((E) Type.DEPOSIT, "Gutschrift");
+            enumMap.put((E) Type.INTEREST, "Abschluss");
+            enumMap.put((E) Type.REMOVAL, "Überweisung");
+            return enumMap;
+        }
+        else
+        {
+            //System.err.println(">>>> CSVDibaAccountTransactionExtratctor:getDefaultEnum enumType ELSE " + enumType.toString());
+            return null;
+        }
+    }
+
+    @Override
+    
+    public Header.Type getDefaultHeadering()
+    {
+        return Header.Type.DEFAULT;
     }
     
     @Override   
@@ -68,7 +84,7 @@ import name.abuchen.portfolio.money.Money;
                                     Messages.CSVColumn_Value, //5
                                     Messages.CSVColumn_TransactionCurrency //6 
                                     };
-        System.err.println("DIBAAccount.DefaultHeader: " + Arrays.toString(defaultHeader));
+        //System.err.println(">>>> CSVDibaAccountTransactionExtratctor:DefaultHeader: " + Arrays.toString(defaultHeader));
         return defaultHeader;
     }
     

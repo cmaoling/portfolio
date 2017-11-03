@@ -3,6 +3,7 @@ package name.abuchen.portfolio.datatransfer.csv;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -11,6 +12,7 @@ import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.AmountField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.DateField;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.model.AccountTransaction;
@@ -41,7 +43,7 @@ import name.abuchen.portfolio.money.Money;
     {
         List<Field> fields = getFields();
         fields.add(new DateField(Messages.CSVColumn_Date));
-        fields.add(new Field(Messages.CSVColumn_ISIN).setOptional(true));
+        fields.add(new ISINField(Messages.CSVColumn_ISIN).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_TickerSymbol).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_WKN).setOptional(true));
         fields.add(new AmountField(Messages.CSVColumn_Value));
@@ -57,12 +59,25 @@ import name.abuchen.portfolio.money.Money;
     @Override
     void extract(List<Item> items, String[] rawValues, Map<String, Column> field2column) throws ParseException
     {
+        System.err.println("CSVAccountTransactionExtratctor:extract raw " + Arrays.toString(rawValues) + "[" + field2column.toString() + "]");
+
         // check if we have a security
         Security security = getSecurity(rawValues, field2column, s -> s.setCurrencyCode(
                         getCurrencyCode(Messages.CSVColumn_TransactionCurrency, rawValues, field2column)));
 
+        if (security != null)
+        {
+            System.err.println("CSVAccountTransactionExtratctor:extract security " + security.toString());
+        }
+        else
+        {
+            System.err.println("CSVAccountTransactionExtratctor:extract security - NULL");
+        }
+
         // check for the transaction amount
         Money amount = getMoney(rawValues, field2column);
+
+        System.err.println("CSVAccountTransactionExtratctor:extract amount " + amount.toString());
 
         // determine type (if not explicitly given by import)
         Type type = inferType(rawValues, field2column, security, amount);
@@ -74,6 +89,11 @@ import name.abuchen.portfolio.money.Money;
         String note = getText(Messages.CSVColumn_Note, rawValues, field2column);
         Long shares = getShares(Messages.CSVColumn_Shares, rawValues, field2column);
         Long taxes = getAmount(Messages.CSVColumn_Taxes, rawValues, field2column);
+
+        if (type != null)
+        {
+            System.err.println("CSVAccountTransactionExtratctor:extract type " + type.toString());            
+        }
 
         switch (type)
         {
@@ -130,11 +150,26 @@ import name.abuchen.portfolio.money.Money;
                 if (type == Type.DIVIDENDS || type == Type.TAX_REFUND)
                     t.setSecurity(security);
                 t.setDate(date);
-                t.setNote(note);
-                if (shares != null && type == Type.DIVIDENDS)
-                    t.setShares(Math.abs(shares));
+                String extNote = getText(Messages.CSVColumn_ISIN, rawValues, field2column); 
+                if (security != null)
+                    System.err.println("CSVAccountTransactionExtratctor:extract security " + security.toInfoString() + " [" + security.getIsin() + "]");
+                if (extNote != null && security.getIsin() == "")
+                {
+                    if (!note.equals(""))
+                        note += " - ";
+                    note += extNote;
+                }
+                if (type == Type.DIVIDENDS)
+                    if (shares != null)
+                        t.setShares(Math.abs(shares));
+                    else
+                    {
+                        //note = "CHECK: " + note;
+                        System.err.println("CSVAccountTransactionExtratctor:extract shares!");
+                    }
                 if (type == Type.DIVIDENDS && taxes != null && taxes.longValue() != 0)
                     t.addUnit(new Unit(Unit.Type.TAX, Money.of(t.getCurrencyCode(), Math.abs(taxes))));
+                t.setNote(note);
                 items.add(new TransactionItem(t));
                 break;
             default:
