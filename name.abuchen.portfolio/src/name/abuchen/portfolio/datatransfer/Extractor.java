@@ -8,11 +8,13 @@ import java.util.List;
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.ImportAction.Context;
 import name.abuchen.portfolio.datatransfer.ImportAction.Status;
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.Annotated;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.MoneysuiteTransaction;
+import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
@@ -30,6 +32,8 @@ public interface Extractor
         public abstract String getTypeInformation();
 
         public abstract LocalDate getDate();
+
+        public abstract String getNote();
 
         public Money getAmount()
         {
@@ -123,6 +127,12 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return transaction.getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             if (transaction instanceof AccountTransaction)
@@ -180,6 +190,12 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return entry.getAccountTransaction().getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             return action.process(entry, context.getAccount(), context.getPortfolio());
@@ -226,6 +242,12 @@ public interface Extractor
         public Security getSecurity()
         {
             return null;
+        }
+
+        @Override
+        public String getNote()
+        {
+            return entry.getSourceTransaction().getNote();
         }
 
         @Override
@@ -284,6 +306,12 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return entry.getSourceTransaction().getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             return action.process(entry, context.getPortfolio(), context.getSecondaryPortfolio());
@@ -321,6 +349,12 @@ public interface Extractor
         public Security getSecurity()
         {
             return security;
+        }
+
+        @Override
+        public String getNote()
+        {
+            return security.getNote();
         }
 
         @Override
