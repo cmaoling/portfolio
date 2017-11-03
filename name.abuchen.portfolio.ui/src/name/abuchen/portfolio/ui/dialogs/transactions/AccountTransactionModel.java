@@ -166,6 +166,7 @@ public class AccountTransactionModel extends AbstractModel
         this.sourceAccount = null;
         this.sourceTransaction = null;
 
+        setShares(0);
         setFxGrossAmount(0);
         setDividendAmount(BigDecimal.ZERO);
         setGrossAmount(0);
