@@ -327,7 +327,7 @@ public class YahooFinanceQuoteFeed extends QuoteFeed
             throw new IOException(MessageFormat.format(Messages.MsgErrorUnexpectedStatusCode,
                             security.getTickerSymbol(), response.statusCode(), wknUrl));
 
-        return response.body();
+        return response.body() + "\nSymbol: <" + security.getTickerSymbol() + ">"; // provide symbol for exception printout later 
     }
 
     private <T extends SecurityPrice> List<T> extractQuotes(Class<T> klass, String responseBody, List<Exception> errors)
@@ -361,13 +361,23 @@ public class YahooFinanceQuoteFeed extends QuoteFeed
 
                 try
                 {
-                    T price = klass.newInstance();
-                    fillValues(values, price, dateFormat);
-                    answer.add(price);
+                    // check Yahoo has not replied w/ all null response, throw error if this is the case
+                    if (   (values[1].equals((String) "null"))
+                        && (values[2].equals((String) "null"))
+                        && (values[3].equals((String) "null"))
+                        && (values[4].equals((String) "null"))
+                        && (values[5].equals((String) "null"))
+                        && (values[6].equals((String) "null")))
+                        throw new IOException(MessageFormat.format(Messages.MsgErrorsConvertingValue, lines[lines.length - 1] + ": " + line));
+                    else
+                    {
+                        T price = klass.newInstance();
+                        fillValues(values, price, dateFormat);
+                        answer.add(price);
+                    }
                 }
                 catch (NumberFormatException | ParseException | DateTimeParseException e)
                 {
-                    System.err.println("Yahoo.QuoteFeed: " + responseBody.toString());
                     errors.add(new IOException(MessageFormat.format(Messages.MsgErrorsConvertingValue, line), e));
                 }
 
