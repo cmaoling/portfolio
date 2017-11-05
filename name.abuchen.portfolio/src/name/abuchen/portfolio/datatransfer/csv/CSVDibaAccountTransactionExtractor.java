@@ -54,6 +54,8 @@ import name.abuchen.portfolio.money.Money;
         {
             //System.err.println(">>>> CSVDibaAccountTransactionExtratctor:getDefaultEnum enumType IF " + enumType.toString());
             final EnumMap<E, String> enumMap = new EnumMap<>(enumType);
+            enumMap.put((E) Type.BUY, "Wertpapierkauf");
+            enumMap.put((E) Type.SELL, "Wertpapiergutschrift");
             enumMap.put((E) Type.DEPOSIT, "Gutschrift");
             enumMap.put((E) Type.INTEREST, "Abschluss");
             enumMap.put((E) Type.REMOVAL, "Überweisung");
