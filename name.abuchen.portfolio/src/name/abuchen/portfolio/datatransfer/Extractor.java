@@ -91,6 +91,11 @@ public interface Extractor
             return transaction;
         }
 
+        public Transaction getTransaction()
+        {
+            return transaction;
+        }
+
         @Override
         public String getTypeInformation()
         {

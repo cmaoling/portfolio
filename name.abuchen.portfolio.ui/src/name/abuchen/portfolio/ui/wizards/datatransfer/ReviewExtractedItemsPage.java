@@ -58,8 +58,13 @@ import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.money.CurrencyConverter;
+import name.abuchen.portfolio.money.CurrencyConverterImpl;
+import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
+import name.abuchen.portfolio.snapshot.PortfolioSnapshot;
+import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.ui.AbstractClientJob;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
@@ -93,6 +98,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
     private final Extractor extractor;
     private final IPreferenceStore preferences;
     private List<File> files;
+
+    private ExchangeRateProviderFactory factory;
 
     private List<ExtractedEntry> allEntries = new ArrayList<ExtractedEntry>();
 
@@ -579,6 +586,25 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
             entry.clearStatus();
             for (ImportAction action : actions)
                 entry.addStatus(entry.getItem().apply(action, this));
+            if (entry.getItem().getShares() == 0)
+            {
+                Security security = entry.getItem().getSecurity();
+                if (security != null && getPortfolio() != null)
+                {
+                    CurrencyConverter converter = new CurrencyConverterImpl(factory, client.getBaseCurrency());
+                    for (Portfolio portfolio : client.getPortfolios())
+                    {
+                        if (portfolio.toString().equals(getPortfolio().toString()))
+                        {
+                            PortfolioSnapshot snapshot = PortfolioSnapshot.create(portfolio, converter, entry.getItem().getDate());
+                            SecurityPosition position = snapshot.getPositionsBySecurity().get(security);
+                            if ((position != null) && (entry.getItem() instanceof Extractor.TransactionItem))
+                                ((Extractor.TransactionItem) entry.getItem()).getTransaction().setShares(position.getShares());
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 

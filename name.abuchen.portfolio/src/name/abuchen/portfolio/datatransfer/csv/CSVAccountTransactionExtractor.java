@@ -162,11 +162,6 @@ import name.abuchen.portfolio.money.Money;
                 if (type == Type.DIVIDENDS)
                     if (shares != null)
                         t.setShares(Math.abs(shares));
-                    else
-                    {
-                        //note = "CHECK: " + note;
-                        System.err.println("CSVAccountTransactionExtratctor:extract shares!");
-                    }
                 if (type == Type.DIVIDENDS && taxes != null && taxes.longValue() != 0)
                     t.addUnit(new Unit(Unit.Type.TAX, Money.of(t.getCurrencyCode(), Math.abs(taxes))));
                 t.setNote(note);
