@@ -175,6 +175,7 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
     private String isin;
     private String tickerSymbol;
     private String wkn;
+    private int    delayedDividend;
     private String eventFeed;
     private String eventFeedURL;
     private String feed;
@@ -206,6 +207,7 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
         this.isin = security.getIsin();
         this.tickerSymbol = security.getTickerSymbol();
         this.wkn = security.getWkn();
+        this.delayedDividend = security.getDelayedDividend();
         this.eventFeed = security.getEventFeed();
         this.eventFeedURL = security.getEventFeedURL();
         this.feed = security.getFeed();
@@ -286,6 +288,16 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
     public void setWkn(String wkn)
     {
         firePropertyChange("wkn", this.wkn, this.wkn = wkn); //$NON-NLS-1$
+    }
+
+    public int getDelayedDividend()
+    {
+        return delayedDividend;
+    }
+
+    public void setDelayedDividend(int delayedDividend)
+    {
+        firePropertyChange("delayedDividend", this.delayedDividend, this.delayedDividend = delayedDividend); //$NON-NLS-1$
     }
 
     public String getFeed()
@@ -422,6 +434,7 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
         security.setWkn(wkn);
         security.setEventFeed(eventFeed);
         security.setEventFeedURL(eventFeedURL);
+        security.setDelayedDividend(delayedDividend);
         security.setFeed(feed);
         security.setFeedURL(feedURL);
         security.setLatestFeed(latestFeed);
