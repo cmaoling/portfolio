@@ -28,6 +28,7 @@ import name.abuchen.portfolio.datatransfer.pdf.HelloBankPDFExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.INGDiBaExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.OnvistaPDFExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.PDFInputFile;
+import name.abuchen.portfolio.datatransfer.pdf.TargobankPDFExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.SBrokerPDFExtractor;
 import name.abuchen.portfolio.datatransfer.pdf.UnicreditPDFExtractor;
 import name.abuchen.portfolio.model.Client;
@@ -83,6 +84,7 @@ public final class ImportExtractedItemsWizard extends Wizard
         extractors.add(new INGDiBaExtractor(client));
         extractors.add(new OnvistaPDFExtractor(client));
         extractors.add(new SBrokerPDFExtractor(client));
+        extractors.add(new TargobankPDFExtractor(client));
         extractors.add(new UnicreditPDFExtractor(client));
         extractors.add(new HelloBankPDFExtractor(client));
 

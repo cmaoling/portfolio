@@ -232,14 +232,17 @@ import name.abuchen.portfolio.datatransfer.Extractor.Item;
             Map<String, String> values = new HashMap<>();
 
             int patternNo = 0;
+            System.err.println("=============== PDFParser.parse ===================");
             for (int ii = lineNo; ii <= lineNoEnd; ii++)
             {
                 Pattern p = pattern.get(patternNo);
                 Matcher m = p.matcher(lines[ii]);
+                System.err.println("Line " + ii + " Content: " + lines[ii] + " Pattern: " + pattern.toString());
                 if (m.matches())
                 {
                     // extract attributes
                     extractAttributes(values, p, m);
+                    System.err.println("MATCH -  values: " + values.toString() + " p: " + p.toString()  + " m: " + m.toString());
 
                     // next pattern?
                     patternNo++;

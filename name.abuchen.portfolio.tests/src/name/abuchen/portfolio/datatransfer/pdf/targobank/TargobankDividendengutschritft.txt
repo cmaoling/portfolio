@@ -1,0 +1,35 @@
+PDF author: 'User' 
+PDFBox Version: 1.8.13
+-----------------------------------------
+TARGOBANK AG & Co. KGaA
+Postfach 10 11 52
+47011 Duisburg
+www.targobank.de
+HERR
+JOHN DOE
+81267 1ST STREET
+12345 LUMMERLAND
+DOE, JOHN 11.09.2013
+Dividendengutschrift
+Depot-Nr. 012345678100
+Konto-Nr. 0123456781
+INTL BUSINESS MACHINES CORP.RG.SH. DL WKN ISIN
+-,20 851399 US4592001014
+Stück 80,0000
+Dividende pro Stück      USD         0,95000000   Zahlbar                10.09.2013
+Geschäftsjahr                              2013   Ex-Tag                 07.08.2013
+Ursprungsland            USA
+                                                        USD                     EUR
+Bruttoertrag                                          76,00                   57,38
+15,0000 % Ausländische Quellensteuer                  11,40-                   8,61-
+Umrechnungskurs USD zu EUR        1,3244000
+Gutschrift mit Wert 12.09.2013                                                48,77
+Rechnungsnummer:        EE2-502-D320-01242141292
+Dieser Beleg wurde maschinell erstellt und wird nicht unterschrieben. Irrtum vorbehalten.
+Persönlich haftender und geschäftsführender Gesellschafter: TARGO Management AG
+Vorstand: Franz Josef Nick (Vorsitzender); Peter Klein; Pascal Laugel; Jürgen Lieberknecht; Berthold Rüsing; Maria Topaler
+Vorsitzender des Aufsichtsrates: Eckart Thomä
+C Sitz der Gesellschaft: Düsseldorf • Handelsregister Amtsgericht Düsseldorf HRB 48380
+USt-ID-Nr.: DE 811 285 485 • USt-ID-Nr. des umsatzsteuerlichen Organträgers: DE 261 486 989
+GCB 000
+M 18 DIN A4  02  02.10
