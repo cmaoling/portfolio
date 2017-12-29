@@ -84,7 +84,7 @@ public class DividendTransaction extends AccountTransaction
 
     public double getPersonalDividendYield()
     {
-        if (fifoCost.getAmount() <= 0)
+        if ((fifoCost == null) || (fifoCost.getAmount() <= 0))
             return 0;
 
         double cost = fifoCost.getAmount();
@@ -97,7 +97,7 @@ public class DividendTransaction extends AccountTransaction
 
     public double getPersonalDividendYieldMovingAverage()
     {
-        if (movingAverageCost.getAmount() <= 0)
+        if ((movingAverageCost == null) || (movingAverageCost.getAmount() <= 0))
             return 0;
 
         double cost = movingAverageCost.getAmount();
