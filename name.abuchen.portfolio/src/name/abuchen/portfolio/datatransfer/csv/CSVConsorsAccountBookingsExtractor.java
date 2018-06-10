@@ -11,6 +11,13 @@ import name.abuchen.portfolio.model.Client;
     }
 
     @Override
+    public int getDefaultSkipLines()
+    {
+        return 0;
+    }
+
+
+    @Override
     public String getDefaultEncoding()
     {
         return "windows-1252";
@@ -21,11 +28,11 @@ import name.abuchen.portfolio.model.Client;
     {
         String[] defaultHeader = {  "",  //0
                                     Messages.CSVColumn_Date, //1
-                                    Messages.CSVColumn_SecurityName, //2
-                                    Messages.CSVColumn_ISIN, //3
+                                    Messages.CSVColumn_PartnerName, //2
+                                    Messages.CSVColumn_IBAN, //3
                                     "", //4
                                     Messages.CSVColumn_Type, //5
-                                    Messages.CSVColumn_Note, //6
+                                    Messages.CSVColumn_ISIN, //6
                                     Messages.CSVColumn_Value, //7
                                     "", //8
                                     "" //9
