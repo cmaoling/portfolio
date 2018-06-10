@@ -18,7 +18,7 @@ import name.abuchen.portfolio.model.Client;
     @Override
     public int getDefaultSkipLines()
     {
-        return 7;
+        return 12;
     }
 
     @Override
@@ -37,7 +37,7 @@ import name.abuchen.portfolio.model.Client;
             final EnumMap<E, String> enumMap = new EnumMap<>(enumType);
             enumMap.put((E) Type.BUY, "Wertpapierkauf");
             enumMap.put((E) Type.SELL, "Wertpapiergutschrift");
-            enumMap.put((E) Type.DEPOSIT, "Gutschrift");
+            enumMap.put((E) Type.DEPOSIT, "Gutschrift|Lastschrifteinzug");
             enumMap.put((E) Type.INTEREST, "Abschluss");
             enumMap.put((E) Type.REMOVAL, "Überweisung");
             enumMap.put((E) Type.INTEREST_CHARGE, "Zinsen");
@@ -65,8 +65,12 @@ import name.abuchen.portfolio.model.Client;
                                     Messages.CSVColumn_Note, //2
                                     Messages.CSVColumn_Type, //3
                                     Messages.CSVColumn_ISIN, //4
-                                    Messages.CSVColumn_Value, //5
-                                    Messages.CSVColumn_TransactionCurrency //6 
+                                    "", //5
+                                    Messages.CSVColumn_TransactionCurrency, //6
+                                    Messages.CSVColumn_Value,  //7
+                                    "",  //8
+                                    "",  //9
+                                    ""  //10
                                     };
         //System.err.println(">>>> CSVDibaAccountTransactionExtratctor:DefaultHeader: " + Arrays.toString(defaultHeader));
         return defaultHeader;

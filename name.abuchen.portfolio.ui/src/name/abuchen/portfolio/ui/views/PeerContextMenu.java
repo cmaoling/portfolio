@@ -45,7 +45,7 @@ public class PeerContextMenu
                             .addTo(manager);
         }
 
-        if (peer.isAccount())
+        if (peer.links2Account())
         {
             manager.add(new Separator());
 

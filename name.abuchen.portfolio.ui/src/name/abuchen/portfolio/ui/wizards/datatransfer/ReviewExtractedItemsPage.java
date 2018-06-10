@@ -487,6 +487,9 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                     Peer peer = entry.getItem().getPeer();
                     if (peer != null)
                         return peer.getIban();
+                    Security security = entry.getItem().getSecurity();
+                    if (security != null)
+                        return Messages.LabelNotAvailable;
                     return Messages.MsgMissingPeer;
                 }
                 else

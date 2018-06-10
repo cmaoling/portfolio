@@ -81,7 +81,7 @@ import name.abuchen.portfolio.money.Money;
         Long taxes = getAmount(Messages.CSVColumn_Taxes, rawValues, field2column);
 
         Peer peer = getPeer(rawValues, field2column, p -> {});
-        if (peer != null && peer.isAccount())
+        if (peer != null && peer.links2Account())
         {
             if (type == Type.DEPOSIT)
                 type = Type.TRANSFER_IN;
@@ -156,7 +156,9 @@ import name.abuchen.portfolio.money.Money;
                 String extNote = getText(Messages.CSVColumn_ISIN, rawValues, field2column);
                 if (extNote != null && security.getIsin() == "")
                 {
-                    if (!note.equals(""))
+                    if (note == null)
+                        note = "";
+                    else if (!note.equals(""))
                         note += " - ";
                     note += extNote;
                 }
@@ -166,7 +168,6 @@ import name.abuchen.portfolio.money.Money;
                         t.setShares(Math.abs(shares));
                     else
                     {
-                        note = "CHECK: " + note;
                         System.err.println("CSVAccountTransactionExtratctor:extract shares!");
                     }
                 }

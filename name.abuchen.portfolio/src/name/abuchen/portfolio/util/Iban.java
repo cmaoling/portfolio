@@ -23,7 +23,7 @@ public class Iban
 
     public static final boolean isValid(String iban) // NOSONAR
     {
-        System.err.println(">>>> Iban::isValid iban: " + iban + "[" + iban.substring(2, 3) + "] => [" + calculateCheckDigit(iban) + "]");
+        //System.err.println(">>>> Iban::isValid iban: " + iban + "  [" + iban.concat("    ").substring(2, 4) + "] => [" + calculateCheckDigit(iban) + "]");
         // taken from: https://gist.github.com/DandyDev/5394643
         String newAccountNumber = iban.trim();
 

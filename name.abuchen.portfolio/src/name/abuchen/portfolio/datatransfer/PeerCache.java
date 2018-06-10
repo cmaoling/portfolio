@@ -128,7 +128,7 @@ public class PeerCache
             if (item instanceof PeerItem || item.getPeer() == null)
                 continue;
 
-            System.err.println(">>>> PeerCache::createMissingPeerItems CHECK item.getPeer: " + item.getPeer() + " vs. " + available); // TODO: still needed for debug?
+            // TODO: still needed for debug? System.err.println(">>>> PeerCache::createMissingPeerItems CHECK item.getPeer: " + item.getPeer() + " vs. " + available);
             if (!available.contains(item.getPeer()))
             {
                 answer.add(new PeerItem(item.getPeer()));

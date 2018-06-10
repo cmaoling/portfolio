@@ -60,7 +60,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
         pdfTransaction.section("wkn", "isin", "name", "currency") //
                         .find("(Wertpapier|Bezeichnung) WKN ISIN") //
                         .match("^(?<name>.*) (?<wkn>[^ ]*) (?<isin>[^ ]*)$") //
-                        .match("(Kurs|Preis pro Anteil) (\\d+,\\d+) (?<currency>\\w{3}+) .*")
+                        .match("(Kurs|Preis pro Anteil) ([\\d.]+,\\d+) (?<currency>\\w{3}+) .*")
                         .assign((t, v) -> t.setSecurity(getOrCreateSecurity(v)))
 
                         .section("shares") //
@@ -103,7 +103,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
         pdfTransaction.section("wkn", "isin", "name", "currency") //
                         .find("(Wertpapier|Bezeichnung) WKN ISIN") //
                         .match("^(?<name>.*) (?<wkn>[^ ]*) (?<isin>[^ ]*)$") //
-                        .match("(Kurs|Preis pro Anteil) (\\d+,\\d+) (?<currency>\\w{3}+) .*")
+                        .match("(Kurs|Preis pro Anteil) ([\\d.]+,\\d+) (?<currency>\\w{3}+) .*")
                         .assign((t, v) -> t.setSecurity(getOrCreateSecurity(v)))
 
                         .section("shares") //
@@ -143,7 +143,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
         pdfTransaction.section("wkn", "isin", "name", "currency") //
                         .find("(Wertpapier|Bezeichnung) WKN ISIN") //
                         .match("^(?<name>.*) (?<wkn>[^ ]*) (?<isin>[^ ]*)$") //
-                        .match("(Kurs|Preis pro Anteil) (\\d+,\\d+) (?<currency>\\w{3}+) .*")
+                        .match("(Kurs|Preis pro Anteil) ([\\d.]+,\\d+) (?<currency>\\w{3}+) .*")
                         .assign((t, v) -> t.setSecurity(getOrCreateSecurity(v)))
 
                         .section("shares") //

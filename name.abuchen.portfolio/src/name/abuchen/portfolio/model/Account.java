@@ -81,7 +81,8 @@ public class Account implements TransactionOwner<AccountTransaction>, Investment
 
     public void setPeer()
     {
-        this.peer = new Peer(this);
+        this.peer = new Peer();
+        this.peer.setAccount(this);
     }
 
     @Override
