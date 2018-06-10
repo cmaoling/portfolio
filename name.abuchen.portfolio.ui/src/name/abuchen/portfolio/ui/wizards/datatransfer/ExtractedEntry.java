@@ -30,7 +30,6 @@ public class ExtractedEntry
     public void setDefaultImported()
     {
         this.isImported = this.item.getDefaultImported();
-        System.err.println(">>>> ExtractedEntry::setDefaultImported " + this.isImported); // TODO: still needed for debug?
     }
 
     public void setImported(boolean isImported)

@@ -317,9 +317,9 @@ public interface Extractor
             }
             // TODO: still needed for debug?System.err.println(">>>> Extractor::apply intermediate source: " + source.toString());
             // TODO: still needed for debug?System.err.println(">>>> Extractor::apply intermediate target: " + target.toString());
-            if (entry.getSourceTransaction().getPeer() != null && entry.getSourceTransaction().getPeer().isAccount())
+            if (entry.getSourceTransaction().getPeer() != null && entry.getSourceTransaction().getPeer().links2Account())
                 target = entry.getSourceTransaction().getPeer().getAccount();
-            if (entry.getTargetTransaction().getPeer() != null && entry.getTargetTransaction().getPeer().isAccount())
+            if (entry.getTargetTransaction().getPeer() != null && entry.getTargetTransaction().getPeer().links2Account())
                 source = entry.getTargetTransaction().getPeer().getAccount();
             System.err.println(">>>> Extractor::apply source: " + source.toString()); // TODO: still needed for debug?
             System.err.println(">>>> Extractor::apply target: " + target.toString()); // TODO: still needed for debug?

@@ -1,26 +1,38 @@
 package name.abuchen.portfolio.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
+import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.util.Iban;
 import name.abuchen.portfolio.Messages;
 
 public class Peer implements Named
 {
+    public static final class ByIban implements Comparator<Peer>, Serializable
+    {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public int compare(Peer s1, Peer s2)
+        {
+            if (s1 == null)
+                return s2 == null ? 0 : -1;
+            return s1.IBAN.compareToIgnoreCase(s2.IBAN);
+        }
+    }
+
     private String name;
     private String note;
     private String IBAN;
+
     private Account account;
 
     public Peer()
     {
         voidAccount();
-    }
-
-    public Peer(Account account)
-    {
-        setAccount(account);
     }
 
     public void voidAccount()
@@ -30,16 +42,9 @@ public class Peer implements Named
         setIban(Iban.IBANNUMBER_DUMMY);
     }
 
-    public void setAccount(Account account)
-    {
-        this.account = account;
-        this.IBAN = null;
-        this.name = null;
-    }
-
     public String setIban(String iban)
     {
-        if (isAccount())
+        if (links2Account())
             account.setIban(iban);
         else
         {
@@ -55,12 +60,7 @@ public class Peer implements Named
         return this.setIban(Iban.DEconvert(blz,konto));
     }
 
-    public Account getAccount()
-    {
-        return account;
-    }
-
-    public boolean isAccount()
+    public boolean links2Account()
     {
         if (getAccount() == null)
             return false;
@@ -68,11 +68,22 @@ public class Peer implements Named
             return true;
     }
 
-    
+    public Account getAccount()
+    {
+        return account;
+    }
+
+    public void setAccount(Account account)
+    {
+        this.account = account;
+        if (IBAN != null && account != null && (account.getIban() == null || account.getIban().length() >= IBAN.length()))
+            account.setIban(IBAN);
+    }
+
     @Override
     public void setName(String name)
     {
-        if (isAccount())
+        if (links2Account())
             getAccount().setName(name);
         else
             this.name = name;
@@ -81,7 +92,7 @@ public class Peer implements Named
     @Override
     public void setNote(String note)
     {
-        if (isAccount())
+        if (links2Account())
             getAccount().setNote(note);
         else
             this.note = note;
@@ -89,7 +100,7 @@ public class Peer implements Named
 
     public String getIban()
     {
-        if (isAccount())
+        if (links2Account())
             return getAccount().getIban();
         else
             return IBAN;
@@ -98,7 +109,7 @@ public class Peer implements Named
     @Override
     public String getName()
     {
-        if (isAccount())
+        if (links2Account())
             return "[" + this.getAccount().getName() + "]";
         else if (IBAN != null && IBAN.equals(Iban.IBANNUMBER_ANY))
             return Messages.LabelAnyPeer;
@@ -109,7 +120,7 @@ public class Peer implements Named
     @Override
     public String getNote()
     {
-        if (isAccount())
+        if (links2Account())
             return "<" + this.getAccount().getNote() + ">";
         else
         return this.note;
@@ -117,7 +128,7 @@ public class Peer implements Named
 
     public Peer getPeer(String Iban)
     {
-        if (isAccount())
+        if (links2Account())
         {
             if (this.getAccount().getIban().equals(Iban))
                 return this;
@@ -165,6 +176,7 @@ public class Peer implements Named
     @Override
     public String toString()
     {
-        return (getName() != null?getName():"NULL") + " (" + (getIban() != null?getIban():"=/=") + ")" + (isAccount() ? " <Account: " + getAccount().getUUID() + ">" : "");
+
+        return (getName() != null?getName():"NULL") + " (" + (getIban() != null?getIban():"=/=") + ")" + (links2Account() ? " <Account: " + getAccount().getUUID() + ">" : "");
     }
 }

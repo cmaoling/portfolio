@@ -133,10 +133,8 @@ public class PeerListView extends AbstractListView implements ModificationListen
     private void resetInput()
     {
         PeerList peers = new PeerList(getClient().getPeers());
-        System.err.println(">>>> PeerListView::resetInput() peers A  : " + peers.toString());
         if (!isFiltered)
             peers = peers.addAccounts(getClient().getAccounts());
-        System.err.println(">>>> PeerListView::resetInput() peers B  : " + peers.toString());
         this.peers.setInput(peers);
     }
 
@@ -155,7 +153,6 @@ public class PeerListView extends AbstractListView implements ModificationListen
             peer.setName(Messages.LabelNoName);
 
             getClient().addPeer(peer);
-            System.err.println(">>>> PeerListView::newPeerAction() peers   : " + peer.toString());
             markDirty();
 
             resetInput();
@@ -166,11 +163,6 @@ public class PeerListView extends AbstractListView implements ModificationListen
                         (dd, manager) -> {
                             if (getClient().getPeers().findPeer(Iban.IBANNUMBER_DUMMY) == null)
                                 manager.add(new SimpleAction(Messages.MenuPeerAdd, newPeerAction));
-
-                           // manager.add(new Separator());
-
-                           // Peer peer = (Peer) peers.getStructuredSelection().getFirstElement();
-                           //  new PeerContextMenu(PeerListView.this).menuAboutToShow(manager, peer, null);
                         });
 
     }
@@ -227,12 +219,19 @@ public class PeerListView extends AbstractListView implements ModificationListen
     @Override
     public void onModified(Object element, Object newValue, Object oldValue)
     {
-        System.err.println(">>>> PeerListView::onModified() ");
-        if (element instanceof DedicatedTransaction)
+        if (element instanceof Peer)
         {
-            AccountTransaction t = (AccountTransaction) ((DedicatedTransaction) element).getTransaction();
-            if (t.getCrossEntry() != null)
-                t.getCrossEntry().updateFrom(t);
+            Peer p = (Peer) element;
+            if (p.links2Account())
+                if (p.getAccount().getUUID().equals(dummyAccount.getUUID()))
+                    p.setAccount(null);
+                else
+                    getClient().removePeer(p);
+            else
+            {
+                // TODO: No Link
+                System.err.println(">>>> PeerListView::onModified() ELSE " + element.toString() + " of " + element.getClass().toString());
+            }
             peers.refresh(true);
         }
 
@@ -266,12 +265,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
                 final StringWriter sw = new StringWriter();
                 final PrintWriter pw = new PrintWriter(sw, true);
 // TEMP                new Exception().printStackTrace(pw);
-                System.err.println(">>>> PeerListView::NameColumn::getText => " + sw.getBuffer().toString());
                 System.err.println(">>>> PeerListView::NameColumn::getText   : " + e.toString());
-//                Peer p = (Peer) e; 
-//                if ((p.getName() == null || (p.getName() != null && p.getName().length() == 0)) && p.getAccount() != null)
-//                    return p.getAccount().getName();
-//                else
                     return ((Peer) e).getName();
                 
             }
@@ -292,7 +286,6 @@ public class PeerListView extends AbstractListView implements ModificationListen
                 Account a = ((Peer) e).getAccount();
                 if (e == null || a == null)
                     return Messages.LabelNoAccount;
-                System.err.println(">>>> PeerListView::AccountColumn::getText   : " + e.toString());
                 return ((Peer) e).getAccount().toString();
             }
 
@@ -313,7 +306,6 @@ public class PeerListView extends AbstractListView implements ModificationListen
         accounts = Collections.unmodifiableList(accounts);
         new ListEditingSupport(Peer.class, "account", accounts)
             .addListener(this).attachTo(column);
-        //column.getEditingSupport().addListener(this);
         peerColumns.addColumn(column);
         
         column = new NoteColumn();

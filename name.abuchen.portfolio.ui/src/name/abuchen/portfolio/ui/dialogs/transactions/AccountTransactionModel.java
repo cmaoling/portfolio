@@ -256,6 +256,8 @@ public class AccountTransactionModel extends AbstractModel
         this.shares  = transaction.getShares();
         this.total   = transaction.getAmount();
         this.peer    = transaction.getPeer();
+        if (this.peer == null)
+            this.peer = new Peer();
         this.partner = this.peer.getName();
         this.iban    = this.peer.getIban();
 
