@@ -2,10 +2,7 @@ package name.abuchen.portfolio.ui.views;
 
 import java.io.StringWriter;
 import java.io.PrintWriter;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +34,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.ToolBar;
-import org.swtchart.ISeries;
 
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
@@ -396,7 +392,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
             public String getText(Object e)
             {
                 AccountTransaction t = (AccountTransaction) ((DedicatedTransaction) e).getTransaction();
-                return Values.Date.format(t.getDate());
+                return Values.Date.format(t.getDateTime().toLocalDate());
             }
 
             @Override

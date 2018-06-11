@@ -3,7 +3,6 @@ package name.abuchen.portfolio.datatransfer.csv;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.text.ParseException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -150,7 +149,7 @@ public abstract class CSVExtractor implements Extractor
         return Long.valueOf((long) Math.round(num.doubleValue() * values.factor()));
     }
 
-    protected LocalDate getDate(String name, String[] rawValues, Map<String, Column> field2column) throws ParseException
+    protected LocalDateTime getDate(String name, String[] rawValues, Map<String, Column> field2column) throws ParseException
     {
         String value = getText(name, rawValues, field2column);
         if (value == null)
@@ -167,7 +166,7 @@ public abstract class CSVExtractor implements Extractor
             else
                 throw e;
         }
-        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()).toLocalDate();
+        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());  //REVISIT .toLocalDate()
     }
 
     protected final BigDecimal getBigDecimal(String name, String[] rawValues, Map<String, Column> field2column)

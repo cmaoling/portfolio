@@ -4,7 +4,9 @@ A simple tool to calculate the overall performance of an investment portfolio.
 
 See http://www.portfolio-performance.info for more details.
 
-[![Build Status](https://travis-ci.org/buchen/portfolio.svg?branch=master)](https://travis-ci.org/buchen/portfolio)
+[![Build Status](https://travis-ci.org/buchen/portfolio.svg?branch=master)](https://travis-ci.org/buchen/portfolio) [ ![Download](https://api.bintray.com/packages/buchen/downloads/portfolio-performance/images/download.svg) ](https://bintray.com/buchen/downloads/portfolio-performance/_latestVersion)
+
+[![LOC](https://sonarcloud.io/api/project_badges/measure?project=name.abuchen.portfolio%3Aportfolio-app&metric=ncloc)](https://sonarcloud.io/dashboard?id=name.abuchen.portfolio%3Aportfolio-app) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=name.abuchen.portfolio%3Aportfolio-app&metric=bugs)](https://sonarcloud.io/project/issues?id=name.abuchen.portfolio%3Aportfolio-app&resolved=false&types=BUG) [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=name.abuchen.portfolio%3Aportfolio-app&metric=vulnerabilities)](https://sonarcloud.io/project/issues?id=name.abuchen.portfolio%3Aportfolio-app&resolved=false&types=VULNERABILITY) [![Code Coverage](https://sonarcloud.io/api/project_badges/measure?project=name.abuchen.portfolio%3Aportfolio-app&metric=coverage)](https://sonarcloud.io/component_measures?id=name.abuchen.portfolio%3Aportfolio-app&metric=Coverage)
 
 ## Prerequisites
 
@@ -31,7 +33,7 @@ set MAVEN_OPTS="-Xmx1g"
 Run Maven 3.x.x in the 'portfolio-app' directory:
 
 ```
-mvn clean install
+mvn clean verify -Dtycho.disableP2Mirrors
 ```
 
 ## Developing with Eclipse
@@ -52,7 +54,7 @@ After importing the Portfolio Performance projects in Eclipse, they will not com
 
 Run Maven *once* in the *'portfolio-app' directory* with the following parameter:
 ```
-mvn clean install -Dgenerate-target-platform=true
+mvn clean install -Dgenerate-target-platform=true -Dtycho.disableP2Mirrors
 ```
 
 ### Set Target Platform

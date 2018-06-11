@@ -5,6 +5,7 @@ import static org.junit.Assert.assertThat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,49 +37,56 @@ public class SecurityPositionTest
     public void testFIFOPurchasePrice()
     {
         List<PortfolioTransaction> tx = new ArrayList<PortfolioTransaction>();
-        tx.add(new PortfolioTransaction(LocalDate.now(), CurrencyUnit.EUR, 100000, null, 100 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.now(), CurrencyUnit.EUR, 100000, null, 100 * Values.Share.factor(),
                         Type.BUY, 0, 0));
-        tx.add(new PortfolioTransaction(LocalDate.now(), CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.now(), CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
                         Type.SELL, 0, 0));
         SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(),
                         new SecurityPrice(), tx);
 
         assertThat(position.getShares(), is(50L * Values.Share.factor()));
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_00)));
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_00)));
     }
 
     @Test
     public void testPurchasePriceWithMultipleBuyTransactions()
     {
         List<PortfolioTransaction> tx = new ArrayList<PortfolioTransaction>();
-        tx.add(new PortfolioTransaction(LocalDate.now(), CurrencyUnit.EUR, 25000, null, 25 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.now(), CurrencyUnit.EUR, 25000, null, 25 * Values.Share.factor(),
                         Type.BUY, 0, 0));
-        tx.add(new PortfolioTransaction(LocalDate.now(), CurrencyUnit.EUR, 150000, null, 75 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.now(), CurrencyUnit.EUR, 150000, null, 75 * Values.Share.factor(),
                         Type.BUY, 0, 0));
-        tx.add(new PortfolioTransaction(LocalDate.now(), CurrencyUnit.EUR, 100000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.now(), CurrencyUnit.EUR, 100000, null, 50 * Values.Share.factor(),
                         Type.SELL, 0, 0));
         SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(),
                         new SecurityPrice(), tx);
 
         assertThat(position.getShares(), is(50L * Values.Share.factor()));
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, 15_00))); // 20_00
+        
+        // expected: (250 + 1500) * (50/100) / 50 (shares held) 
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 17_50)));
     }
-
+    
     @Test
     public void testPurchasePriceWithMultipleBuyTransactionsMiddlePrice()
     {
         List<PortfolioTransaction> tx = new ArrayList<PortfolioTransaction>();
-        tx.add(new PortfolioTransaction(LocalDate.now(), CurrencyUnit.EUR, 75000, null, 75 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.now(), CurrencyUnit.EUR, 75000, null, 75 * Values.Share.factor(),
                         Type.BUY, 0, 0));
-        tx.add(new PortfolioTransaction(LocalDate.now(), CurrencyUnit.EUR, 50000, null, 25 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.now(), CurrencyUnit.EUR, 50000, null, 25 * Values.Share.factor(),
                         Type.BUY, 0, 0));
-        tx.add(new PortfolioTransaction(LocalDate.now(), CurrencyUnit.EUR, 100000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.now(), CurrencyUnit.EUR, 100000, null, 50 * Values.Share.factor(),
                         Type.SELL, 0, 0));
         SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(),
                         new SecurityPrice(), tx);
 
         assertThat(position.getShares(), is(50L * Values.Share.factor()));
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, 5_00))); // 15_00
+        
+        // expected: (750 + 500) * (50/100) / 50 (shares held)
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 12_50)));
     }
 
     @Test
@@ -86,11 +94,12 @@ public class SecurityPositionTest
     {
         SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(),
                         new SecurityPrice(), Arrays.asList( //
-                                        new PortfolioTransaction(LocalDate.now(), CurrencyUnit.EUR, 500_00, null,
+                                        new PortfolioTransaction(LocalDateTime.now(), CurrencyUnit.EUR, 500_00, null,
                                                         50 * Values.Share.factor(), Type.SELL, 0, 0)));
 
         assertThat(position.getShares(), is(-50L * Values.Share.factor()));
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, 0)));
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 0)));
     }
 
     @Test
@@ -98,13 +107,15 @@ public class SecurityPositionTest
     {
         SecurityPrice price = new SecurityPrice(LocalDate.of(2012, Month.DECEMBER, 2), Values.Quote.factorize(20));
         List<PortfolioTransaction> tx = new ArrayList<PortfolioTransaction>();
-        tx.add(new PortfolioTransaction("2012-01-01", CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2012, Month.JANUARY, 1, 0, 0), CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
                         Type.TRANSFER_IN, 0, 0));
         SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(), price, tx);
 
         assertThat(position.getShares(), is(50L * Values.Share.factor()));
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_00)));
         assertThat(position.getFIFOPurchaseValue(), is(Money.of(CurrencyUnit.EUR, 500_00)));
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_00)));
+        assertThat(position.getMovingAveragePurchaseValue(), is(Money.of(CurrencyUnit.EUR, 500_00)));
         assertThat(position.calculateValue(), is(Money.of(CurrencyUnit.EUR, 1000_00)));
         assertThat(position.getProfitLoss(), is(Money.of(CurrencyUnit.EUR, 500_00)));
     }
@@ -114,15 +125,17 @@ public class SecurityPositionTest
     {
         SecurityPrice price = new SecurityPrice(LocalDate.of(2013, Month.DECEMBER, 2), Values.Quote.factorize(20));
         List<PortfolioTransaction> tx = new ArrayList<PortfolioTransaction>();
-        tx.add(new PortfolioTransaction("2013-01-01", CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2013, Month.JANUARY, 1, 0, 0), CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
                         Type.BUY, 0, 0));
-        tx.add(new PortfolioTransaction("2013-02-01", CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2013, Month.FEBRUARY, 1, 0, 0), CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
                         Type.TRANSFER_IN, 0, 0));
         SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(), price, tx);
 
         assertThat(position.getShares(), is(100L * Values.Share.factor()));
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_50)));
         assertThat(position.getFIFOPurchaseValue(), is(Money.of(CurrencyUnit.EUR, 1050_00)));
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_50)));
+        assertThat(position.getMovingAveragePurchaseValue(), is(Money.of(CurrencyUnit.EUR, 1050_00)));
         assertThat(position.calculateValue(), is(Money.of(CurrencyUnit.EUR, 2000_00)));
         assertThat(position.getProfitLoss(), is(Money.of(CurrencyUnit.EUR, 950_00)));
     }
@@ -132,17 +145,19 @@ public class SecurityPositionTest
     {
         SecurityPrice price = new SecurityPrice(LocalDate.of(2014, Month.DECEMBER, 2), Values.Quote.factorize(20));
         List<PortfolioTransaction> tx = new ArrayList<PortfolioTransaction>();
-        tx.add(new PortfolioTransaction("2014-01-01", CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2014, Month.JANUARY, 1, 0, 0), CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
                         Type.BUY, 0, 0));
-        tx.add(new PortfolioTransaction("2014-02-01", CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2014, Month.FEBRUARY, 1, 0, 0), CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
                         Type.TRANSFER_OUT, 0, 0));
-        tx.add(new PortfolioTransaction("2014-02-01", CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2014, Month.FEBRUARY, 1, 0, 0), CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
                         Type.TRANSFER_IN, 0, 0));
         SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(), price, tx);
 
         assertThat(position.getShares(), is(50L * Values.Share.factor()));
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_00)));
         assertThat(position.getFIFOPurchaseValue(), is(Money.of(CurrencyUnit.EUR, 500_00)));
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_00)));
+        assertThat(position.getMovingAveragePurchaseValue(), is(Money.of(CurrencyUnit.EUR, 500_00)));
         assertThat(position.calculateValue(), is(Money.of(CurrencyUnit.EUR, 1000_00)));
         assertThat(position.getProfitLoss(), is(Money.of(CurrencyUnit.EUR, 500_00)));
     }
@@ -152,19 +167,21 @@ public class SecurityPositionTest
     {
         SecurityPrice price = new SecurityPrice(LocalDate.of(2015, Month.DECEMBER, 2), Values.Quote.factorize(20));
         List<PortfolioTransaction> tx = new ArrayList<PortfolioTransaction>();
-        tx.add(new PortfolioTransaction("2015-01-01", CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2015, Month.JANUARY, 1, 0, 0), CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
                         Type.BUY, 0, 0));
-        tx.add(new PortfolioTransaction("2015-02-01", CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2015, Month.FEBRUARY, 1, 0, 0), CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
                         Type.TRANSFER_OUT, 0, 0));
-        tx.add(new PortfolioTransaction("2015-02-01", CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2015, Month.FEBRUARY, 1, 0, 0), CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
                         Type.TRANSFER_IN, 0, 0));
-        tx.add(new PortfolioTransaction("2015-02-02", CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2015, Month.FEBRUARY, 2, 0, 0), CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
                         Type.TRANSFER_IN, 0, 0));
         SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(), price, tx);
 
         assertThat(position.getShares(), is(100L * Values.Share.factor()));
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_50)));
         assertThat(position.getFIFOPurchaseValue(), is(Money.of(CurrencyUnit.EUR, 1050_00)));
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_50)));
+        assertThat(position.getMovingAveragePurchaseValue(), is(Money.of(CurrencyUnit.EUR, 1050_00)));
         assertThat(position.calculateValue(), is(Money.of(CurrencyUnit.EUR, 2000_00)));
         assertThat(position.getProfitLoss(), is(Money.of(CurrencyUnit.EUR, 950_00)));
     }
@@ -174,19 +191,22 @@ public class SecurityPositionTest
     {
         SecurityPrice price = new SecurityPrice(LocalDate.of(2016, Month.DECEMBER, 2), Values.Quote.factorize(20));
         List<PortfolioTransaction> tx = new ArrayList<PortfolioTransaction>();
-        tx.add(new PortfolioTransaction("2016-01-01", CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
+
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2016, Month.JANUARY, 1, 0, 0), CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
                         Type.BUY, 0, 0));
-        tx.add(new PortfolioTransaction("2016-02-01", CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2016, Month.FEBRUARY, 1, 0, 0), CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
                         Type.TRANSFER_OUT, 0, 0));
-        tx.add(new PortfolioTransaction("2016-02-01", CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2016, Month.FEBRUARY, 1, 0, 0), CurrencyUnit.EUR, 55000, null, 50 * Values.Share.factor(),
                         Type.TRANSFER_IN, 0, 0));
-        tx.add(new PortfolioTransaction("2016-02-02", CurrencyUnit.EUR, 60000, null, 30 * Values.Share.factor(), // 25 @ 55000
-                        Type.TRANSFER_OUT, 0, 0));
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2016, Month.FEBRUARY, 2, 0, 0), CurrencyUnit.EUR, 60000, null, 30 * Values.Share.factor(),
+                        Type.TRANSFER_OUT, 0, 0)); // 25 @ 55000
         SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(), price, tx);
 
         assertThat(position.getShares(), is(20L * Values.Share.factor())); // 25L
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, -5_00))); // 10_00
         assertThat(position.getFIFOPurchaseValue(), is(Money.of(CurrencyUnit.EUR, -100_00))); // 250_00
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_00)));
+        assertThat(position.getMovingAveragePurchaseValue(), is(Money.of(CurrencyUnit.EUR, 200_00))); // 250_00?
         assertThat(position.calculateValue(), is(Money.of(CurrencyUnit.EUR, 400_00))); // 500_00
         assertThat(position.getProfitLoss(), is(Money.of(CurrencyUnit.EUR, 500_00))); // 250_00
     }
@@ -196,15 +216,17 @@ public class SecurityPositionTest
     {
         SecurityPrice price = new SecurityPrice(LocalDate.of(2017, Month.DECEMBER, 2), Values.Quote.factorize(20));
         List<PortfolioTransaction> tx = new ArrayList<PortfolioTransaction>();
-        tx.add(new PortfolioTransaction("2017-01-01", CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2017, Month.JANUARY, 1, 0, 0), CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
                         Type.BUY, 0, 0));
-        tx.add(new PortfolioTransaction("2017-02-01", CurrencyUnit.EUR, 55000, null, 25 * Values.Share.factor(),
+        tx.add(new PortfolioTransaction(LocalDateTime.of(2017, Month.FEBRUARY, 1, 0, 0), CurrencyUnit.EUR, 55000, null, 25 * Values.Share.factor(),
                         Type.TRANSFER_OUT, 0, 0));
         SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(), price, tx);
 
         assertThat(position.getShares(), is(25L * Values.Share.factor()));
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, -2_00))); // 10_00
         assertThat(position.getFIFOPurchaseValue(), is(Money.of(CurrencyUnit.EUR, -50_00))); //250_00
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 10_00)));
+        assertThat(position.getMovingAveragePurchaseValue(), is(Money.of(CurrencyUnit.EUR, 250_00)));
         assertThat(position.calculateValue(), is(Money.of(CurrencyUnit.EUR, 500_00)));
         assertThat(position.getProfitLoss(), is(Money.of(CurrencyUnit.EUR, 550_00))); // 250_00
     }
@@ -217,7 +239,7 @@ public class SecurityPositionTest
 
         PortfolioTransaction t = new PortfolioTransaction();
         t.setType(PortfolioTransaction.Type.DELIVERY_INBOUND);
-        t.setDate(LocalDate.parse("2017-01-25"));
+        t.setDateTime(LocalDateTime.parse("2017-01-25T00:00"));
         t.setShares(Values.Share.factorize(13));
         t.setSecurity(security);
         t.setMonetaryAmount(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(9659.24)));
@@ -237,6 +259,7 @@ public class SecurityPositionTest
 
         // 10287.13 / 13 = 791.32
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.USD, Values.Amount.factorize(791.32))));
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.USD, Values.Amount.factorize(791.32))));
 
         // 9659.24 EUR x ( 1 / 0.937470704040499) = 10303,51
         assertThat(position.getFIFOPurchaseValue(),
@@ -272,7 +295,7 @@ public class SecurityPositionTest
 
         PortfolioTransaction inbound_delivery = new PortfolioTransaction();
         inbound_delivery.setType(PortfolioTransaction.Type.DELIVERY_INBOUND);
-        inbound_delivery.setDate(LocalDate.parse("2016-01-01"));
+        inbound_delivery.setDateTime(LocalDateTime.parse("2016-01-01T00:00"));
         inbound_delivery.setSecurity(security);
         inbound_delivery.setMonetaryAmount(Money.of(CurrencyUnit.USD, Values.Amount.factorize(27409.55)));
         inbound_delivery.setShares(Values.Share.factorize(2415.794));
@@ -293,6 +316,22 @@ public class SecurityPositionTest
         assertThat(third.getFIFOPurchaseValue(), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(4923.39))));
         assertThat(third.getFIFOPurchaseValue(),
                         is(Money.of(CurrencyUnit.EUR, Math.round(position.getFIFOPurchaseValue().getAmount() * 0.2))));
+        
+        assertThat(third.getMovingAveragePurchaseValue(), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(4923.39))));
+
+    }
+    
+    @Test
+    public void testFIFOPurchasePriceWithOnlySell()
+    {
+        List<PortfolioTransaction> tx = new ArrayList<PortfolioTransaction>();
+        tx.add(new PortfolioTransaction(LocalDateTime.now(), CurrencyUnit.EUR, 50000, null, 50 * Values.Share.factor(),
+                        Type.SELL, 0, 0));
+        SecurityPosition position = new SecurityPosition(new Security(), new TestCurrencyConverter(),
+                        new SecurityPrice(), tx);
+
+        assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, 0)));
+        assertThat(position.getMovingAveragePurchasePrice(), is(Money.of(CurrencyUnit.EUR, 0)));
     }
 
 }

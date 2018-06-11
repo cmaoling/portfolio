@@ -8,6 +8,7 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -162,6 +163,10 @@ public class DetectDuplicatesActionTest
             {
                 return new Peer();
             }
+            else if (propertyType == LocalDateTime.class)
+            {
+                return LocalDateTime.of(1999, 1, 1, 0, 0, 0);
+            }
             else if (propertyType == Security.class)
             {
                 return new Security();
@@ -199,6 +204,10 @@ public class DetectDuplicatesActionTest
             else if (propertyType == Peer.class)
             {
                 return new Peer();
+            }
+            else if (propertyType == LocalDateTime.class)
+            {
+                return LocalDateTime.of(2000 + random.nextInt(30), 1, 1, 0, 0, 0);
             }
             else if (propertyType == Security.class)
             {

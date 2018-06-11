@@ -1,7 +1,7 @@
 package name.abuchen.portfolio.datatransfer;
 
 import java.io.File;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -52,7 +52,7 @@ public interface Extractor
 
         public abstract String getTypeInformation();
 
-        public abstract LocalDate getDate();
+        public abstract LocalDateTime getDate();
 
         public abstract String getNote();
 
@@ -133,9 +133,9 @@ public interface Extractor
         }
 
         @Override
-        public LocalDate getDate()
+        public LocalDateTime getDate()
         {
-            return transaction.getDate();
+            return transaction.getDateTime();
         }
 
         @Override
@@ -202,9 +202,9 @@ public interface Extractor
         }
 
         @Override
-        public LocalDate getDate()
+        public LocalDateTime getDate()
         {
-            return entry.getAccountTransaction().getDate();
+            return entry.getAccountTransaction().getDateTime();
         }
 
         @Override
@@ -275,9 +275,9 @@ public interface Extractor
         }
 
         @Override
-        public LocalDate getDate()
+        public LocalDateTime getDate()
         {
-            return entry.getSourceTransaction().getDate();
+            return entry.getSourceTransaction().getDateTime();
         }
 
         @Override
@@ -355,9 +355,9 @@ public interface Extractor
         }
 
         @Override
-        public LocalDate getDate()
+        public LocalDateTime getDate()
         {
-            return entry.getSourceTransaction().getDate();
+            return entry.getSourceTransaction().getDateTime();
         }
 
         @Override
@@ -419,7 +419,7 @@ public interface Extractor
         }
 
         @Override
-        public LocalDate getDate()
+        public LocalDateTime getDate()
         {
             return null;
         }
@@ -473,7 +473,7 @@ public interface Extractor
         }
 
         @Override
-        public LocalDate getDate()
+        public LocalDateTime getDate()
         {
             return null;
         }

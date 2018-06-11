@@ -1,17 +1,17 @@
 package name.abuchen.portfolio.model;
 
 import java.text.MessageFormat;
-import java.text.SimpleDateFormat;
+//REVISIT import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
+import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.model.Transaction.Unit;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
-import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.util.Dates;
 import name.abuchen.portfolio.util.TradeCalendar;
 
@@ -30,7 +30,7 @@ public class InvestmentPlan implements Named, Adaptable
      */
     private boolean autoGenerate = false;
 
-    private LocalDate start;
+    private LocalDateTime start;
     private int interval = 1;
 
     private long amount;
@@ -46,6 +46,16 @@ public class InvestmentPlan implements Named, Adaptable
     public InvestmentPlan(String name)
     {
         this.name = name;
+    }
+
+    public Class<? extends Transaction> getPlanType()
+    {
+        if (portfolio != null && security != null)
+            return PortfolioTransaction.class;
+        else if (portfolio == null && account != null && security == null)
+            return AccountTransaction.class;
+        else
+            throw new IllegalArgumentException();
     }
 
     @Override
@@ -101,7 +111,7 @@ public class InvestmentPlan implements Named, Adaptable
     {
         this.account = account;
     }
-    
+
     public boolean isAutoGenerate()
     {
         return autoGenerate;
@@ -114,10 +124,15 @@ public class InvestmentPlan implements Named, Adaptable
 
     public LocalDate getStart()
     {
-        return start;
+        return start.toLocalDate();
     }
 
     public void setStart(LocalDate start)
+    {
+        this.start = start.atStartOfDay();
+    }
+
+    public void setStart(LocalDateTime start)
     {
         this.start = start;
     }
@@ -160,7 +175,7 @@ public class InvestmentPlan implements Named, Adaptable
     @Deprecated
     public void removeTransaction(Transaction transaction)
     {
-        transactions.remove(transaction);
+        this.transactions.remove(transaction);
     }
 
     public void removeTransaction(PortfolioTransaction portfolioTransaction)
@@ -199,7 +214,7 @@ public class InvestmentPlan implements Named, Adaptable
         LocalDate last = null;
         for (Transaction t : transactions)
         {
-            LocalDate date = t.getDate();
+            LocalDate date = t.getDateTime().toLocalDate();
             if (last == null || last.isBefore(date))
                 last = date;
         }
@@ -256,7 +271,8 @@ public class InvestmentPlan implements Named, Adaptable
 
     public LocalDate getDateOfNextTransactionToBeGenerated()
     {
-        return transactions.isEmpty() ? start : next(getLastDate());
+        LocalDate lastDate = getLastDate();
+        return lastDate != null ? next(lastDate) : start.toLocalDate();
     }
 
     public List<Transaction> generateTransactions(CurrencyConverter converter)
@@ -281,6 +297,18 @@ public class InvestmentPlan implements Named, Adaptable
 
     private Transaction createTransaction(CurrencyConverter converter, LocalDate tDate)
     {
+        Class<? extends Transaction> planType = getPlanType();
+        
+        if (planType == PortfolioTransaction.class)
+            return createSecurityTx(converter, tDate);
+        else if (planType == AccountTransaction.class)
+            return createDepositTx(converter, tDate);
+        else
+            throw new IllegalArgumentException();
+    }
+
+    private Transaction createSecurityTx(CurrencyConverter converter, LocalDate tDate)
+    {
         if (account == null && portfolio == null)
             return null;
 
@@ -289,11 +317,12 @@ public class InvestmentPlan implements Named, Adaptable
         long availableAmount = amount - fees;
         long shares          = 0L;
 
-        long yourmilliseconds = System.currentTimeMillis();
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
-        Date resultdate = new Date(yourmilliseconds);
+//      REVISIT  
+//        long yourmilliseconds = System.currentTimeMillis();
+//        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
+//        Date resultdate = new Date(yourmilliseconds);
 
-        String note = MessageFormat.format(Messages.InvestmentPlanAutoNoteLabel, sdf.format(resultdate), name);
+        String note = MessageFormat.format(Messages.InvestmentPlanAutoNoteLabel, Values.DateTime.format(LocalDateTime.now()), name); //sdf.format(resultdate)
 
         if (security != null && portfolio != null)
         {
@@ -320,7 +349,7 @@ public class InvestmentPlan implements Named, Adaptable
                 // create buy transaction
                 BuySellEntry entry = new BuySellEntry(portfolio, account);
                 entry.setType(PortfolioTransaction.Type.BUY);
-                entry.setDate(tDate);
+                entry.setDate(tDate.atStartOfDay());
                 entry.setShares(shares);
                 entry.setCurrencyCode(targetCurrencyCode);
                 entry.setAmount(amount);
@@ -341,8 +370,8 @@ public class InvestmentPlan implements Named, Adaptable
             {
                 // create deposit transaction
                 AccountTransaction transaction = new AccountTransaction();
-                transaction.setDate(tDate);
                 transaction.setType(AccountTransaction.Type.DEPOSIT);
+                transaction.setDateTime(tDate.atStartOfDay());
                 transaction.setCurrencyCode(targetCurrencyCode);
                 transaction.setAmount(amount);
                 transaction.setNote(note);
@@ -360,7 +389,7 @@ public class InvestmentPlan implements Named, Adaptable
         {
             // create inbound delivery
             PortfolioTransaction transaction = new PortfolioTransaction();
-            transaction.setDate(tDate);
+            transaction.setDateTime(tDate.atStartOfDay());
             transaction.setType(PortfolioTransaction.Type.DELIVERY_INBOUND);
             transaction.setSecurity(security);
             transaction.setCurrencyCode(targetCurrencyCode);
@@ -373,8 +402,29 @@ public class InvestmentPlan implements Named, Adaptable
 
             if (forex != null)
                 transaction.addUnit(forex);
+
             portfolio.addTransaction(transaction);
             return (Transaction) transaction;
         }
+    }
+
+    private Transaction createDepositTx(CurrencyConverter converter, LocalDate tDate)
+    {
+        Money deposit = Money.of(getCurrencyCode(), amount);
+
+        boolean needsCurrencyConversion = !getCurrencyCode().equals(account.getCurrencyCode());
+        if (needsCurrencyConversion)
+            deposit = converter.with(account.getCurrencyCode()).at(tDate).apply(deposit);
+
+        // create deposit transaction
+        AccountTransaction transaction = new AccountTransaction();
+        transaction.setDateTime(tDate.atStartOfDay());
+        transaction.setType(AccountTransaction.Type.DEPOSIT);
+        transaction.setMonetaryAmount(deposit);
+        transaction.setNote(MessageFormat.format(Messages.InvestmentPlanAutoNoteLabel,
+                        Values.DateTime.format(LocalDateTime.now()), name));
+
+        account.addTransaction(transaction);
+        return transaction;
     }
 }

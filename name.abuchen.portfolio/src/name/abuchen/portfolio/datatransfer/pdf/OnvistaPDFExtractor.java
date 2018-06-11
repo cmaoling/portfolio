@@ -80,15 +80,16 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                             }
                         })
 
-                        .section("date", "amount", "currency") //
+                        .section("date", "time", "amount", "currency") //
                         .match("Handelstag (?<date>\\d+.\\d+.\\d{4}+) (.*)")
+                        .match("Handelszeit (?<time>\\d+:\\d+)(.*)")
                         .find("Wert(\\s+)Konto-Nr. Betrag zu Ihren Lasten(\\s*)$")
                         // 14.01.2015 172306238 EUR 59,55
                         // Wert Konto-Nr. Betrag zu Ihren Lasten
                         // 01.06.2011 172306238 EUR 6,40
                         .match("(\\d+.\\d+.\\d{4}+) (\\d{6,12}) (?<currency>\\w{3}+) (?<amount>\\d{1,3}(\\.\\d{3})*(,\\d{2})?)$")
                         .assign((t, v) -> {
-                            t.setDate(asDate(v.get("date")));
+                            t.setDate(asDate(v.get("date"), v.get("time")));
                             t.setAmount(asAmount(v.get("amount")));
                             t.setCurrencyCode(asCurrencyCode(v.get("currency")));
                         })
@@ -134,12 +135,13 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                             }
                         })
 
-                        .section("date", "amount", "currency") //
+                        .section("date", "time", "amount", "currency") //
                         .match("Handelstag (?<date>\\d+.\\d+.\\d{4}+) (.*)")
+                        .match("Handelszeit (?<time>\\d+:\\d+)(.*)")
                         .find("Wert(\\s+)Konto-Nr. Betrag zu Ihren Gunsten(\\s*)$")
                         .match("(\\d+.\\d+.\\d{4}+) (\\d{6,12}) (?<currency>\\w{3}+) (?<amount>\\d{1,3}(\\.\\d{3})*(,\\d{2})?)")
                         .assign((t, v) -> {
-                            t.setDate(asDate(v.get("date")));
+                            t.setDate(asDate(v.get("date"), v.get("time")));
                             t.setAmount(asAmount(v.get("amount")));
                             t.setCurrencyCode(asCurrencyCode(v.get("currency")));
                         })
@@ -303,7 +305,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                             {
                                 t.setShares(asShares(v.get("shares")));
                             }
-                            t.setDate(asDate(v.get("date")));
+                            t.setDateTime(asDate(v.get("date")));
                             t.setAmount(asAmount(v.get("amount")));
                             t.setCurrencyCode(asCurrencyCode(v.get("currency")));
                         })
@@ -421,7 +423,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                         // STK 55,000 24.04.2013
                         .match("(^\\w{3}+) (\\d{1,3}(\\.\\d{3})*(,\\d{3})?) (?<date>\\d+.\\d+.\\d{4}+)?(.*)")
                         .assign((t, v) -> {
-                            t.setDate(asDate(v.get("date")));
+                            t.setDateTime(asDate(v.get("date")));
                             type.getCurrentContext().put("date", v.get("date"));
                         })
 
@@ -465,9 +467,9 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                                 t.setShares(asShares(v.get("shares")));
                             }
                             t.setCurrencyCode(asCurrencyCode(t.getSecurity().getCurrencyCode()));
-                            if (t.getDate() == null)
+                            if (t.getDateTime() == null)
                             {
-                                t.setDate(asDate(type.getCurrentContext().get("date")));
+                                t.setDateTime(asDate(type.getCurrentContext().get("date")));
                             }
                         })
 
@@ -493,7 +495,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
         pdfTransaction.section("date")
                         // Frankfurt am Main, 06.04.2011
                         .match("(.*), (?<date>\\d+.\\d+.\\d{4}+)") //
-                        .assign((t, v) -> t.setDate(asDate(v.get("date"))))
+                        .assign((t, v) -> t.setDateTime(asDate(v.get("date"))))
 
                         .section("name", "isin") //
                         .find("Einbuchung:(\\s*)") //
@@ -543,7 +545,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
         pdfTransaction.section("date")
                         // Frankfurt am Main, 25.05.2016
                         .match("(.*), (?<date>\\d+.\\d+.\\d{4}+)") //
-                        .assign((t, v) -> t.setDate(asDate(v.get("date"))))
+                        .assign((t, v) -> t.setDateTime(asDate(v.get("date"))))
 
                         .section("name", "isin") //
                         .find("Einbuchung:(\\s*)") //
@@ -610,7 +612,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                                 t.setShares(asShares(v.get("shares")));
                             }
                             t.setCurrencyCode(asCurrencyCode(t.getSecurity().getCurrencyCode()));
-                            t.setDate(asDate(v.get("date")));
+                            t.setDateTime(asDate(v.get("date")));
                         })
 
                         .wrap(TransactionItem::new);
@@ -662,7 +664,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
 
                         .section("date") //
                         .find("(.*)(Schlusstag|Ex-Tag|Wert Konto-Nr.*)").match("(.*)(^|\\s+)(?<date>\\d+.\\d+.\\d{4}+)") //
-                        .assign((t, v) -> t.setDate(asDate(v.get("date"))))
+                        .assign((t, v) -> t.setDateTime(asDate(v.get("date"))))
 
                         .section("currency", "amount").optional()
                         // Wert Betrag zu Ihren Gunsten
@@ -873,9 +875,9 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
 
                             t.setSecurity(getOrCreateSecurity(v));
 
-                            if (t.getDate() == null)
+                            if (t.getDateTime() == null)
                             {
-                                t.setDate(asDate(type.getCurrentContext().get("date")));
+                                t.setDateTime(asDate(type.getCurrentContext().get("date")));
                             }
                             if (t.getCurrencyCode() == null)
                             {
@@ -929,7 +931,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                             {
                                 // create a long date from the year in the
                                 // context
-                                t.setDate(asDate(date + context.get("year")));
+                                t.setDateTime(asDate(date + context.get("year")));
                             }
                             t.setAmount(asAmount(v.get("amount")));
                             t.setCurrencyCode(asCurrencyCode(context.get("currency")));
@@ -1031,7 +1033,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                             {
                                 // create a long date from the year in the
                                 // context
-                                t.setDate(asDate(date + context.get("year")));
+                                t.setDateTime(asDate(date + context.get("year")));
                             }
                             t.setAmount(asAmount(v.get("amount")));
                             t.setCurrencyCode(asCurrencyCode(context.get("currency")));
@@ -1069,6 +1071,8 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                                         break;
                                     case "AbgSt. Optimierung":
                                         t.setType(AccountTransaction.Type.TAX_REFUND);
+                                        break;
+                                    default:
                                         break;
                                 }
                             }
@@ -1233,7 +1237,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                         // 06.05.2013 172306238 56072633 EUR 3,05
                         .match("(^|\\s+)(?<date>\\d+\\.\\d+\\.\\d{4}+)(\\s)(\\d+)?(\\s)?(\\d+)?(\\s)(?<currency>\\w{3}+) (\\d{1,3}(\\.\\d{3})*(,\\d{2})?)")
                         .assign((t, v) -> {
-                            t.setDate(asDate(v.get("date")));
+                            t.setDateTime(asDate(v.get("date")));
                             t.setCurrencyCode(asCurrencyCode(v.get("currency")));
                         })
 
@@ -1284,7 +1288,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                         // 23.11.2015 172306238 EUR 12,86
                         .match("(^|\\s+)(?<date>\\d+\\.\\d+\\.\\d{4}+)(\\s)(\\d+)(\\s)(?<currency>\\w{3}+) (\\d{1,3}(\\.\\d{3})*(,\\d{2})?)")
                         .assign((t, v) -> {
-                            t.setDate(asDate(v.get("date")));
+                            t.setDateTime(asDate(v.get("date")));
                             t.setCurrencyCode(asCurrencyCode(v.get("currency")));
                             v.put("isin", type.getCurrentContext().get("isin"));
                             t.setSecurity(getOrCreateSecurity(v));

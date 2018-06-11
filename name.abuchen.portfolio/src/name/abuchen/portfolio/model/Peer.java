@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.util.Iban;
 import name.abuchen.portfolio.Messages;
 

@@ -2,7 +2,7 @@ package name.abuchen.portfolio.datatransfer.csv;
 
 import java.text.MessageFormat;
 import java.text.ParseException;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -11,10 +11,10 @@ import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.AmountField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.DateField;
-import name.abuchen.portfolio.datatransfer.csv.CSVImporter.IBANField;
-import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.IBANField;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransaction.Type;
 import name.abuchen.portfolio.model.AccountTransferEntry;
@@ -73,7 +73,7 @@ import name.abuchen.portfolio.money.Money;
         Type type = inferType(rawValues, field2column, security, amount);
 
         // extract remaining fields
-        LocalDate date = getDate(Messages.CSVColumn_Date, rawValues, field2column);
+        LocalDateTime date = getDate(Messages.CSVColumn_Date, rawValues, field2column);
         if (date == null)
             throw new ParseException(MessageFormat.format(Messages.CSVImportMissingField, Messages.CSVColumn_Date), 0);
         String note = getText(Messages.CSVColumn_Note, rawValues, field2column);
@@ -131,6 +131,7 @@ import name.abuchen.portfolio.money.Money;
                 break;
             case DIVIDENDS:
             case DIVIDEND_CHARGE:
+                // dividends must have a security
                 if (security == null)
                     throw new ParseException(MessageFormat.format(Messages.CSVImportMissingSecurity,
                                     new StringJoiner(", ").add(Messages.CSVColumn_ISIN) //$NON-NLS-1$
@@ -152,7 +153,7 @@ import name.abuchen.portfolio.money.Money;
                 t.setCurrencyCode(amount.getCurrencyCode());
                 if (dividendType || type == Type.TAX_REFUND)
                     t.setSecurity(security);
-                t.setDate(date);
+                t.setDateTime(date);
                 String extNote = getText(Messages.CSVColumn_ISIN, rawValues, field2column);
                 if (extNote != null && security.getIsin() == "")
                 {

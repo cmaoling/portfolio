@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -60,17 +61,22 @@ public class IBFlexStatementExtractor implements Extractor
         this.exchanges.put("VENTURE", "V");
     }
 
-    private LocalDate convertDate(String date) throws DateTimeParseException
+    private LocalDateTime convertDate(String date) throws DateTimeParseException
     {
-
         if (date.length() > 8)
         {
-            return LocalDate.parse(date);
+            return LocalDate.parse(date).atStartOfDay();
         }
         else
         {
-            return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
+            return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")).atStartOfDay();
         }
+    }
+    
+    private LocalDateTime convertDate(String date, String time) throws DateTimeParseException
+    {
+        return LocalDateTime.parse(String.format("%s %s", date, time), DateTimeFormatter.ofPattern("yyyyMMdd HHmmss"))
+                        .withSecond(0).withNano(0);
     }
 
     /**
@@ -166,7 +172,7 @@ public class IBFlexStatementExtractor implements Extractor
         private Function<Element, Item> buildAccountTransaction = element -> {
             AccountTransaction transaction = new AccountTransaction();
 
-            transaction.setDate(convertDate(element.getAttribute("dateTime")));
+            transaction.setDateTime(convertDate(element.getAttribute("dateTime")));
             Double amount = Double.parseDouble(element.getAttribute("amount"));
             String currency = asCurrencyUnit(element.getAttribute("currency"));
 
@@ -269,13 +275,7 @@ public class IBFlexStatementExtractor implements Extractor
                 throw new IllegalArgumentException();
             }
 
-            String d = element.getAttribute("tradeDate");
-            if (d == null || d.length() == 0)
-            {
-                // use reportDate for CorporateActions
-                d = element.getAttribute("reportDate");
-            }
-            transaction.setDate(convertDate(d));
+            transaction.setDate(convertDate(element.getAttribute("tradeDate"), element.getAttribute("tradeTime")));
 
             // transaction currency
             String currency = asCurrencyUnit(element.getAttribute("currency"));
@@ -352,7 +352,7 @@ public class IBFlexStatementExtractor implements Extractor
                 {
                     transaction.setType(PortfolioTransaction.Type.DELIVERY_OUTBOUND);
                 }
-                transaction.setDate(convertDate(eElement.getAttribute("reportDate")));
+                transaction.setDateTime(convertDate(eElement.getAttribute("reportDate")));
                 // Share Quantity
                 Double qty = Math.abs(Double.parseDouble(eElement.getAttribute("quantity")));
                 transaction.setShares(Math.round(qty.doubleValue() * Values.Share.factor()));
@@ -380,7 +380,7 @@ public class IBFlexStatementExtractor implements Extractor
                 BigDecimal fxRateToBase;
                 if (fxRateToBaseString != null && !fxRateToBaseString.isEmpty())
                 {
-                    fxRateToBase = new BigDecimal(Double.parseDouble(fxRateToBaseString));
+                    fxRateToBase = BigDecimal.valueOf(Double.parseDouble(fxRateToBaseString));
                 }
                 else
                 {
@@ -414,7 +414,7 @@ public class IBFlexStatementExtractor implements Extractor
                 BigDecimal fxRateToBase;
                 if (fxRateToBaseString != null && !fxRateToBaseString.isEmpty())
                 {
-                    fxRateToBase = new BigDecimal(Double.parseDouble(fxRateToBaseString));
+                    fxRateToBase = BigDecimal.valueOf(Double.parseDouble(fxRateToBaseString));
                 }
                 else
                 {

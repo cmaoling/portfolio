@@ -41,10 +41,12 @@ public enum Images
     FILTER_OFF("filter_off.png"), //$NON-NLS-1$
     CALENDAR_ON("calendar_on.png"), //$NON-NLS-1$
     CALENDAR_OFF("calendar_off.png"), //$NON-NLS-1$
+    CLOCK("clock.png"), //$NON-NLS-1$
 
     VIEW_TABLE("view_table.png"), //$NON-NLS-1$
     VIEW_TREEMAP("view_treemap.png"), //$NON-NLS-1$
     VIEW_PIECHART("view_piechart.png"), //$NON-NLS-1$
+    VIEW_DONUT("view_donut.png"), //$NON-NLS-1$
     VIEW_REBALANCING("view_rebalancing.png"), //$NON-NLS-1$
     VIEW_STACKEDCHART("view_stackedchart.png"), //$NON-NLS-1$
 
@@ -56,6 +58,9 @@ public enum Images
     CATEGORY("category.png"), //$NON-NLS-1$
     UNASSIGNED_CATEGORY("unassigned.png"), //$NON-NLS-1$
 
+    DASHBOARD("dashboard.png"), //$NON-NLS-1$
+    DASHBOARD_SELECTED("dashboard_selected.png"), //$NON-NLS-1$
+    
     TEXT("text.png"), //$NON-NLS-1$
 
     ERROR("error.png"), //$NON-NLS-1$
