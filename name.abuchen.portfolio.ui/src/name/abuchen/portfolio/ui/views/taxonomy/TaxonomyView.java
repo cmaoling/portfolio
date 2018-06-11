@@ -144,6 +144,8 @@ public class TaxonomyView extends AbstractFinanceView implements PropertyChangeL
     private String identifierView;
     /** preference key: include unassigned category in charts */
     private String identifierUnassigned;
+    /** preference key: exclude securities in pie chart */
+    private String identifierExclucdeSecuritiesInPieChart;
     /** preference key: order by taxonomy in stack chart */
     private String identifierOrderByTaxonomy;
     /** preference key: node expansion state in definition viewer */
@@ -172,6 +174,8 @@ public class TaxonomyView extends AbstractFinanceView implements PropertyChangeL
 
         this.identifierView = TaxonomyView.class.getSimpleName() + "-VIEW-" + taxonomy.getId(); //$NON-NLS-1$
         this.identifierUnassigned = TaxonomyView.class.getSimpleName() + "-UNASSIGNED-" + taxonomy.getId(); //$NON-NLS-1$
+        this.identifierExclucdeSecuritiesInPieChart = TaxonomyView.class.getSimpleName() + "-EXCLUDESECURITESPIECHART-" //$NON-NLS-1$
+                        + taxonomy.getId();
         this.identifierOrderByTaxonomy = TaxonomyView.class.getSimpleName() + "-ORDERBYTAXONOMY-" + taxonomy.getId(); //$NON-NLS-1$
         this.expansionStateDefinition = TaxonomyView.class.getSimpleName() + "-EXPANSION-DEFINITION-" //$NON-NLS-1$
                         + taxonomy.getId();
@@ -179,10 +183,12 @@ public class TaxonomyView extends AbstractFinanceView implements PropertyChangeL
                         + taxonomy.getId();
 
         this.model = make(TaxonomyModel.class, taxonomy);
-        this.model.setExcludeUnassignedCategoryInCharts(part.getPreferenceStore().getBoolean(identifierUnassigned));
-        this.model.setOrderByTaxonomyInStackChart(part.getPreferenceStore().getBoolean(identifierOrderByTaxonomy));
-        this.model.setExpansionStateDefinition(part.getPreferenceStore().getString(expansionStateDefinition));
-        this.model.setExpansionStateRebalancing(part.getPreferenceStore().getString(expansionStateReblancing));
+        IPreferenceStore preferences = part.getPreferenceStore();
+        this.model.setExcludeUnassignedCategoryInCharts(preferences.getBoolean(identifierUnassigned));
+        this.model.setExcludeSecuritiesInPieChart(preferences.getBoolean(identifierExclucdeSecuritiesInPieChart));
+        this.model.setOrderByTaxonomyInStackChart(preferences.getBoolean(identifierOrderByTaxonomy));
+        this.model.setExpansionStateDefinition(preferences.getString(expansionStateDefinition));
+        this.model.setExpansionStateRebalancing(preferences.getString(expansionStateReblancing));
 
         this.taxonomy.addPropertyChangeListener(this);
     }
@@ -207,10 +213,12 @@ public class TaxonomyView extends AbstractFinanceView implements PropertyChangeL
 
         // store preferences *after* disposing pages -> allow pages to update
         // the model
-        getPreferenceStore().setValue(identifierUnassigned, model.isUnassignedCategoryInChartsExcluded());
-        getPreferenceStore().setValue(identifierOrderByTaxonomy, model.isOrderByTaxonomyInStackChart());
-        getPreferenceStore().setValue(expansionStateDefinition, model.getExpansionStateDefinition());
-        getPreferenceStore().setValue(expansionStateReblancing, model.getExpansionStateRebalancing());
+        IPreferenceStore preferences = getPreferenceStore();
+        preferences.setValue(identifierUnassigned, model.isUnassignedCategoryInChartsExcluded());
+        preferences.setValue(identifierExclucdeSecuritiesInPieChart, model.isSecuritiesInPieChartExcluded());
+        preferences.setValue(identifierOrderByTaxonomy, model.isOrderByTaxonomyInStackChart());
+        preferences.setValue(expansionStateDefinition, model.getExpansionStateDefinition());
+        preferences.setValue(expansionStateReblancing, model.getExpansionStateRebalancing());
 
         super.dispose();
     }
@@ -221,8 +229,9 @@ public class TaxonomyView extends AbstractFinanceView implements PropertyChangeL
         addView(toolBar, Messages.LabelViewTaxonomyDefinition, Images.VIEW_TABLE, 0);
         addView(toolBar, Messages.LabelViewReBalancing, Images.VIEW_REBALANCING, 1);
         addView(toolBar, Messages.LabelViewPieChart, Images.VIEW_PIECHART, 2);
-        addView(toolBar, Messages.LabelViewTreeMap, Images.VIEW_TREEMAP, 3);
-        addView(toolBar, Messages.LabelViewStackedChart, Images.VIEW_STACKEDCHART, 4);
+        addView(toolBar, Messages.LabelViewDonutChart, Images.VIEW_DONUT, 3);
+        addView(toolBar, Messages.LabelViewTreeMap, Images.VIEW_TREEMAP, 4);
+        addView(toolBar, Messages.LabelViewStackedChart, Images.VIEW_STACKEDCHART, 5);
 
         new ToolItem(toolBar, SWT.SEPARATOR);
 
@@ -281,6 +290,7 @@ public class TaxonomyView extends AbstractFinanceView implements PropertyChangeL
         Page[] pages = new Page[] { make(DefinitionViewer.class, model, renderer), //
                         make(ReBalancingViewer.class, model, renderer), //
                         make(PieChartViewer.class, model, renderer), //
+                        make(DonutViewer.class, model, renderer), //
                         make(TreeMapViewer.class, model, renderer), //
                         make(StackedChartViewer.class, model, renderer) };
 

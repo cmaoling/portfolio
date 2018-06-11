@@ -16,6 +16,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.eclipse.e4.core.di.extensions.Preference;
+import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -76,6 +77,7 @@ import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.UIConstants;
 import name.abuchen.portfolio.ui.dnd.SecurityDragListener;
 import name.abuchen.portfolio.ui.dnd.SecurityTransfer;
+import name.abuchen.portfolio.ui.selection.SecuritySelection;
 import name.abuchen.portfolio.ui.util.AttributeComparator;
 import name.abuchen.portfolio.ui.util.LabelOnly;
 import name.abuchen.portfolio.ui.util.viewers.Column;
@@ -99,6 +101,9 @@ public class StatementOfAssetsViewer
 {
     @Inject
     private IPreferenceStore preference;
+
+    @Inject
+    private ESelectionService selectionService;
 
     private boolean useIndirectQuotation = false;
 
@@ -172,6 +177,12 @@ public class StatementOfAssetsViewer
         assets = new TableViewer(container, SWT.FULL_SELECTION);
         ColumnViewerToolTipSupport.enableFor(assets, ToolTip.NO_RECREATE);
         ColumnEditingSupport.prepare(assets);
+
+        assets.addSelectionChangedListener(event -> {
+            Element element = (Element) ((IStructuredSelection) event.getSelection()).getFirstElement();
+            if (element != null && element.isSecurity())
+                selectionService.setSelection(new SecuritySelection(client, element.getSecurity()));
+        });
 
         support = new ShowHideColumnHelper(StatementOfAssetsViewer.class.getName(), client, preference, assets, layout);
 
@@ -370,6 +381,27 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
+        column = new Column("ppmvavg", Messages.ColumnPurchasePriceMovingAverage, SWT.RIGHT, 60); //$NON-NLS-1$
+        column.setDescription(Messages.ColumnPurchasePriceMovingAverage_Description);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object e)
+            {
+                Element element = (Element) e;
+                if (element.isSecurity())
+                {
+                    Money purchasePrice = element.getSecurityPosition().getMovingAveragePurchasePrice();
+                    return Values.Money.formatNonZero(purchasePrice, client.getBaseCurrency());
+                }
+                return null;
+            }
+        });
+        column.setComparator(new ElementComparator(new AttributeComparator(e -> ((Element) e).isSecurity()
+                        ? ((Element) e).getSecurityPosition().getMovingAveragePurchasePrice() : null)));
+        column.setVisible(false);
+        support.addColumn(column);
+
         column = new Column("8", Messages.ColumnPurchaseValue, SWT.RIGHT, 80); //$NON-NLS-1$
         column.setDescription(Messages.ColumnPurchaseValue_Description);
         column.setLabelProvider(new ColumnLabelProvider()
@@ -390,6 +422,29 @@ public class StatementOfAssetsViewer
         });
         column.setVisible(false);
         column.setSorter(ColumnViewerSorter.create(Element.class, "FIFOPurchaseValue") //$NON-NLS-1$
+                        .wrap(ElementComparator::new));
+        support.addColumn(column);
+
+        column = new Column("pvmvavg", Messages.ColumnPurchaseValueMovingAverage, SWT.RIGHT, 80); //$NON-NLS-1$
+        column.setDescription(Messages.ColumnPurchaseValueMovingAverage_Description);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object e)
+            {
+                Element element = (Element) e;
+                Money purchaseValue = element.getMovingAveragePurchaseValue();
+                return Values.Money.formatNonZero(purchaseValue, client.getBaseCurrency());
+            }
+
+            @Override
+            public Font getFont(Object e)
+            {
+                return ((Element) e).isGroupByTaxonomy() || ((Element) e).isCategory() ? boldFont : null;
+            }
+        });
+        column.setVisible(false);
+        column.setSorter(ColumnViewerSorter.create(Element.class, "MovingAveragePurchaseValue") //$NON-NLS-1$
                         .wrap(ElementComparator::new));
         support.addColumn(column);
 
@@ -487,7 +542,7 @@ public class StatementOfAssetsViewer
         support.addColumn(column);
 
         Function<Stream<Object>, Object> sum = elements -> elements.map(e -> (Money) e)
-                        .collect(MoneyCollectors.sum(client.getBaseCurrency()));
+                        .collect(MoneyCollectors.sum(getCurrencyConverter().getTermCurrency()));
 
         column = new Column("capitalgains", Messages.ColumnCapitalGains, SWT.RIGHT, 80); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getCapitalGainsOnHoldings, sum,
@@ -505,6 +560,27 @@ public class StatementOfAssetsViewer
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnCapitalGainsPercent_Option, options));
         column.setGroupLabel(Messages.GroupLabelPerformance);
         column.setDescription(Messages.ColumnCapitalGainsPercent_Description);
+        column.setLabelProvider(labelProvider);
+        column.setSorter(ColumnViewerSorter.create(new ElementComparator(labelProvider)));
+        column.setVisible(false);
+        support.addColumn(column);
+
+        column = new Column("capitalgainsmvavg", Messages.ColumnCapitalGainsMovingAverage, SWT.RIGHT, 80); //$NON-NLS-1$
+        labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getCapitalGainsOnHoldingsMovingAverage, sum,
+                        true);
+        column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnCapitalGainsMovingAverage_Option, options));
+        column.setGroupLabel(Messages.GroupLabelPerformance);
+        column.setDescription(Messages.ColumnCapitalGainsMovingAverage_Description);
+        column.setLabelProvider(labelProvider);
+        column.setSorter(ColumnViewerSorter.create(new ElementComparator(labelProvider)));
+        column.setVisible(false);
+        support.addColumn(column);
+
+        column = new Column("capitalgainsmvavg%", Messages.ColumnCapitalGainsMovingAveragePercent, SWT.RIGHT, 80); //$NON-NLS-1$
+        labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getCapitalGainsOnHoldingsMovingAveragePercent);
+        column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnCapitalGainsMovingAveragePercent_Option, options));
+        column.setGroupLabel(Messages.GroupLabelPerformance);
+        column.setDescription(Messages.ColumnCapitalGainsMovingAveragePercent_Description);
         column.setLabelProvider(labelProvider);
         column.setSorter(ColumnViewerSorter.create(new ElementComparator(labelProvider)));
         column.setVisible(false);
@@ -538,7 +614,7 @@ public class StatementOfAssetsViewer
         Column column = new Column("sumdiv", Messages.ColumnDividendSum, SWT.RIGHT, 80); //$NON-NLS-1$
 
         Function<Stream<Object>, Object> collector = elements -> elements.map(e -> (Money) e)
-                        .collect(MoneyCollectors.sum(client.getBaseCurrency()));
+                        .collect(MoneyCollectors.sum(getCurrencyConverter().getTermCurrency()));
 
         labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getSumOfDividends, collector,
                         false);
@@ -556,6 +632,17 @@ public class StatementOfAssetsViewer
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnDividendTotalRateOfReturn + " {0}", options)); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelDividends);
         column.setDescription(Messages.ColumnDividendTotalRateOfReturn_Description);
+        column.setLabelProvider(labelProvider);
+        column.setSorter(ColumnViewerSorter.create(new ElementComparator(labelProvider)));
+        column.setVisible(false);
+        support.addColumn(column);
+
+        column = new Column("d%mvavg", Messages.ColumnDividendMovingAverageTotalRateOfReturn, SWT.RIGHT, 80); //$NON-NLS-1$
+        labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getTotalRateOfReturnDivMovingAverage, null,
+                        false);
+        column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnDividendMovingAverageTotalRateOfReturn + " {0}", options)); //$NON-NLS-1$
+        column.setGroupLabel(Messages.GroupLabelDividends);
+        column.setDescription(Messages.ColumnDividendMovingAverageTotalRateOfReturn_Description);
         column.setLabelProvider(labelProvider);
         column.setSorter(ColumnViewerSorter.create(new ElementComparator(labelProvider)));
         column.setVisible(false);
@@ -909,6 +996,11 @@ public class StatementOfAssetsViewer
             return performance.get(period);
         }
 
+        public boolean isPerformanceCalculated(ReportingPeriod period)
+        {
+            return performance.containsKey(period);
+        }
+
         public boolean isGroupByTaxonomy()
         {
             return groupByTaxonomy != null;
@@ -977,6 +1069,16 @@ public class StatementOfAssetsViewer
                 return category.getFIFOPurchaseValue();
             else
                 return groupByTaxonomy.getFIFOPurchaseValue();
+        }
+
+        public Money getMovingAveragePurchaseValue()
+        {
+            if (position != null)
+                return position.getMovingAveragePurchaseValue();
+            else if (category != null)
+                return category.getMovingAveragePurchaseValue();
+            else
+                return groupByTaxonomy.getMovingAveragePurchaseValue();
         }
 
         public Money getProfitLoss()
@@ -1264,7 +1366,7 @@ public class StatementOfAssetsViewer
         private void calculatePerformance(Element element, ReportingPeriod period)
         {
             // already calculated?
-            if (element.getPerformance(period) != null)
+            if (element.isPerformanceCalculated(period))
                 return;
 
             if (clientSnapshot == null && portfolioSnapshot == null)

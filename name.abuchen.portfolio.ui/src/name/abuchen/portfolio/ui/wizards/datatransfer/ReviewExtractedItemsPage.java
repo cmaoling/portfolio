@@ -1,6 +1,6 @@
 package name.abuchen.portfolio.ui.wizards.datatransfer;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -387,8 +387,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
             @Override
             public String getText(ExtractedEntry entry)
             {
-                LocalDate date = entry.getItem().getDate();
-                return date != null ? Values.Date.format(date) : null;
+                LocalDateTime date = entry.getItem().getDate();
+                return date != null ? Values.DateTime.format(date) : null;
             }
         });
         layout.setColumnData(column.getColumn(), new ColumnPixelData(80, true));
@@ -676,7 +676,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
             if (entry.getItem().getShares() == 0 && entry.getItem() instanceof Extractor.TransactionItem)
             {
                 Security security = entry.getItem().getSecurity();
-                LocalDate date = entry.getItem().getDate();
+                LocalDateTime date = entry.getItem().getDate();
                 if (security != null && getPortfolio() != null && date != null)
                 {
                     CurrencyConverter converter = new CurrencyConverterImpl(factory, client.getBaseCurrency());
@@ -684,7 +684,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                     {
                         if (portfolio.toString().equals(getPortfolio().toString()))
                         {
-                            PortfolioSnapshot snapshot = PortfolioSnapshot.create(portfolio, converter, date);
+                            PortfolioSnapshot snapshot = PortfolioSnapshot.create(portfolio, converter, date.toLocalDate());
                             SecurityPosition position = snapshot.getPositionsBySecurity().get(security);
                             if ((position != null) && (entry.getItem() instanceof Extractor.TransactionItem))
                                 ((Extractor.TransactionItem) entry.getItem()).getTransaction().setShares(position.getShares());

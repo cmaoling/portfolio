@@ -47,7 +47,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
         DocumentType type = new DocumentType("Sammelabrechnung (Wertpapierkauf/-verkauf)");
         this.addDocumentTyp(type);
 
-        Block block = new Block("Nr.(\\d*)/(\\d*)  Kauf.*");
+        Block block = new Block("Nr.(\\d*)/(\\d*) *Kauf.*");
         type.addBlock(block);
         block.set(new Transaction<BuySellEntry>().subject(() -> {
             BuySellEntry entry = new BuySellEntry();
@@ -56,7 +56,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
         })
 
                         .section("wkn", "isin", "name")
-                        .match("Nr.[0-9A-Za-z]*/(\\d*)  Kauf *(?<name>.*) *\\((?<isin>[^/]*)/(?<wkn>[^)]*)\\)")
+                        .match("Nr.[0-9A-Za-z]*/(\\d*) *Kauf *(?<name>.*) *\\((?<isin>[^/]*)/(?<wkn>[^)]*)\\)")
                         .assign((t, v) -> {
                             t.setSecurity(getOrCreateSecurity(v));
                         })
@@ -93,7 +93,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
 
                         .wrap(t -> new BuySellEntryItem(t)));
 
-        block = new Block("Nr.(\\d*)/(\\d*)  Verkauf.*");
+        block = new Block("Nr.(\\d*)/(\\d*) *Verkauf.*");
         type.addBlock(block);
         block.set(new Transaction<BuySellEntry>().subject(() -> {
             BuySellEntry entry = new BuySellEntry();
@@ -102,7 +102,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
         })
 
                         .section("wkn", "isin", "name")
-                        .match("Nr.(\\d*)/(\\d*)  Verkauf *(?<name>.*) *\\((?<isin>[^/]*)/(?<wkn>[^)]*)\\)")
+                        .match("Nr.(\\d*)/(\\d*) *Verkauf *(?<name>.*) *\\((?<isin>[^/]*)/(?<wkn>[^)]*)\\)")
                         .assign((t, v) -> {
                             t.setSecurity(getOrCreateSecurity(v));
                         })
@@ -171,7 +171,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
                         .assign((t, v) -> t.setDate(asDate(v.get("date"))))
 
                         .section("wkn", "isin", "name")
-                        .match("Nr.[0-9A-Za-z]*/(\\d*)  Kauf *(?<name>.*) *\\((?<isin>[^/]*)/(?<wkn>[^)]*)\\)") //
+                        .match("Nr.[0-9A-Za-z]*/(\\d*) *Kauf *(?<name>.*) *\\((?<isin>[^/]*)/(?<wkn>[^)]*)\\)") //
                         .assign((t, v) -> {
                             t.setSecurity(getOrCreateSecurity(v));
                         })
@@ -250,7 +250,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
                                 {
                                     // create a long date from the year in the
                                     // context
-                                    t.setDate(asDate(date + context.get("year")));
+                                    t.setDateTime(asDate(date + context.get("year")));
                                 }
                                 t.setNote(v.get("text"));
                                 t.setAmount(asAmount(v.get("amount")));
@@ -281,7 +281,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
                 {
                     // create a long date from the year in the
                     // context
-                    t.setDate(asDate(date + context.get("year")));
+                    t.setDateTime(asDate(date + context.get("year")));
                 }
                 t.setNote(v.get("text"));
                 t.setAmount(asAmount(v.get("amount")));
@@ -334,7 +334,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
 
                         .section("date") //
                         .match("Valuta * : *(?<date>\\d+.\\d+.\\d{4}+).*")
-                        .assign((t, v) -> t.setDate(asDate(v.get("date"))))
+                        .assign((t, v) -> t.setDateTime(asDate(v.get("date"))))
 
                         .wrap(t -> new TransactionItem(t)));
     }
@@ -408,24 +408,26 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
                         .match(".* Bruttodividende *: *(?<amountGrossFx>[.\\d]+,\\d{2}) (?<currencyFx>\\w{3})") //
                         .assign((t, v) -> {
                             
-                                // get exchange rate (in Fx/EUR) and calculate inverse exchange rate (in EUR/Fx)
                                 Map<String, String> context = type.getCurrentContext();
-                                BigDecimal exchangeRate = asExchangeRate(context.get("exchangeRate"));
-                                BigDecimal inverseRate  = BigDecimal.ONE.divide(exchangeRate, 10, BigDecimal.ROUND_HALF_DOWN);
-                                
                                 // set currency of transaction (should be in EUR)
                                 String currencyCode = asCurrencyCode(context.get("currency"));
                                 t.setCurrencyCode(currencyCode);
-                                
+                            
                                 // get foreign currency (should be in Fx)
                                 String currencyCodeFx = asCurrencyCode(v.get("currencyFx"));
-                                
-                                // get gross amount and calculate equivalent in EUR
-                                Money mAmountGrossFx = Money.of(currencyCodeFx, Math.round(asAmount(v.get("amountGrossFx")))); 
-                                BigDecimal amountGrossFxInEUR = BigDecimal.valueOf(mAmountGrossFx.getAmount()).divide(exchangeRate, 10, BigDecimal.ROUND_HALF_DOWN);
-                                Money mAmountGrossFxInEUR = Money.of(currencyCode, Math.round(amountGrossFxInEUR.longValue()));
-                                t.addUnit(new Unit(Unit.Type.GROSS_VALUE, mAmountGrossFxInEUR, mAmountGrossFx, inverseRate));
-
+                                if(!"EUR".equalsIgnoreCase(currencyCodeFx)) {
+                                    // get exchange rate (in Fx/EUR) and calculate inverse exchange rate (in EUR/Fx)
+                                    BigDecimal exchangeRate = asExchangeRate(context.get("exchangeRate"));
+                                    BigDecimal inverseRate  = BigDecimal.ONE.divide(exchangeRate, 10, BigDecimal.ROUND_HALF_DOWN);
+                                   
+                                    // get gross amount and calculate equivalent in EUR
+                                    Money mAmountGrossFx = Money.of(currencyCodeFx, Math.round(asAmount(v.get("amountGrossFx")))); 
+                                    BigDecimal amountGrossFxInEUR = BigDecimal.valueOf(mAmountGrossFx.getAmount()).divide(exchangeRate, 10, BigDecimal.ROUND_HALF_DOWN);
+                                    Money mAmountGrossFxInEUR = Money.of(currencyCode, Math.round(amountGrossFxInEUR.longValue()));
+                                    t.addUnit(new Unit(Unit.Type.GROSS_VALUE, mAmountGrossFxInEUR, mAmountGrossFx, inverseRate));
+                                } else { //but if not in Fx but Euro already...
+                                    t.addUnit(new Unit(Unit.Type.GROSS_VALUE, Money.of(currencyCodeFx, Math.round(asAmount(v.get("amountGrossFx"))))));
+                                }
                         })
                         
                         // Quellenst.-satz :       30,00 %        Gez. Quellenst. :         7,88 USD
@@ -433,20 +435,23 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
                         .match(".* Gez. Quellenst. *: *(?<amountFx>[.\\d]+,\\d{2}) (?<currencyFx>\\w{3})") //
                         .assign((t, v) -> {
                             
-                                // get exchange rate (in Fx/EUR) and calculate inverse exchange rate (in EUR/Fx)
                                 Map<String, String> context = type.getCurrentContext();
-                                BigDecimal exchangeRate = asExchangeRate(context.get("exchangeRate"));
-                                BigDecimal inverseRate  = BigDecimal.ONE.divide(exchangeRate, 10, BigDecimal.ROUND_HALF_DOWN);
-                        
                                 // get foreign currency (should be in Fx) and transaction currency (should be in EUR)
                                 String currencyCode   = asCurrencyCode(context.get("currency"));
                                 String currencyCodeFx = asCurrencyCode(v.get("currencyFx"));
-                                
-                                // get foreign taxes and calculate equivalent in EUR
-                                Money mTaxesFx = Money.of(currencyCodeFx, Math.round(asAmount(v.get("amountFx"))));
-                                BigDecimal taxesFxInEUR = BigDecimal.valueOf(mTaxesFx.getAmount()).divide(exchangeRate, 10, BigDecimal.ROUND_HALF_DOWN);
-                                Money mTaxesFxInEUR = Money.of(currencyCode, Math.round(taxesFxInEUR.longValue()));
-                                t.addUnit(new Unit(Unit.Type.TAX, mTaxesFxInEUR, mTaxesFx, inverseRate));
+                                if(!"EUR".equalsIgnoreCase(currencyCodeFx)) {
+                                    // get exchange rate (in Fx/EUR) and calculate inverse exchange rate (in EUR/Fx)
+                                   BigDecimal exchangeRate = asExchangeRate(context.get("exchangeRate"));
+                                    BigDecimal inverseRate  = BigDecimal.ONE.divide(exchangeRate, 10, BigDecimal.ROUND_HALF_DOWN);
+                                    
+                                    // get foreign taxes and calculate equivalent in EUR
+                                    Money mTaxesFx = Money.of(currencyCodeFx, Math.round(asAmount(v.get("amountFx"))));
+                                    BigDecimal taxesFxInEUR = BigDecimal.valueOf(mTaxesFx.getAmount()).divide(exchangeRate, 10, BigDecimal.ROUND_HALF_DOWN);
+                                    Money mTaxesFxInEUR = Money.of(currencyCode, Math.round(taxesFxInEUR.longValue()));
+                                    t.addUnit(new Unit(Unit.Type.TAX, mTaxesFxInEUR, mTaxesFx, inverseRate));
+                                } else { //but if not in Fx but Euro already...
+                                    t.addUnit(new Unit(Unit.Type.TAX, Money.of(currencyCodeFx, Math.round(asAmount(v.get("amountFx"))))));
+                                }
                             
                         })                
 
@@ -464,7 +469,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
 
                         .section("date") //
                         .match("Valuta * : *(?<date>\\d+.\\d+.\\d{4}+).*") //
-                        .assign((t, v) -> t.setDate(asDate(v.get("date"))))
+                        .assign((t, v) -> t.setDateTime(asDate(v.get("date"))))
 
                         .wrap(t -> new TransactionItem(t)));
     }
@@ -487,7 +492,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
                         .assign((t, v) -> t.setDate(asDate(v.get("date"))))
 
                         .section("wkn", "isin", "name")
-                        .match("Nr.(\\d*)/(\\d*)  Verkauf *(?<name>.*) *\\((?<isin>[^/]*)/(?<wkn>[^)]*)\\)") //
+                        .match("Nr.(\\d*)/(\\d*) *Verkauf *(?<name>.*) *\\((?<isin>[^/]*)/(?<wkn>[^)]*)\\)") //
                         .assign((t, v) -> {
                             t.setSecurity(getOrCreateSecurity(v));
                         })
@@ -551,7 +556,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
         })
                         // Datum          : 16.03.2015
                         .section("date").match("Datum(\\s*):(\\s+)(?<date>\\d+.\\d+.\\d{4})") //
-                        .assign((t, v) -> t.setDate(asDate(v.get("date"))))
+                        .assign((t, v) -> t.setDateTime(asDate(v.get("date"))))
 
                         // Depoteingang                                       DEKAFONDS CF (DE0008474503)
                         .section("isin", "name")
@@ -854,7 +859,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
                             {
                                 // create a long date from the year in the
                                 // context
-                                t.setDate(asDate(date + context.get("year")));
+                                t.setDateTime(asDate(date + context.get("year")));
                             }
                             t.setNote(v.get("text"));
                             t.setAmount(asAmount(v.get("amount")));
@@ -907,7 +912,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
                             {
                                 // create a long date from the year in the
                                 // context
-                                t.setDate(asDate(date + context.get("year")));
+                                t.setDateTime(asDate(date + context.get("year")));
                             }
                             t.setNote(v.get("text"));
                             t.setAmount(asAmount(v.get("amount")));
@@ -930,7 +935,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
     {
 
         // optional: Steuererstattung
-        Block block = new Block("Nr.(\\d*)/(\\d*)  Verkauf.*");
+        Block block = new Block("Nr.(\\d*)/(\\d*) *Verkauf.*");
         type.addBlock(block);
         block.set(new Transaction<AccountTransaction>()
                         .subject(() -> {
@@ -948,7 +953,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
                         })
 
                         .section("wkn", "isin", "name")
-                        .match("Nr.(\\d*)/(\\d*)  Verkauf *(?<name>.*) *\\((?<isin>[^/]*)/(?<wkn>[^)]*)\\)")
+                        .match("Nr.(\\d*)/(\\d*) *Verkauf *(?<name>.*) *\\((?<isin>[^/]*)/(?<wkn>[^)]*)\\)")
                         .assign((t, v) -> {
                             t.setSecurity(getOrCreateSecurity(v));
                         })
@@ -957,7 +962,7 @@ public class FinTechGroupBankPDFExtractor extends AbstractPDFExtractor
                         .match("^davon ausgef\\. *: (?<shares>[.\\d]+,\\d*) St\\. *Schlusstag *: *(?<date>\\d+.\\d+.\\d{4}+), \\d+:\\d+ Uhr")
                         .assign((t, v) -> {
                             t.setShares(asShares(v.get("shares")));
-                            t.setDate(asDate(v.get("date")));
+                            t.setDateTime(asDate(v.get("date")));
 
                         })
 

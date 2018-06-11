@@ -12,6 +12,7 @@ public class DividendTransaction extends AccountTransaction
 
     private long totalShares;
     private Money fifoCost;
+    private Money movingAverageCost;
 
     public Account getAccount()
     {
@@ -40,6 +41,17 @@ public class DividendTransaction extends AccountTransaction
         this.fifoCost = fifoCost;
     }
 
+    public Money getMovingAverageCost()
+    {
+        return movingAverageCost;
+    }
+
+    /* package */
+    void setMovingAverageCost(Money movingAverageCost)
+    {
+        this.movingAverageCost = movingAverageCost;
+    }
+
     /* package */
     void setTotalShares(long totalShares)
     {
@@ -59,19 +71,32 @@ public class DividendTransaction extends AccountTransaction
         return getGrossValueAmount() / cost;
     }
 
+    public double getPersonalDividendYieldMovingAverage()
+    {
+        if (movingAverageCost.getAmount() <= 0)
+            return 0;
+
+        double cost = movingAverageCost.getAmount();
+
+        if (getShares() > 0)
+            cost = movingAverageCost.getAmount() * (getShares() / (double) totalShares);
+
+        return getGrossValueAmount() / cost;
+    }
+
     static long amountFractionPerShare(long amount, long shares)
     {
         if (shares == 0)
             return 0;
 
-        return Math.round((amount * (Values.AmountFraction.factor() / Values.Amount.factor()) * Values.Share.divider())
+        return Math.round((amount * (Values.AmountFraction.factor() / (double)Values.Amount.factor()) * Values.Share.divider())
                         / (double) shares);
     }
 
     public long getGrossValueAmount()
     {
         long taxes = getUnits().filter(u -> u.getType() == Unit.Type.TAX)
-                        .collect(MoneyCollectors.sum(getCurrencyCode(), u -> u.getAmount())).getAmount();
+                        .collect(MoneyCollectors.sum(getCurrencyCode(), Unit::getAmount)).getAmount();
 
         return getAmount() + taxes;
     }

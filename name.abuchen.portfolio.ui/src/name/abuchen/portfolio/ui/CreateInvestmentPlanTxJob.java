@@ -51,7 +51,7 @@ final class CreateInvestmentPlanTxJob extends AbstractClientJob
             Map<InvestmentPlan, List<Transaction>> tx = new HashMap<>();
 
             CurrencyConverterImpl converter = new CurrencyConverterImpl(factory, getClient().getBaseCurrency());
-            getClient().getPlans().stream().forEach(plan -> {
+            getClient().getPlans().stream().filter(InvestmentPlan::isAutoGenerate).forEach(plan -> {
                 List<Transaction> transactions = plan.generateTransactions(converter);
                 if (!transactions.isEmpty())
                     tx.put(plan, transactions);

@@ -2,6 +2,8 @@ package name.abuchen.portfolio.ui.dialogs.transactions;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.runtime.IStatus;
@@ -14,7 +16,6 @@ import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.model.TransactionOwner;
-import name.abuchen.portfolio.model.PortfolioTransferEntry.Suggestion;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.CurrencyConverterImpl;
 import name.abuchen.portfolio.money.Values;
@@ -27,7 +28,7 @@ public class SecurityTransferModel extends AbstractModel
 {
     public enum Properties
     {
-        security, securityCurrencyCode, sourcePortfolio, sourcePortfolioLabel, quoteSuggestion, targetPortfolio, targetPortfolioLabel, date, shares, quote, amount, note, calculationStatus;
+        security, securityCurrencyCode, sourcePortfolio, sourcePortfolioLabel, quoteSuggestion, targetPortfolio, targetPortfolioLabel, date, time, shares, quote, amount, note, calculationStatus;
     }
 
     private final Client client;
@@ -38,6 +39,7 @@ public class SecurityTransferModel extends AbstractModel
     private Portfolio sourcePortfolio;
     private Portfolio targetPortfolio;
     private LocalDate date = LocalDate.now();
+    private LocalTime time = LocalTime.MIDNIGHT;
 
     private long shares;
     private BigDecimal quote = BigDecimal.ONE;
@@ -95,7 +97,7 @@ public class SecurityTransferModel extends AbstractModel
         }
 
         t.setSecurity(security);
-        t.setDate(date);
+        t.setDate(LocalDateTime.of(date, time));
         t.setShares(shares);
         t.setAmount(amount);
         t.setCurrencyCode(security.getCurrencyCode());
@@ -118,7 +120,7 @@ public class SecurityTransferModel extends AbstractModel
     {
         if (shares == 0L)
             return ValidationStatus.error(MessageFormat.format(Messages.MsgDialogInputRequired, Messages.ColumnShares));
-        
+
         // check whether gross value is in range
         long lower = Math.round(shares * quote.add(BigDecimal.valueOf(-0.01)).doubleValue() * Values.Amount.factor()
                         / Values.Share.divider());
@@ -215,7 +217,9 @@ public class SecurityTransferModel extends AbstractModel
         this.targetPortfolio = (Portfolio) entry.getOwner(entry.getTargetTransaction());
 
         this.security = entry.getSourceTransaction().getSecurity();
-        this.date = entry.getSourceTransaction().getDate();
+        LocalDateTime transactionDate = entry.getSourceTransaction().getDateTime();
+        this.date = transactionDate.toLocalDate();
+        this.time = transactionDate.toLocalTime();
         this.shares = entry.getSourceTransaction().getShares();
         this.quote = entry.getSourceTransaction().getGrossPricePerShare().toBigDecimal();
         this.amount = entry.getTargetTransaction().getAmount();
@@ -284,9 +288,20 @@ public class SecurityTransferModel extends AbstractModel
         return date;
     }
 
+    public LocalTime getTime()
+    {
+        return time;
+    }
+
     public void setDate(LocalDate date)
     {
         firePropertyChange(Properties.date.name(), this.date, this.date = date);
+        updateSharesAndQuote();
+    }
+
+    public void setTime(LocalTime time)
+    {
+        firePropertyChange(Properties.time.name(), this.time, this.time = time);
         updateSharesAndQuote();
     }
 
@@ -305,7 +320,7 @@ public class SecurityTransferModel extends AbstractModel
         }
         else if (amount != 0 && shares != 0)
         {
-            setQuote(new BigDecimal(amount * Values.Share.factor() / (shares * Values.Amount.divider())));
+            setQuote(BigDecimal.valueOf(amount * Values.Share.factor() / (shares * Values.Amount.divider())));
         }
 
         firePropertyChange(Properties.calculationStatus.name(), this.calculationStatus,
@@ -338,7 +353,8 @@ public class SecurityTransferModel extends AbstractModel
 
         if (shares != 0)
         {
-            BigDecimal newQuote = new BigDecimal(amount * Values.Share.factor() / (shares * Values.Amount.divider()));
+            BigDecimal newQuote = BigDecimal
+                            .valueOf(amount * Values.Share.factor() / (shares * Values.Amount.divider()));
             firePropertyChange(Properties.quote.name(), this.quote, this.quote = newQuote);
         }
 

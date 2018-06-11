@@ -86,7 +86,8 @@ public class SecuritiesChart
         EVENTS(Messages.LabelChartDetailEvents), //
         SPLITS(Messages.LabelChartDetailSplits), //
         RIGHTS(Messages.LabelChartDetailRights), //
-        FIFOPURCHASE(Messages.LabelChartDetailFIFOpurchase + SEPERATOR), //
+        FIFOPURCHASE(Messages.LabelChartDetailFIFOpurchase), //
+        FLOATINGAVGPURCHASE(Messages.LabelChartDetailMovingAveragePurchase + SEPERATOR), //
         SMA50(Messages.LabelChartDetailSMA50), //
         SMA200(Messages.LabelChartDetailSMA200), //
         BOLLINGERBANDS(Messages.LabelChartDetailBollingerBands);
@@ -116,6 +117,7 @@ public class SecuritiesChart
     private Color colorEventOther  = Colors.getColor(140, 90, 200);
 
     private Color colorFifoPurchasePrice = Colors.getColor(226, 122, 121);
+    private Color colorMovingAveragePurchasePrice = Colors.getColor(150, 82, 81);
     private Color colorBollingerBands = Colors.getColor(201, 141, 68);
     private Color colorSMA50 = Colors.getColor(102, 171, 29);
     private Color colorSMA200 = Colors.getColor(96, 104, 110);
@@ -220,7 +222,7 @@ public class SecuritiesChart
                 Interval displayInterval = Interval.of(date.minusDays(5), date.plusDays(5));
 
                 customTooltipEvents.stream() //
-                                .filter(t -> displayInterval.contains(t.getDate())) //
+                                .filter(t -> displayInterval.contains(t.getDateTime())) //
                                 .forEach(t -> {
                                     if (t instanceof AccountTransaction)
                                         addDividendTooltip(composite, (AccountTransaction) t);
@@ -235,7 +237,7 @@ public class SecuritiesChart
     {
         Label label = new Label(composite, SWT.NONE);
         label.setText(MessageFormat.format(Messages.LabelToolTipTransactionSummary, t.getType().toString(),
-                        dateTimeFormatter.format(t.getDate()), t.getMonetaryAmount().toString()));
+                        dateTimeFormatter.format(t.getDateTime().toLocalDate()), t.getMonetaryAmount().toString()));
 
         label = new Label(composite, SWT.NONE);
         label.setText(MessageFormat.format(Messages.LabelToolTipInvestmentDetails, Values.Share.format(t.getShares()),
@@ -247,7 +249,7 @@ public class SecuritiesChart
     {
         Label label = new Label(composite, SWT.NONE);
         label.setText(MessageFormat.format(Messages.LabelToolTipTransactionSummary, t.getType().toString(),
-                        dateTimeFormatter.format(t.getDate()), t.getMonetaryAmount().toString()));
+                        dateTimeFormatter.format(t.getDateTime().toLocalDate()), t.getMonetaryAmount().toString()));
 
         if (t.getShares() == 0L)
         {
@@ -447,8 +449,15 @@ public class SecuritiesChart
             }
             else
             {
-                index = Math.abs(Collections.binarySearch(prices, new SecurityPrice(chartPeriod, 0),
-                                new SecurityPrice.ByDate()));
+                index = Collections.binarySearch(prices, new SecurityPrice(chartPeriod, 0), new SecurityPrice.ByDate());
+                if (index == -1)
+                {
+                    index = 0;
+                }
+                else
+                {
+                    index = Math.abs(index);
+                }
 
                 if (index >= prices.size())
                 {
@@ -567,6 +576,9 @@ public class SecuritiesChart
         if (chartConfig.contains(ChartDetails.FIFOPURCHASE))
             addFIFOPurchasePrice();
 
+        if (chartConfig.contains(ChartDetails.FLOATINGAVGPURCHASE))
+            addMovingAveragePurchasePrice();
+
         if (chartConfig.contains(ChartDetails.INVESTMENT))
             addInvestmentMarkerLines();
 
@@ -609,7 +621,7 @@ public class SecuritiesChart
                         .filter(t -> t.getSecurity() == security)
                         .filter(t -> t.getType() == PortfolioTransaction.Type.BUY
                                         || t.getType() == PortfolioTransaction.Type.DELIVERY_INBOUND)
-                        .filter(t -> chartPeriod == null || chartPeriod.isBefore(t.getDate()))
+                        .filter(t -> chartPeriod == null || chartPeriod.isBefore(t.getDateTime().toLocalDate()))
                         .sorted(new Transaction.ByDate()).collect(Collectors.toList());
 
         addInvestmentMarkers(purchase, Messages.SecurityMenuBuy, colorEventPurchase);
@@ -618,7 +630,7 @@ public class SecuritiesChart
                         .filter(t -> t.getSecurity() == security)
                         .filter(t -> t.getType() == PortfolioTransaction.Type.SELL
                                         || t.getType() == PortfolioTransaction.Type.DELIVERY_OUTBOUND)
-                        .filter(t -> chartPeriod == null || chartPeriod.isBefore(t.getDate()))
+                        .filter(t -> chartPeriod == null || chartPeriod.isBefore(t.getDateTime().toLocalDate()))
                         .sorted(new Transaction.ByDate()).collect(Collectors.toList());
 
         addInvestmentMarkers(sales, Messages.SecurityMenuSell, colorEventSale);
@@ -637,13 +649,13 @@ public class SecuritiesChart
                 String label = Values.Share.format(t.getType().isPurchase() ? t.getShares() : -t.getShares());
                 double value = t.getGrossPricePerShare(converter.with(t.getSecurity().getCurrencyCode())).getAmount()
                                 / Values.Quote.divider();
-                chart.addMarkerLine(t.getDate(), color, label, value);
+                chart.addMarkerLine(t.getDateTime().toLocalDate(), color, label, value);
             });
         }
         else
         {
-            Date[] dates = transactions.stream().map(PortfolioTransaction::getDate)
-                            .map(d -> Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant()))
+            Date[] dates = transactions.stream().map(PortfolioTransaction::getDateTime)
+                            .map(d -> Date.from(d.atZone(ZoneId.systemDefault()).toInstant()))
                             .collect(Collectors.toList()).toArray(new Date[0]);
 
             double[] values = transactions.stream().mapToDouble(
@@ -702,7 +714,7 @@ public class SecuritiesChart
         List<AccountTransaction> dividends = client.getAccounts().stream().flatMap(a -> a.getTransactions().stream())
                         .filter(t -> t.getSecurity() == security)
                         .filter(t -> t.getType() == AccountTransaction.Type.DIVIDENDS)
-                        .filter(t -> chartPeriod == null || chartPeriod.isBefore(t.getDate()))
+                        .filter(t -> chartPeriod == null || chartPeriod.isBefore(t.getDateTime().toLocalDate()))
                         .sorted(new Transaction.ByDate()).collect(Collectors.toList());
 
         List<SecurityEvent> events =   security.getEvents(SecurityEvent.Type.STOCK_DIVIDEND).stream() //
@@ -720,8 +732,8 @@ public class SecuritiesChart
             List<LocalDate> dates = new ArrayList<LocalDate>();
             if (!dividends.isEmpty())
                 dividends.forEach(t -> {
-                    chart.addMarkerLine(t.getDate(), colorEventDividendPaid, getDividendLabel(t));
-                    dates.add(t.getDate());
+                    chart.addMarkerLine(t.getDateTime().toLocalDate(), colorEventDividendPaid, getDividendLabel(t));
+                    dates.add(t.getDateTime().toLocalDate());
                 });
             if (!events.isEmpty())
                 events.forEach(e -> {
@@ -740,8 +752,8 @@ public class SecuritiesChart
             if (dividends.isEmpty())
                 return;
 
-            Date[] dates = dividends.stream().map(AccountTransaction::getDate)
-                            .map(d -> Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant()))
+            Date[] dates = dividends.stream().map(AccountTransaction::getDateTime)
+                            .map(d -> Date.from(d.atZone(ZoneId.systemDefault()).toInstant()))
                             .collect(Collectors.toList()).toArray(new Date[0]);
 
             IAxis yAxis1st = chart.getAxisSet().getYAxis(0);
@@ -903,8 +915,10 @@ public class SecuritiesChart
                         .filter(t -> t.getSecurity().equals(security))
                         .filter(t -> !(t.getType() == PortfolioTransaction.Type.TRANSFER_IN
                                         || t.getType() == PortfolioTransaction.Type.TRANSFER_OUT))
-                        .filter(t -> t.getDate().isBefore(today))
-                        .map(t -> (chartPeriod == null || t.getDate().isAfter(chartPeriod)) ? t.getDate() : chartPeriod)
+                        .filter(t -> t.getDateTime().toLocalDate().isBefore(today))
+                        .map(t -> (chartPeriod == null || t.getDateTime().toLocalDate().isAfter(chartPeriod))
+                                        ? t.getDateTime().toLocalDate()
+                                        : chartPeriod)
                         .distinct() //
                         .sorted() //
                         .collect(Collectors.toList());
@@ -975,6 +989,100 @@ public class SecuritiesChart
                         LineStyle.SOLID, false, seriesCounter == 0);
     }
 
+    private void addMovingAveragePurchasePrice()
+    {
+        // securities w/o currency (e.g. index) cannot be bought and hence have
+        // no purchase price
+        if (security.getCurrencyCode() == null)
+            return;
+
+        // create a list of dates that are relevant for floating avg purchase price
+        // changes (i.e. all purchase and sell events)
+
+        Client filteredClient = new ClientSecurityFilter(security).filter(client);
+        CurrencyConverter securityCurrency = converter.with(security.getCurrencyCode());
+
+        LocalDate today = LocalDate.now();
+
+        List<LocalDate> candidates = client.getPortfolios().stream() //
+                        .flatMap(p -> p.getTransactions().stream()) //
+                        .filter(t -> t.getSecurity().equals(security))
+                        .filter(t -> !(t.getType() == PortfolioTransaction.Type.TRANSFER_IN
+                                        || t.getType() == PortfolioTransaction.Type.TRANSFER_OUT))
+                        .filter(t -> t.getDateTime().toLocalDate().isBefore(today))
+                        .map(t -> (chartPeriod == null || t.getDateTime().toLocalDate().isAfter(chartPeriod))
+                                        ? t.getDateTime().toLocalDate()
+                                        : chartPeriod)
+                        .distinct() //
+                        .sorted() //
+                        .collect(Collectors.toList());
+
+        // calculate floating avg purchase price for each event - separate lineSeries
+        // per holding period
+
+        List<Double> values = new ArrayList<>();
+        List<LocalDate> dates = new ArrayList<>();
+        int seriesCounter = 0;
+
+        for (LocalDate eventDate : candidates)
+        {
+            Optional<Double> purchasePrice = getMovingAveragePurchasePrice(filteredClient, securityCurrency, eventDate);
+
+            if (purchasePrice.isPresent())
+            {
+                dates.add(eventDate);
+                values.add(purchasePrice.get());
+            }
+            else
+            {
+                if (!dates.isEmpty())
+                {
+                    // add previous value if the data series ends here (no more
+                    // future events)
+
+                    dates.add(eventDate);
+                    values.add(values.get(values.size() - 1));
+
+                    createMovingAveragePurchaseLineSeries(values, dates, seriesCounter++);
+
+                    values.clear();
+                    dates.clear();
+                }
+                else if (dates.isEmpty())
+                {
+                    // if no holding period exists, then do not add the event at
+                    // all
+                }
+            }
+        }
+
+        // add today if needed
+
+        getMovingAveragePurchasePrice(filteredClient, securityCurrency, today).ifPresent(price -> {
+            dates.add(today);
+            values.add(price);
+        });
+
+        if (!dates.isEmpty())
+            createMovingAveragePurchaseLineSeries(values, dates, seriesCounter);
+    }
+
+    private void createMovingAveragePurchaseLineSeries(List<Double> values, List<LocalDate> dates, int seriesCounter)
+    {
+        String label = seriesCounter == 0 ? Messages.LabelChartDetailMovingAveragePurchase
+                        : MessageFormat.format(Messages.LabelChartDetailMovingAveragePurchaseHoldingPeriod, seriesCounter + 1);
+
+        ILineSeries series = (ILineSeries) chart.getSeriesSet().createSeries(SeriesType.LINE, label);
+
+        series.setSymbolType(PlotSymbolType.NONE);
+        series.setYAxisId(0);
+        series.enableStep(true);
+
+        configureSeriesPainter(series, TimelineChart.toJavaUtilDate(dates.toArray(new LocalDate[0])),
+                        ArrayUtils.toPrimitive(values.toArray(new Double[0])), colorMovingAveragePurchasePrice, 2,
+                        LineStyle.SOLID, false, seriesCounter == 0);
+    }
+
     private Optional<Double> getLatestPurchasePrice()
     {
         // securities w/o currency (e.g. index) cannot be bought and hence have
@@ -1000,4 +1108,20 @@ public class SecuritiesChart
         else
             return Optional.empty();
     }
+
+    private Optional<Double> getMovingAveragePurchasePrice(Client filteredClient, CurrencyConverter currencyConverter,
+                    LocalDate date)
+    {
+        ClientSnapshot snapshot = ClientSnapshot.create(filteredClient, currencyConverter, date);
+        AssetPosition position = snapshot.getPositionsByVehicle().get(security);
+        if (position == null)
+            return Optional.empty();
+
+        Money purchasePrice = position.getPosition().getMovingAveragePurchasePrice();
+        if (!purchasePrice.isZero())
+            return Optional.of(purchasePrice.getAmount() / Values.Amount.divider());
+        else
+            return Optional.empty();
+    }
+
 }

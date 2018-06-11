@@ -104,26 +104,26 @@ public class ClientSecurityFilter implements ClientFilter
         switch (pair.getTransaction().getType())
         {
             case DIVIDENDS:
-                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDate(),
+                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDateTime(),
                                 t.getCurrencyCode(), amount + taxes, t.getSecurity(), t.getType()));
-                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDate(),
+                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDateTime(),
                                 t.getCurrencyCode(), amount + taxes, t.getSecurity(), AccountTransaction.Type.REMOVAL));
                 break;
             case DIVIDEND_CHARGE:
-                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDate(),
+                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDateTime(),
                                 t.getCurrencyCode(), amount - taxes, t.getSecurity(), t.getType()));
-                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDate(),
+                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDateTime(),
                                 t.getCurrencyCode(), amount - taxes, t.getSecurity(), AccountTransaction.Type.DEPOSIT));
                 break;
             case FEES:
                 getAccount.apply((Account) pair.getOwner()).internalAddTransaction(t);
-                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDate(),
-                                t.getCurrencyCode(), t.getAmount(), t.getSecurity(), AccountTransaction.Type.DEPOSIT));
+                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDateTime(),
+                                t.getCurrencyCode(), amount, t.getSecurity(), AccountTransaction.Type.DEPOSIT));
                 break;
             case FEES_REFUND:
                 getAccount.apply((Account) pair.getOwner()).internalAddTransaction(t);
-                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDate(),
-                                t.getCurrencyCode(), t.getAmount(), t.getSecurity(), AccountTransaction.Type.REMOVAL));
+                getAccount.apply((Account) pair.getOwner()).internalAddTransaction(new AccountTransaction(t.getDateTime(),
+                                t.getCurrencyCode(), amount, t.getSecurity(), AccountTransaction.Type.REMOVAL));
                 break;
             case TAXES:
             case TAX_REFUND:
@@ -145,7 +145,7 @@ public class ClientSecurityFilter implements ClientFilter
     private PortfolioTransaction convertToDelivery(PortfolioTransaction t, PortfolioTransaction.Type targetType)
     {
         PortfolioTransaction pseudo = new PortfolioTransaction();
-        pseudo.setDate(t.getDate());
+        pseudo.setDateTime(t.getDateTime());
         pseudo.setCurrencyCode(t.getCurrencyCode());
         pseudo.setSecurity(t.getSecurity());
         pseudo.setShares(t.getShares());

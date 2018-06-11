@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.beans.BeanProperties;
+import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -59,7 +60,7 @@ public class PreviewTransactionsPage extends AbstractWizardPage
             switch (columnIndex)
             {
                 case 0:
-                    return Values.Date.format(t.getDate());
+                    return Values.DateTime.format(t.getDateTime());
                 case 1:
                     if (t instanceof AccountTransaction)
                         return ((AccountTransaction) t).getType().toString();
@@ -69,7 +70,7 @@ public class PreviewTransactionsPage extends AbstractWizardPage
                 case 2:
                     return Values.Share.format(t.getShares());
                 case 3:
-                    if (model.isChangeTransactions() && t.getDate().isBefore(model.getExDate()))
+                    if (model.isChangeTransactions() && t.getDateTime().toLocalDate().isBefore(model.getExDate()))
                     {
                         long shares = t.getShares() * model.getNewShares() / model.getOldShares();
                         return Values.Share.format(shares);
@@ -130,7 +131,7 @@ public class PreviewTransactionsPage extends AbstractWizardPage
 
         TableColumn column = new TableColumn(tableViewer.getTable(), SWT.None);
         column.setText(Messages.ColumnDate);
-        layout.setColumnData(column, new ColumnPixelData(80, true));
+        layout.setColumnData(column, new ColumnPixelData(100, true));
 
         column = new TableColumn(tableViewer.getTable(), SWT.None);
         column.setText(Messages.ColumnTransactionType);
@@ -155,8 +156,9 @@ public class PreviewTransactionsPage extends AbstractWizardPage
 
         DataBindingContext context = new DataBindingContext();
 
-        context.bindValue(WidgetProperties.selection().observe(checkbox), //
-                        BeanProperties.value("changeTransactions").observe(model)); //$NON-NLS-1$
+        @SuppressWarnings("unchecked")
+        IObservableValue<?> observable = BeanProperties.value("changeTransactions").observe(model); //$NON-NLS-1$
+        context.bindValue(WidgetProperties.selection().observe(checkbox), observable);
 
         checkbox.addSelectionListener(new SelectionAdapter()
         {

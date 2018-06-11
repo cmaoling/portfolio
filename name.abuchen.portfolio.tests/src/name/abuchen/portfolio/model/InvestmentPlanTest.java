@@ -1,10 +1,11 @@
 package name.abuchen.portfolio.model;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertThat;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,22 +31,24 @@ public class InvestmentPlanTest
         Portfolio portfolio = new PortfolioBuilder(account).addTo(client);
 
         InvestmentPlan investmentPlan = new InvestmentPlan();
-        investmentPlan.setAccount(account);       // set both account and portfolio
-        investmentPlan.setPortfolio(portfolio);   // causes securities to be bought
+        investmentPlan.setAccount(account); // set both account and portfolio
+        investmentPlan.setPortfolio(portfolio); // causes securities to be
+                                                // bought
         investmentPlan.setSecurity(security);
         investmentPlan.setAmount(Values.Amount.factorize(100));
         investmentPlan.setInterval(1);
-        investmentPlan.setStart(LocalDate.parse("2016-01-31"));
+        investmentPlan.setStart(LocalDateTime.parse("2016-01-31T00:00:00"));
 
         investmentPlan.generateTransactions(new TestCurrencyConverter());
 
         List<Transaction> tx = investmentPlan.getTransactions().stream()
-                        .filter(t -> t.getDate().isBefore(LocalDate.parse("2017-04-10"))).collect(Collectors.toList());
+                        .filter(t -> t.getDateTime().isBefore(LocalDateTime.parse("2017-04-10T00:00")))
+                        .collect(Collectors.toList());
 
         assertThat(tx.size(), is(15));
 
         tx = investmentPlan.getTransactions().stream()
-                        .filter(t -> t.getDate().getYear() == 2016 && t.getDate().getMonth() == Month.MAY)
+                        .filter(t -> t.getDateTime().getYear() == 2016 && t.getDateTime().getMonth() == Month.MAY)
                         .collect(Collectors.toList());
 
         // May 2016 should contain two transactions:
@@ -56,22 +59,24 @@ public class InvestmentPlanTest
         assertThat(tx.get(0), instanceOf(PortfolioTransaction.class));
         assertThat(tx.get(1), instanceOf(PortfolioTransaction.class));
 
-        assertThat(tx.get(0).getDate(), is(LocalDate.parse("2016-05-02")));
+        assertThat(tx.get(0).getDateTime(), is(LocalDateTime.parse("2016-05-02T00:00")));
         assertThat(((PortfolioTransaction) tx.get(0)).getType(), is(PortfolioTransaction.Type.BUY));
 
-        assertThat(tx.get(1).getDate(), is(LocalDate.parse("2016-05-31")));
+        assertThat(tx.get(1).getDateTime(), is(LocalDateTime.parse("2016-05-31T00:00")));
         assertThat(((PortfolioTransaction) tx.get(1)).getType(), is(PortfolioTransaction.Type.BUY));
 
         // check that delta generation of transactions also takes into account
         // the transaction "spilled over" into the next month
 
-        investmentPlan.getTransactions().stream().filter(t -> t.getDate().isAfter(LocalDate.parse("2016-05-10")))
-                        .collect(Collectors.toList()).forEach(t -> investmentPlan.removeTransaction((PortfolioTransaction) t));
+        investmentPlan.getTransactions().stream()
+                        .filter(t -> t.getDateTime().isAfter(LocalDateTime.parse("2016-05-10T00:00")))
+                        .collect(Collectors.toList())
+                        .forEach(t -> investmentPlan.removeTransaction((PortfolioTransaction) t));
 
         List<Transaction> newlyGenerated = investmentPlan.generateTransactions(new TestCurrencyConverter());
         assertThat(newlyGenerated.isEmpty(), is(false));
         assertThat(newlyGenerated.get(0), instanceOf(PortfolioTransaction.class));
-        assertThat(newlyGenerated.get(0).getDate(), is(LocalDate.parse("2016-05-31")));
+        assertThat(newlyGenerated.get(0).getDateTime(), is(LocalDateTime.parse("2016-05-31T00:00")));
     }
 
     @Test
@@ -83,22 +88,23 @@ public class InvestmentPlanTest
         Portfolio portfolio = new PortfolioBuilder(account).addTo(client);
 
         InvestmentPlan investmentPlan = new InvestmentPlan();
-        //investmentPlan.setAccount(account);     // set portfolio only
-        investmentPlan.setPortfolio(portfolio);   //  causes securities to be delivered in
+        // investmentPlan.setAccount(account); // set portfolio only
+        investmentPlan.setPortfolio(portfolio); // causes securities to be delivered in
         investmentPlan.setSecurity(security);
         investmentPlan.setAmount(Values.Amount.factorize(100));
         investmentPlan.setInterval(1);
-        investmentPlan.setStart(LocalDate.parse("2016-01-31"));
+        investmentPlan.setStart(LocalDateTime.parse("2016-01-31T00:00"));
 
         investmentPlan.generateTransactions(new TestCurrencyConverter());
 
         List<Transaction> tx = investmentPlan.getTransactions().stream()
-                        .filter(t -> t.getDate().isBefore(LocalDate.parse("2017-04-10"))).collect(Collectors.toList());
+                        .filter(t -> t.getDateTime().isBefore(LocalDateTime.parse("2017-04-10T00:00")))
+                        .collect(Collectors.toList());
 
         assertThat(tx.size(), is(15));
 
         tx = investmentPlan.getTransactions().stream()
-                        .filter(t -> t.getDate().getYear() == 2016 && t.getDate().getMonth() == Month.MAY)
+                        .filter(t -> t.getDateTime().getYear() == 2016 && t.getDateTime().getMonth() == Month.MAY)
                         .collect(Collectors.toList());
 
         // May 2016 should contain two transactions:
@@ -107,10 +113,10 @@ public class InvestmentPlanTest
 
         assertThat(tx.size(), is(2));
         assertThat(tx.get(0), instanceOf(PortfolioTransaction.class));
-        assertThat(tx.get(0).getDate(), is(LocalDate.parse("2016-05-02")));
+        assertThat(tx.get(0).getDateTime(), is(LocalDateTime.parse("2016-05-02T00:00")));
         assertThat(((PortfolioTransaction) tx.get(0)).getType(), is(PortfolioTransaction.Type.DELIVERY_INBOUND));
         assertThat(tx.get(1), instanceOf(PortfolioTransaction.class));
-        assertThat(tx.get(1).getDate(), is(LocalDate.parse("2016-05-31")));
+        assertThat(tx.get(1).getDateTime(), is(LocalDateTime.parse("2016-05-31T00:00")));
         assertThat(((PortfolioTransaction) tx.get(1)).getType(), is(PortfolioTransaction.Type.DELIVERY_INBOUND));
     }
 
@@ -118,27 +124,27 @@ public class InvestmentPlanTest
     public void testGenerationOfDepositTransaction()
     {
         Client client = new Client();
-        Security security = new SecurityBuilder().addTo(client);
+        //Security security = new SecurityBuilder().addTo(client);
         Account account = new AccountBuilder().addTo(client);
-        Portfolio portfolio = new PortfolioBuilder(account).addTo(client);
+        //Portfolio portfolio = new PortfolioBuilder(account).addTo(client);
 
         InvestmentPlan investmentPlan = new InvestmentPlan();
-        investmentPlan.setAccount(account);        // set portfolio only
+        investmentPlan.setAccount(account);        // set account only
         //investmentPlan.setPortfolio(portfolio);  //  causes deposit to be made
-        investmentPlan.setSecurity(security);
+        //investmentPlan.setSecurity(security);
         investmentPlan.setAmount(Values.Amount.factorize(100));
         investmentPlan.setInterval(1);
-        investmentPlan.setStart(LocalDate.parse("2016-01-31"));
+        investmentPlan.setStart(LocalDateTime.parse("2016-01-31T00:00"));
 
         investmentPlan.generateTransactions(new TestCurrencyConverter());
 
         List<Transaction> tx = investmentPlan.getTransactions().stream()
-                        .filter(t -> t.getDate().isBefore(LocalDate.parse("2017-04-10"))).collect(Collectors.toList());
+                        .filter(t -> t.getDateTime().isBefore(LocalDateTime.parse("2017-04-10T00:00"))).collect(Collectors.toList());
 
         assertThat(tx.size(), is(15));
 
         tx = investmentPlan.getTransactions().stream()
-                        .filter(t -> t.getDate().getYear() == 2016 && t.getDate().getMonth() == Month.MAY)
+                        .filter(t -> t.getDateTime().getYear() == 2016 && t.getDateTime().getMonth() == Month.MAY)
                         .collect(Collectors.toList());
 
         // May 2016 should contain two transactions:
@@ -149,11 +155,11 @@ public class InvestmentPlanTest
         assertThat(tx.size(), is(2));
 
         assertThat(tx.get(0), instanceOf(AccountTransaction.class));
-        assertThat(tx.get(0).getDate(), is(LocalDate.parse("2016-05-02")));
+        assertThat(tx.get(0).getDateTime(), is(LocalDateTime.parse("2016-05-02T00:00")));
         assertThat(((AccountTransaction) tx.get(0)).getType(), is(AccountTransaction.Type.DEPOSIT));
 
         assertThat(tx.get(1), instanceOf(AccountTransaction.class));
-        assertThat(tx.get(1).getDate(), is(LocalDate.parse("2016-05-31")));
+        assertThat(tx.get(1).getDateTime(), is(LocalDateTime.parse("2016-05-31T00:00")));
         assertThat(((AccountTransaction) tx.get(1)).getType(), is(AccountTransaction.Type.DEPOSIT));
     }
 }

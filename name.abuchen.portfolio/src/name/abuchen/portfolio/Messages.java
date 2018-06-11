@@ -53,10 +53,14 @@ public class Messages extends NLS
     public static String CSVDefPortfolioTransactions;
     public static String CSVDefSecurities;
     public static String CSVFormatApostrophe;
+    public static String CSVFormatDDMMMYYYY;
     public static String CSVFormatDDMMYY;
+    public static String CSVFormatDDMMYY1;
     public static String CSVFormatDDMMYYYY;
     public static String CSVFormatDDMMYYYY1;
     public static String CSVFormatISO;
+    public static String CSVFormatMMDDYY;
+    public static String CSVFormatMMDDYYYY;
     public static String CSVFormatNumberGermany;
     public static String CSVFormatNumberUS;
     public static String CSVFormatYYYYMMDD;
@@ -155,6 +159,7 @@ public class Messages extends NLS
     public static String MsgErrorIllegalForexUnit;
     public static String MsgErrorMissingValueMatches;
     public static String MsgErrorNoCrumbFound;
+    public static String MsgErrorNoneOfSubSectionsMatched;
     public static String MsgErrorNotAllPatternMatched;
     public static String MsgErrorNotAValidDate;
     public static String MsgErrorsConvertingValue;
@@ -173,6 +178,7 @@ public class Messages extends NLS
     public static String MsgNoExchangeRateAvailableForConversion;
     public static String MsgNoExchangeRateTimeSeriesFound;
     public static String MsgNoMatchingTableFoundInHTML;
+    public static String MsgNoQuotesFoundInHTML;
     public static String MsgNoResults;
     public static String MsgNotANumber;
     public static String MsgNotAPortflioFile;

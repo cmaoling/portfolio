@@ -55,7 +55,7 @@ import com.thoughtworks.xstream.mapper.Mapper;
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.model.Classification.Assignment;
 import name.abuchen.portfolio.model.PortfolioTransaction.Type;
-import name.abuchen.portfolio.model.PortfolioTransferEntry;
+//import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.money.CurrencyUnit;
 //import name.abuchen.portfolio.money.Monetary;
 import name.abuchen.portfolio.money.Money;
@@ -63,6 +63,7 @@ import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.impl.YahooFinanceQuoteFeed;
 import name.abuchen.portfolio.util.ProgressMonitorInputStream;
 import name.abuchen.portfolio.util.XStreamLocalDateConverter;
+import name.abuchen.portfolio.util.XStreamLocalDateTimeConverter;
 
 @SuppressWarnings("deprecation")
 public class ClientFactory
@@ -213,7 +214,9 @@ public class ClientFactory
             {
                 // check signature
                 byte[] signature = new byte[SIGNATURE.length];
-                input.read(signature);
+                int read = input.read(signature);
+                if (read != SIGNATURE.length)
+                    throw new IOException();
                 if (!Arrays.equals(signature, SIGNATURE))
                     throw new IOException(Messages.MsgNotAPortflioFile);
 
@@ -230,7 +233,9 @@ public class ClientFactory
 
                 // read initialization vector
                 byte[] iv = new byte[IV_LENGTH];
-                input.read(iv);
+                read = input.read(iv);
+                if (read != IV_LENGTH)
+                    throw new IOException();
 
                 Client client;
                 // build cipher and stream
@@ -240,9 +245,15 @@ public class ClientFactory
                 {
                     // read version information
                     byte[] bytes = new byte[4];
-                    decrypted.read(bytes); // major version number
+                    read = decrypted.read(bytes); // major version number
+                    if (read != bytes.length)
+                        throw new IOException();
+                    
                     int majorVersion = ByteBuffer.wrap(bytes).getInt();
-                    decrypted.read(bytes); // version number
+                    read = decrypted.read(bytes); // version number
+                    if (read != bytes.length)
+                        throw new IOException();
+                    
                     int version = ByteBuffer.wrap(bytes).getInt();
 
                     // sanity check if the file was properly decrypted
@@ -262,7 +273,7 @@ public class ClientFactory
                         {
                             // explicitly close the stream to force bad padding
                             // exceptions to occur inside this try-catch-block
-                            decrypted.close();
+                            decrypted.close(); // NOSONAR
                         }
                         catch (IOException ex)
                         {
@@ -271,7 +282,7 @@ public class ClientFactory
                             // "Given final block not properly padded" is thrown
                             // if we do not read the stream - so ignore that
                             // kind of exception
-                            if (!(ex.getCause() instanceof BadPaddingException)) 
+                            if (!(ex.getCause() instanceof BadPaddingException))
                                 throw ex;
                         }
                     }
@@ -457,21 +468,21 @@ public class ClientFactory
 
         switch (client.getVersion())
         {
-            case 1:
+            case 1: // NOSONAR
                 fixAssetClassTypes(client);
                 addFeedAndExchange(client);
-            case 2:
+            case 2: // NOSONAR
                 addDecimalPlaces(client);
             case 3:
                 // do nothing --> added industry classification
-            case 4:
+            case 4: // NOSONAR
                 for (Security s : client.getSecurities())
                     s.generateUUID();
             case 5:
                 // do nothing --> save industry taxonomy in client
             case 6:
                 // do nothing --> added WKN attribute to security
-            case 7:
+            case 7: // NOSONAR
                 // new portfolio transaction types:
                 // DELIVERY_INBOUND, DELIVERY_OUTBOUND
                 changePortfolioTransactionTypeToDelivery(client);
@@ -479,22 +490,22 @@ public class ClientFactory
                 // do nothing --> added 'retired' property to securities
             case 9:
                 // do nothing --> added 'cross entries' to transactions
-            case 10:
+            case 10: // NOSONAR
                 generateUUIDs(client);
             case 11:
                 // do nothing --> added 'properties' to client
-            case 12:
+            case 12: // NOSONAR
                 // added investment plans
                 // added security on chart as benchmark *and* performance
                 fixStoredBenchmarkChartConfigurations(client);
-            case 13:
+            case 13: // NOSONAR
                 // introduce arbitrary taxonomies
                 addAssetClassesAsTaxonomy(client);
                 addIndustryClassificationAsTaxonomy(client);
                 addAssetAllocationAsTaxonomy(client);
                 fixStoredClassificationChartConfiguration(client);
                 setDeprecatedFieldsToNull(client);
-            case 14:
+            case 14: // NOSONAR
                 // added shares to track dividends per share
                 assignSharesToDividendTransactions(client);
             case 15:
@@ -518,25 +529,25 @@ public class ClientFactory
                 // property to security
             case 24:
                 // do nothing --> added 'TAX_REFUND' as account transaction
-            case 25:
+            case 25: // NOSONAR
                 // incremented precision of shares to 6 digits after the decimal
                 // sign
                 incrementSharesPrecisionFromFiveToSixDigitsAfterDecimalSign(client);
             case 26:
                 // do nothing --> added client settings
-            case 27:
+            case 27: // NOSONAR
                 // client settings include attribute types
                 fixStoredChartConfigurationToSupportMultipleViews(client);
-            case 28:
+            case 28: // NOSONAR
                 // added currency support --> designate a default currency (user
                 // will get a dialog to change)
                 setAllCurrencies(client, CurrencyUnit.EUR);
                 bumpUpCPIMonthValue(client);
                 convertFeesAndTaxesToTransactionUnits(client);
-            case 29:
+            case 29: // NOSONAR
                 // added decimal places to stock quotes
                 addDecimalPlacesToQuotes(client);
-            case 30:
+            case 30: // NOSONAR
                 // added dashboards to model
                 fixStoredChartConfigurationWithNewPerformanceSeriesKeys(client);
                 migrateToConfigurationSets(client);
@@ -576,10 +587,10 @@ public class ClientFactory
     {
         for (Security security : client.getSecurities())
         {
-            if ("STOCK".equals(security.getType())) //$NON-NLS-1$
-                security.setType("EQUITY"); //$NON-NLS-1$
-            else if ("BOND".equals(security.getType())) //$NON-NLS-1$
-                security.setType("DEBT"); //$NON-NLS-1$
+            if ("STOCK".equals(security.getType())) //$NON-NLS-1$ // NOSONAR
+                security.setType("EQUITY"); //$NON-NLS-1$ // NOSONAR
+            else if ("BOND".equals(security.getType())) //$NON-NLS-1$ // NOSONAR
+                security.setType("DEBT"); //$NON-NLS-1$ // NOSONAR
         }
     }
 
@@ -616,7 +627,7 @@ public class ClientFactory
             a.generateUUID();
         for (Portfolio p : client.getPortfolios())
             p.generateUUID();
-        for (Category c : client.getRootCategory().flatten())
+        for (Category c : client.getRootCategory().flatten()) // NOSONAR
             c.generateUUID();
     }
 
@@ -650,7 +661,7 @@ public class ClientFactory
 
         for (Security security : client.getSecurities())
         {
-            Classification classification = taxonomy.getClassificationById(security.getType());
+            Classification classification = taxonomy.getClassificationById(security.getType()); // NOSONAR
 
             if (classification != null)
             {
@@ -665,7 +676,7 @@ public class ClientFactory
 
     private static void addIndustryClassificationAsTaxonomy(Client client)
     {
-        String oldIndustryId = client.getIndustryTaxonomy();
+        String oldIndustryId = client.getIndustryTaxonomy(); // NOSONAR
 
         Taxonomy taxonomy = null;
 
@@ -688,7 +699,7 @@ public class ClientFactory
         int rank = 0;
         for (Security security : client.getSecurities())
         {
-            Classification classification = taxonomy.getClassificationById(security.getIndustryClassification());
+            Classification classification = taxonomy.getClassificationById(security.getIndustryClassification()); // NOSONAR
 
             if (classification != null)
             {
@@ -705,7 +716,7 @@ public class ClientFactory
 
     private static void addAssetAllocationAsTaxonomy(Client client)
     {
-        Category category = client.getRootCategory();
+        Category category = client.getRootCategory(); // NOSONAR
 
         Taxonomy taxonomy = new Taxonomy("assetallocation", Messages.LabelAssetAllocation); //$NON-NLS-1$
         Classification root = new Classification(category.getUUID(), Messages.LabelAssetAllocation);
@@ -718,11 +729,11 @@ public class ClientFactory
         client.addTaxonomy(taxonomy);
     }
 
-    private static void buildTree(Classification node, Category category)
+    private static void buildTree(Classification node, Category category) // NOSONAR
     {
         int rank = 0;
 
-        for (Category child : category.getChildren())
+        for (Category child : category.getChildren()) // NOSONAR
         {
             Classification classification = new Classification(node, child.getUUID(), child.getName());
             classification.setWeight(child.getPercentage() * Values.Weight.factor());
@@ -788,13 +799,13 @@ public class ClientFactory
 
     private static void setDeprecatedFieldsToNull(Client client)
     {
-        client.setRootCategory(null);
-        client.setIndustryTaxonomy(null);
+        client.setRootCategory(null); // NOSONAR
+        client.setIndustryTaxonomy(null); // NOSONAR
 
         for (Security security : client.getSecurities())
         {
-            security.setIndustryClassification(null);
-            security.setType(null);
+            security.setIndustryClassification(null); // NOSONAR
+            security.setType(null); // NOSONAR
         }
     }
 
@@ -805,8 +816,8 @@ public class ClientFactory
             List<TransactionPair<?>> transactions = security.getTransactions(client);
 
             // sort by date of transaction
-            Collections.sort(transactions,
-                            (one, two) -> one.getTransaction().getDate().compareTo(two.getTransaction().getDate()));
+            Collections.sort(transactions, (one, two) -> one.getTransaction().getDateTime()
+                            .compareTo(two.getTransaction().getDateTime()));
 
             // count and assign number of shares by account
             Map<Account, Long> account2shares = new HashMap<>();
@@ -836,7 +847,7 @@ public class ClientFactory
                     switch (portfolioTransaction.getType())
                     {
                         case BUY:
-                        case SELL:
+                        case SELL: // NOSONAR
                             if (portfolioTransaction.getCrossEntry() != null)
                                 account = (Account) portfolioTransaction.getCrossEntry()
                                                 .getCrossOwner(portfolioTransaction);
@@ -945,15 +956,15 @@ public class ClientFactory
         {
             for (PortfolioTransaction t : p.getTransactions())
             {
-                long fees = t.fees;
+                long fees = t.fees; // NOSONAR
                 if (fees != 0)
                     t.addUnit(new Transaction.Unit(Transaction.Unit.Type.FEE, Money.of(t.getCurrencyCode(), fees)));
-                t.fees = 0;
+                t.fees = 0; // NOSONAR
 
-                long taxes = t.taxes;
+                long taxes = t.taxes; // NOSONAR
                 if (taxes != 0)
                     t.addUnit(new Transaction.Unit(Transaction.Unit.Type.TAX, Money.of(t.getCurrencyCode(), taxes)));
-                t.taxes = 0;
+                t.taxes = 0; // NOSONAR
             }
         }
     }
@@ -985,7 +996,7 @@ public class ClientFactory
                         .filter(t -> t.getConverter() instanceof AttributeType.QuoteConverter)
                         .collect(Collectors.toList());
 
-        client.getSecurities().stream().map(s -> s.getAttributes()).forEach(attributes -> {
+        client.getSecurities().stream().map(Security::getAttributes).forEach(attributes -> {
             for (AttributeType t : typesWithQuotes)
             {
                 Object value = attributes.get(t);
@@ -1092,75 +1103,70 @@ public class ClientFactory
 
 
     @SuppressWarnings("nls")
-    private static XStream xstream()
+    private static synchronized XStream xstream()
     {
         if (xstream == null)
         {
-            synchronized (ClientFactory.class)
-            {
-                if (xstream == null)
-                {
-                    xstream = new XStream();
+            xstream = new XStream();
 
-                    xstream.setClassLoader(ClientFactory.class.getClassLoader());
+            xstream.setClassLoader(ClientFactory.class.getClassLoader());
 
-                    xstream.registerConverter(new XStreamLocalDateConverter());
-                    xstream.registerConverter(new PortfolioTransactionConverter(xstream.getMapper(),
-                                    xstream.getReflectionProvider()));
+            xstream.registerConverter(new XStreamLocalDateConverter());
+            xstream.registerConverter(new XStreamLocalDateTimeConverter());
+            xstream.registerConverter(
+                            new PortfolioTransactionConverter(xstream.getMapper(), xstream.getReflectionProvider()));
 
-                    xstream.useAttributeFor(Money.class, "amount");
-                    xstream.useAttributeFor(Money.class, "currencyCode");
-                    xstream.aliasAttribute(Money.class, "currencyCode", "currency");
+            xstream.useAttributeFor(Money.class, "amount");
+            xstream.useAttributeFor(Money.class, "currencyCode");
+            xstream.aliasAttribute(Money.class, "currencyCode", "currency");
 
-                    xstream.alias("account", Account.class);
-                    xstream.alias("client", Client.class);
-                    xstream.alias("settings", ClientSettings.class);
-                    xstream.alias("bookmark", Bookmark.class);
-                    xstream.alias("portfolio", Portfolio.class);
-                    xstream.alias("unit", Transaction.Unit.class);
-                    xstream.useAttributeFor(Transaction.Unit.class, "type");
-                    xstream.alias("account-transaction", AccountTransaction.class);
-                    xstream.alias("portfolio-transaction", PortfolioTransaction.class);
-                    xstream.alias("security", Security.class);
-                    xstream.alias("latest", LatestSecurityPrice.class);
-                    xstream.alias("category", Category.class);
-                    xstream.alias("watchlist", Watchlist.class);
-                    xstream.alias("investment-plan", InvestmentPlan.class);
-                    xstream.alias("attribute-type", AttributeType.class);
+            xstream.alias("account", Account.class);
+            xstream.alias("client", Client.class);
+            xstream.alias("settings", ClientSettings.class);
+            xstream.alias("bookmark", Bookmark.class);
+            xstream.alias("portfolio", Portfolio.class);
+            xstream.alias("unit", Transaction.Unit.class);
+            xstream.useAttributeFor(Transaction.Unit.class, "type");
+            xstream.alias("account-transaction", AccountTransaction.class);
+            xstream.alias("portfolio-transaction", PortfolioTransaction.class);
+            xstream.alias("security", Security.class);
+            xstream.alias("latest", LatestSecurityPrice.class);
+            xstream.alias("category", Category.class); // NOSONAR
+            xstream.alias("watchlist", Watchlist.class);
+            xstream.alias("investment-plan", InvestmentPlan.class);
+            xstream.alias("attribute-type", AttributeType.class);
 
-                    xstream.alias("price", SecurityPrice.class);
-                    xstream.useAttributeFor(SecurityPrice.class, "date");
-                    xstream.aliasField("t", SecurityPrice.class, "date");
-                    xstream.useAttributeFor(SecurityPrice.class, "value");
-                    xstream.aliasField("v", SecurityPrice.class, "value");
+            xstream.alias("price", SecurityPrice.class);
+            xstream.useAttributeFor(SecurityPrice.class, "date");
+            xstream.aliasField("t", SecurityPrice.class, "date");
+            xstream.useAttributeFor(SecurityPrice.class, "value");
+            xstream.aliasField("v", SecurityPrice.class, "value");
 
-                    xstream.alias("cpi", ConsumerPriceIndex.class);
-                    xstream.useAttributeFor(ConsumerPriceIndex.class, "year");
-                    xstream.aliasField("y", ConsumerPriceIndex.class, "year");
-                    xstream.useAttributeFor(ConsumerPriceIndex.class, "month");
-                    xstream.aliasField("m", ConsumerPriceIndex.class, "month");
-                    xstream.useAttributeFor(ConsumerPriceIndex.class, "index");
-                    xstream.aliasField("i", ConsumerPriceIndex.class, "index");
+            xstream.alias("cpi", ConsumerPriceIndex.class);
+            xstream.useAttributeFor(ConsumerPriceIndex.class, "year");
+            xstream.aliasField("y", ConsumerPriceIndex.class, "year");
+            xstream.useAttributeFor(ConsumerPriceIndex.class, "month");
+            xstream.aliasField("m", ConsumerPriceIndex.class, "month");
+            xstream.useAttributeFor(ConsumerPriceIndex.class, "index");
+            xstream.aliasField("i", ConsumerPriceIndex.class, "index");
 
-                    xstream.alias("buysell", BuySellEntry.class);
-                    xstream.alias("account-transfer", AccountTransferEntry.class);
-                    xstream.alias("portfolio-transfer", PortfolioTransferEntry.class);
+            xstream.alias("buysell", BuySellEntry.class);
+            xstream.alias("account-transfer", AccountTransferEntry.class);
+            xstream.alias("portfolio-transfer", PortfolioTransferEntry.class);
 
-                    xstream.alias("taxonomy", Taxonomy.class);
-                    xstream.alias("classification", Classification.class);
-                    xstream.alias("assignment", Assignment.class);
+            xstream.alias("taxonomy", Taxonomy.class);
+            xstream.alias("classification", Classification.class);
+            xstream.alias("assignment", Assignment.class);
 
-                    xstream.alias("dashboard", Dashboard.class);
-                    xstream.useAttributeFor(Dashboard.class, "name");
-                    xstream.alias("column", Dashboard.Column.class);
-                    xstream.alias("widget", Dashboard.Widget.class);
-                    xstream.useAttributeFor(Dashboard.Widget.class, "type");
+            xstream.alias("dashboard", Dashboard.class);
+            xstream.useAttributeFor(Dashboard.class, "name");
+            xstream.alias("column", Dashboard.Column.class);
+            xstream.alias("widget", Dashboard.Widget.class);
+            xstream.useAttributeFor(Dashboard.Widget.class, "type");
 
-                    xstream.alias("event", SecurityEvent.class);
-                    xstream.alias("config-set", ConfigurationSet.class);
-                    xstream.alias("config", ConfigurationSet.Configuration.class);
-                }
-            }
+            xstream.alias("event", SecurityEvent.class);
+            xstream.alias("config-set", ConfigurationSet.class);
+            xstream.alias("config", ConfigurationSet.Configuration.class);
         }
         return xstream;
     }

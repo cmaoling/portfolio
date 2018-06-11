@@ -1,7 +1,6 @@
 package name.abuchen.portfolio.datatransfer.csv;
 
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
