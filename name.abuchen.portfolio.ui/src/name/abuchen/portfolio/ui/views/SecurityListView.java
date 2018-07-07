@@ -109,6 +109,16 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 openEditDialog(newSecurity);
             }));
 
+            manager.add(new SimpleAction(Messages.SecurityMenuNewExchangeRate, a -> {
+                Security newSecurity = new Security();
+                newSecurity.setFeed(QuoteFeed.MANUAL);
+                newSecurity.setCurrencyCode(getClient().getBaseCurrency());
+                newSecurity.setTargetCurrencyCode(getClient().getBaseCurrency());
+                openEditDialog(newSecurity);
+            }));
+
+            manager.add(new Separator());
+
             manager.add(new SimpleAction(Messages.SecurityMenuSearchYahoo, a -> {
                 SearchYahooWizardDialog dialog = new SearchYahooWizardDialog(getToolBar().getShell(), getClient());
                 if (dialog.open() == Dialog.OK)
@@ -118,7 +128,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 
         private void openEditDialog(Security newSecurity)
         {
-            Dialog dialog = new EditSecurityDialog(getToolBar().getShell(), getClient(), newSecurity);
+            Dialog dialog = make(EditSecurityDialog.class, newSecurity);
 
             if (dialog.open() == Dialog.OK)
             {
@@ -137,6 +147,8 @@ public class SecurityListView extends AbstractListView implements ModificationLi
     private class FilterDropDown extends AbstractDropDown
     {
         private Predicate<Security> securityIsNotInactive = record -> !record.isRetired();
+        private Predicate<Security> onlySecurities = record -> !record.isExchangeRate();
+        private Predicate<Security> onlyExchangeRates = record -> record.isExchangeRate();
 
         public FilterDropDown(ToolBar toolBar, IPreferenceStore preferenceStore)
         {
@@ -157,6 +169,8 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         public void menuAboutToShow(IMenuManager manager)
         {
             manager.add(createAction(Messages.SecurityListFilterHideInactive, securityIsNotInactive));
+            manager.add(createAction(Messages.SecurityListFilterOnlySecurities, onlySecurities));
+            manager.add(createAction(Messages.SecurityListFilterOnlyExchangeRates, onlyExchangeRates));
         }
 
         private Action createAction(String label, Predicate<Security> predicate)
@@ -299,15 +313,15 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         toolItem.setControl(search);
 
         search.addModifyListener(e -> {
-            String filter = search.getText().trim();
-            if (filter.length() == 0)
+            String filterText = search.getText().trim();
+            if (filterText.length() == 0)
             {
                 filterPattern = null;
                 securities.refresh();
             }
             else
             {
-                filterPattern = Pattern.compile(".*" + filter + ".*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$ //$NON-NLS-2$
+                filterPattern = Pattern.compile(".*" + filterText + ".*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$ //$NON-NLS-2$
                 securities.refresh();
             }
         });
@@ -711,7 +725,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         support.addColumn(column);
 
         column = new Column(Messages.ColumnShares, SWT.RIGHT, 80);
-        column.setLabelProvider(new SharesLabelProvider()
+        column.setLabelProvider(new SharesLabelProvider() // NOSONAR
         {
             @Override
             public Long getValue(Object element)
@@ -744,7 +758,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         column.setSorter(ColumnViewerSorter.create((o1, o2) -> {
             long a1 = ((TransactionPair<?>) o1).getTransaction().getAmount();
             long a2 = ((TransactionPair<?>) o2).getTransaction().getAmount();
-            return a1 > a2 ? 1 : a1 < a2 ? -1 : 0;
+            return Long.compare(a1, a2);
         }));
         support.addColumn(column);
 

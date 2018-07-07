@@ -189,7 +189,10 @@ public class Client
     public void addSecurity(Security security)
     {
         Objects.requireNonNull(security);
+
         securities.add(security);
+
+        propertyChangeSupport.firePropertyChange("securities", null, security); //$NON-NLS-1$
     }
 
     public void removeSecurity(final Security security)
@@ -200,7 +203,10 @@ public class Client
         deleteTaxonomyAssignments(security);
         deleteAccountTransactions(security);
         deletePortfolioTransactions(security);
+
         securities.remove(security);
+
+        propertyChangeSupport.firePropertyChange("securities", security, null); //$NON-NLS-1$
     }
 
     public List<Watchlist> getWatchlists()
@@ -391,6 +397,11 @@ public class Client
     public void addDashboard(Dashboard dashboard)
     {
         this.dashboards.add(dashboard);
+    }
+
+    public void addDashboard(int index, Dashboard dashboard)
+    {
+        this.dashboards.add(index, dashboard);
     }
 
     public void removeDashboard(Dashboard dashboard)
