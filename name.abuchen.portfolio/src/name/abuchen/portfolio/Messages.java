@@ -113,6 +113,7 @@ public class Messages extends NLS
     public static String LabelDeposits;
     public static String LabelEuropeanCentralBank;
     public static String LabelHTMLTable;
+    public static String LabelHTMLTableOld;
     public static String LabelInterest;
     public static String LabelJointPortfolio;
     public static String LabelNameReferenceAccountRecovered;
