@@ -45,7 +45,7 @@ public class SecurityPerformanceSnapshot
         Map<Security, SecurityPerformanceRecord> records = new HashMap<>();
 
         for (Security s : client.getSecurities())
-            records.put(s, new SecurityPerformanceRecord(s));
+            records.put(s, new SecurityPerformanceRecord(client, s));
         return records;
     }
 
@@ -89,16 +89,8 @@ public class SecurityPerformanceSnapshot
                 case DIVIDENDS:
                 case INTEREST:
                 case DIVIDEND_CHARGE:
-                    DividendTransaction dt = new DividendTransaction();
-                    dt.setType(t.getType());
-                    dt.setDateTime(t.getDateTime());
-                    dt.setSecurity(t.getSecurity());
+                    DividendTransaction dt = DividendTransaction.from(t);
                     dt.setAccount(account);
-                    dt.setCurrencyCode(t.getCurrencyCode());
-                    dt.setAmount((t.getType().equals(AccountTransaction.Type.DIVIDEND_CHARGE) ? -1 : 1) * t.getAmount());
-                    dt.setShares(t.getShares());
-                    dt.setNote(t.getNote());
-                    dt.addUnits(t.getUnits());
                     records.get(t.getSecurity()).addTransaction(dt);
                     break;
                 case TAXES:

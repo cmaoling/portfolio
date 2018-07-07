@@ -42,12 +42,10 @@ public class SecurityTest
             else if (p.getPropertyType() == int.class && p.getWriteMethod() != null)
                 p.getWriteMethod().invoke(source, new Random().nextInt());
             else
-            {
                 skipped++;
-            }
         }
 
-        assertThat(skipped, equalTo(9));
+        assertThat(skipped, equalTo(10));
 
         Security target = source.deepCopy();
 

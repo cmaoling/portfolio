@@ -562,6 +562,7 @@ public class ClientFactory
             case 35:
                 // added flag to auto-generate tx from investment plan
             case 36:
+                // converted from LocalDate to LocalDateTime
                 // SecurityEvent has no more details
                 convertSecurityEventDetails(client);
             case 37:
