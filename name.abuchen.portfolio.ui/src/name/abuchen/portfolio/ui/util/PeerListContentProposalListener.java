@@ -18,7 +18,7 @@ public class PeerListContentProposalListener implements IContentProposalListener
     {
         if (proposal instanceof PeerListContentProposal)
         {
-            System.err.println(">>>> PeerListContentProposalListener::proposalAccepted proposal: " + proposal.toString() + " |  peer: " + ((PeerListContentProposal) proposal).getPeer().toString());// TODO: still needed for debug?
+            // TODO: still needed for debug? System.err.println(">>>> PeerListContentProposalListener::proposalAccepted proposal: " + proposal.toString() + " |  peer: " + ((PeerListContentProposal) proposal).getPeer().toString());
             this.model.setPeer(((PeerListContentProposal) proposal).getPeer());
         }
         else

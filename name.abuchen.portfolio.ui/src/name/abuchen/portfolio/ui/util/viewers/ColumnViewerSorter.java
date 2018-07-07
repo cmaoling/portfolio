@@ -153,7 +153,6 @@ public final class ColumnViewerSorter
             }
             catch (NoSuchMethodException e)
             {
-                PortfolioPlugin.log("clazz: " + clazz.toString() + " e: " + e); // TODO: still needed for debug?
                 try
                 {
                     return clazz.getMethod("is" + camelCaseAttribute); //$NON-NLS-1$
