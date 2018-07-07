@@ -16,6 +16,7 @@ public abstract class Feed
     public static final String MANUAL = "MANUAL"; //$NON-NLS-1$
     public static final String YAHOO = "YAHOO"; //$NON-NLS-1$
     public static final String HTML = "GENERIC_HTML_TABLE"; //$NON-NLS-1$
+    public static final String OLD_HTML = "CMAOLING_HTML_TABLE"; //$NON-NLS-1$
 
     /**
      * Returns the technical identifier of the feed.

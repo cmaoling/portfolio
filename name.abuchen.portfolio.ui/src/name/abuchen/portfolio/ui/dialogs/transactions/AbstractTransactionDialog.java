@@ -2,6 +2,8 @@ package name.abuchen.portfolio.ui.dialogs.transactions;
 
 import java.text.MessageFormat;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -22,6 +24,7 @@ import org.eclipse.jface.databinding.viewers.ViewersObservables;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
+import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.jface.fieldassist.IControlContentAdapter;
 import org.eclipse.jface.fieldassist.IContentProposalListener;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;
@@ -37,7 +40,9 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
@@ -48,6 +53,8 @@ import com.ibm.icu.text.DecimalFormat;
 import com.ibm.icu.text.NumberFormat;
 
 import name.abuchen.portfolio.model.Account;
+import name.abuchen.portfolio.model.Peer;
+import name.abuchen.portfolio.model.PeerList;
 import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.money.Values;
@@ -56,9 +63,12 @@ import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.CurrencyToStringConverter;
 import name.abuchen.portfolio.ui.util.DatePicker;
 import name.abuchen.portfolio.ui.util.IValidatingConverter;
+import name.abuchen.portfolio.ui.util.PeerListContentProposalListener;
+import name.abuchen.portfolio.ui.util.PeerListContentProposalProvider;
 import name.abuchen.portfolio.ui.util.SimpleDateTimeDateSelectionProperty;
 import name.abuchen.portfolio.ui.util.SimpleDateTimeTimeSelectionProperty;
 import name.abuchen.portfolio.ui.util.StringToCurrencyConverter;
+import name.abuchen.portfolio.util.Iban;
 
 public abstract class AbstractTransactionDialog extends TitleAreaDialog
 {
@@ -253,6 +263,103 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
         }
     }
 
+    public class PeerPicker
+    {
+        public final AutoCompleteInput iban;
+        public final Label lblPartner;
+        public final Text valuePartner;
+        public final Label lblPeer;
+
+        public PeerPicker(Composite parent, PeerList peerList, AccountTransactionModel model)
+        {
+            iban = new AutoCompleteInput(parent, Messages.ColumnIBAN, new PeerListContentProposalProvider(peerList)
+            {
+              public IContentProposal[] getProposals(String contents, int position)
+              {
+                  IContentProposal[] Atmp = super.getProposals(contents, position);
+                  List<IContentProposal> Ltmp = new ArrayList(Arrays.asList(Atmp));
+                  IContentProposal Ctmp = makeContentProposal(AccountTransactionModel.EMPTY_PEER);
+                  Ltmp.add(0, Ctmp);
+                  return Ltmp.toArray(new IContentProposal[Ltmp.size()]);
+              }
+
+              protected IContentProposal makeContentProposal(Peer peer)
+              {
+                  return (IContentProposal) new PeerListContentProposalProvider.IbanProposal(peer);
+              }
+            }, new PeerListContentProposalListener(model), model);
+
+            iban.value.addListener(SWT.FocusOut, new Listener()
+            {
+                public void handleEvent(Event e)
+                {
+                    String IBAN = iban.value.getText();
+                    model.setIban(IBAN);
+                    boolean match = model.matchPeer(IBAN);
+                    if (!match)
+                    {
+                            Peer modelPeer = model.getPeer();
+                            Peer peer = (model.EMPTY_PEER.equals(modelPeer) ? new Peer() : modelPeer);
+                            peer.setIban(IBAN);
+                            model.setPeer(peer);
+                    }
+                    else
+                        setVisible(model.supportsPeer(), match);
+                }
+            });
+
+            lblPartner = new Label(parent, SWT.LEFT);
+            lblPartner.setText(Messages.ColumnPartner);
+            valuePartner = new Text(parent, SWT.BORDER);
+            valuePartner.addListener(SWT.FocusOut, new Listener()
+            {
+                public void handleEvent(Event e)
+                {
+                    String Partner = valuePartner.getText();
+                    model.setPartner(Partner);
+                    boolean match = model.matchPeer(Partner);
+                    if (!match)
+                    {
+                            Peer modelPeer = model.getPeer();
+                            Peer peer = (model.EMPTY_PEER.equals(modelPeer) ? new Peer() : modelPeer);
+                            peer.setName(Partner);
+                            model.setPeer(peer);
+                    }
+                    setVisible(model.supportsPeer(), match);
+                }
+            });
+
+            lblPeer = new Label(parent, SWT.RIGHT);
+            lblPeer.setText(Messages.MsgMissingPeer);
+        }
+
+        public void bindPartner(String property)
+        {
+            context.bindValue(WidgetProperties.text(SWT.Modify).observe(valuePartner),
+                            BeanProperties.value(property).observe(model));
+        }
+
+        public void bindIban(String property, String missingValueMessage)
+        {
+            iban.bindValue(property, missingValueMessage);
+        }
+
+        public void bindPeer(String property)
+        {
+            IObservableValue<?> observable = BeanProperties.value(property).observe(model);
+            context.bindValue(WidgetProperties.text().observe(lblPeer), observable);
+        }
+
+        public void setVisible(boolean isVisible, boolean peerNotPartner)
+        {
+            iban.setVisible(isVisible);
+            lblPartner.setVisible(isVisible && !peerNotPartner);
+            valuePartner.setVisible(isVisible && !peerNotPartner);
+            lblPeer.setVisible(isVisible && peerNotPartner);
+        }
+
+    }
+
     //based on http://javawiki.sowas.com/doku.php?id=swt-jface:autocompletefield
     public class AutoCompleteInput
     {
@@ -263,7 +370,7 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
         private IContentProposalProvider contentProposalProvider;
         private ContentProposalAdapter  contentProposalAdapter;
 
-        public AutoCompleteInput(Composite editArea, String text, IContentProposalProvider contentProposalProvider, IContentProposalListener contentProposalListener)
+        public AutoCompleteInput(Composite editArea, String text, IContentProposalProvider contentProposalProvider, IContentProposalListener contentProposalListener, AccountTransactionModel model)
         {
             if (text != null)
             {
@@ -308,14 +415,19 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
 
         public void bindValue(String property, String missingValueMessage)
         {
-            this.bindValue(property, missingValueMessage, true);
-        }
+            UpdateValueStrategy strategy = new UpdateValueStrategy(UpdateValueStrategy.POLICY_UPDATE);
+            strategy.setAfterGetValidator(value -> {
+                            String v = (String) value;
+                            return ((v == null || v.length() == 0 || Iban.isValid(v)) ? ValidationStatus.ok() : ValidationStatus.error(missingValueMessage));
+            });
+            new Exception().printStackTrace(System.err);
 
-        public void bindValue(String property, String missingValueMessage, boolean isMandatory)
-        {
-            context.bindValue(WidgetProperties.text().observe(value), BeanProperties.value(property).observe(model));
+            @SuppressWarnings("unchecked")
+            IObservableValue<Object> targetObservable = WidgetProperties.text(SWT.Modify).observe(value);
+            @SuppressWarnings("unchecked")
+            IObservableValue<?> modelObservable = BeanProperties.value(property).observe(model);
+            context.bindValue(targetObservable, modelObservable, strategy, null);
         }
-
     }
 
     class ModelStatusListener

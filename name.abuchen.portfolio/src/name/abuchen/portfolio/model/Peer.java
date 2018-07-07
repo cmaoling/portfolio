@@ -31,14 +31,15 @@ public class Peer implements Named
 
     public Peer()
     {
-        voidAccount();
+        //voidAccount();
     }
 
-    public void voidAccount()
+    public Peer voidAccount()
     {
         account = null;
         setName(Messages.LabelAnyPeer);
-        setIban(Iban.IBANNUMBER_DUMMY);
+        setIban(Iban.IBANNUMBER_ANY);
+        return this;
     }
 
     public String setIban(String iban)
@@ -50,6 +51,18 @@ public class Peer implements Named
             account = null;
             if (Iban.isValid(iban))
                 IBAN = iban;
+        }
+        return this.getIban();
+    }
+
+    public String setInvalidIban(String iban)
+    {
+        if (links2Account())
+            account.setIban(iban);
+        else
+        {
+            account = null;
+            IBAN = iban;
         }
         return this.getIban();
     }
@@ -101,6 +114,8 @@ public class Peer implements Named
     {
         if (links2Account())
             return getAccount().getIban();
+        else if (IBAN != null && IBAN.equals(Iban.IBANNUMBER_ANY))
+            return "";
         else
             return IBAN;
     }

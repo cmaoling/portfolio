@@ -10,7 +10,7 @@ public class Iban
 {
     private static final String CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"; //$NON-NLS-1$
     private static final String DEFAULT_CHECK_DIGIT = "00";
-    public  static final String PATTERN = "[A-Z]{2}[0-9]{20}"; //$NON-NLS-1$
+    public  static final String PATTERN = "[A-Z]{2}[0-9.?-]{2}[0-9]{18}"; //$NON-NLS-1$
     public  static final int IBANNUMBER_MIN_SIZE = 22;
     public  static final int IBANNUMBER_MAX_SIZE = 22;
     public  static final BigInteger IBANNUMBER_MAGIC_NUMBER = new BigInteger("97");
@@ -23,7 +23,9 @@ public class Iban
 
     public static final boolean isValid(String iban) // NOSONAR
     {
-        //System.err.println(">>>> Iban::isValid iban: " + iban + "  [" + iban.concat("    ").substring(2, 4) + "] => [" + calculateCheckDigit(iban) + "]");
+        if (iban == null)
+            return false;
+
         // taken from: https://gist.github.com/DandyDev/5394643
         String newAccountNumber = iban.trim();
 
@@ -98,9 +100,14 @@ public class Iban
             final String checkDigit = Integer.toString(checkDigitIntValue);
             return checkDigitIntValue > 9 ? checkDigit : "0" + checkDigit;
         }
-        else
-            System.err.println(">>>> iban::calculateCheckDigit() matcher : " + matcher.toString()); // TODO: still needed for debug?
-            return "XX";
+        return "XX";
+    }
+
+    public static final String suggestIban(String iban)
+    {
+        if ((iban.substring(2, 4).equals("..") || iban.substring(2, 4).equals("??")) && (iban.length() >= IBANNUMBER_MIN_SIZE && iban.length() <= IBANNUMBER_MAX_SIZE))
+            iban = (iban.substring(0, 2) + calculateCheckDigit(iban) + iban.substring(4, 22)).toUpperCase();
+        return iban;
     }
 
     public static final String DEconvert(String blz, String account) // NOSONAR

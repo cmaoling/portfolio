@@ -1,7 +1,5 @@
 package name.abuchen.portfolio.ui.views;
 
-import java.io.StringWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,22 +35,14 @@ import org.eclipse.swt.widgets.ToolBar;
 
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
-import name.abuchen.portfolio.model.AccountTransaction.Type;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.DedicatedTransaction;
 import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.PeerList;
-import name.abuchen.portfolio.model.PortfolioTransaction;
-import name.abuchen.portfolio.model.Transaction;
-import name.abuchen.portfolio.money.CurrencyConverter;
-import name.abuchen.portfolio.money.CurrencyConverterImpl;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Money;
-import name.abuchen.portfolio.money.MutableMoney;
-import name.abuchen.portfolio.money.Quote;
 import name.abuchen.portfolio.money.Values;
-import name.abuchen.portfolio.snapshot.AccountSnapshot;
 import name.abuchen.portfolio.util.Iban;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
@@ -62,7 +52,6 @@ import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransferDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.OpenDialogAction;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransactionDialog;
 import name.abuchen.portfolio.ui.util.AbstractDropDown;
-import name.abuchen.portfolio.ui.util.Colors;
 import name.abuchen.portfolio.ui.util.SimpleAction;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnEditingSupport;
@@ -70,12 +59,8 @@ import name.abuchen.portfolio.ui.util.viewers.ColumnEditingSupport.ModificationL
 import name.abuchen.portfolio.ui.util.viewers.ColumnViewerSorter;
 import name.abuchen.portfolio.ui.util.viewers.DateTimeEditingSupport;
 import name.abuchen.portfolio.ui.util.viewers.ListEditingSupport;
-import name.abuchen.portfolio.ui.util.viewers.SharesLabelProvider;
 import name.abuchen.portfolio.ui.util.viewers.ShowHideColumnHelper;
 import name.abuchen.portfolio.ui.util.viewers.StringEditingSupport;
-import name.abuchen.portfolio.ui.util.viewers.ValueEditingSupport;
-import name.abuchen.portfolio.ui.views.columns.CurrencyColumn;
-import name.abuchen.portfolio.ui.views.columns.CurrencyColumn.CurrencyEditingSupport;
 import name.abuchen.portfolio.ui.views.columns.NameColumn;
 import name.abuchen.portfolio.ui.views.columns.NameColumn.NameColumnLabelProvider;
 import name.abuchen.portfolio.ui.views.columns.NoteColumn;
@@ -157,7 +142,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
 
         AbstractDropDown.create(toolBar, Messages.MenuPeerAdd, Images.PLUS.image(), SWT.NONE,
                         (dd, manager) -> {
-                            if (getClient().getPeers().findPeer(Iban.IBANNUMBER_DUMMY) == null)
+                            if (getClient().getPeers().findPeer(Iban.IBANNUMBER_DUMMY, true) == null)
                                 manager.add(new SimpleAction(Messages.MenuPeerAdd, newPeerAction));
                         });
 
@@ -258,12 +243,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
             @Override
             public String getText(Object e)
             {
-                final StringWriter sw = new StringWriter();
-                final PrintWriter pw = new PrintWriter(sw, true);
-// TEMP                new Exception().printStackTrace(pw);
-                System.err.println(">>>> PeerListView::NameColumn::getText   : " + e.toString());
                     return ((Peer) e).getName();
-                
             }
         });
         column.getEditingSupport().addListener(this);

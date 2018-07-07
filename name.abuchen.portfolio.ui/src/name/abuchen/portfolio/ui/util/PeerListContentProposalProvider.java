@@ -1,7 +1,7 @@
 package name.abuchen.portfolio.ui.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;
@@ -26,15 +26,18 @@ public abstract class PeerListContentProposalProvider implements IContentProposa
         @Override
         public String getContent()
         {
-            System.err.println(">>>> PeerListContentProvider::IbanProposal::getContent "  + peer.toString());// TODO: still needed for debug?
+            // TODO: still needed for debug? System.err.println(">>>> PeerListContentProvider::IbanProposal::getContent "  + peer.toString());
             return peer.getIban();
         }
 
         @Override
         public int getCursorPosition()
         {
-            System.err.println(">>>> PeerListContentProposal::IbanProposal::getCursorPosition "  + peer.toString());// TODO: still needed for debug?
-           return peer.getIban().length();
+            // TODO: still needed for debug? System.err.println(">>>> PeerListContentProposal::IbanProposal::getCursorPosition "  + peer.toString());
+            if (peer.getIban() != null)
+                return peer.getIban().length();
+            else
+                return 0;
         }          
     }
 
@@ -48,52 +51,42 @@ public abstract class PeerListContentProposalProvider implements IContentProposa
         @Override
         public String getContent()
         {
-            System.err.println(">>>> PeerListContentProvider::PartnerProposal::getContent "  + peer.toString());// TODO: still needed for debug?
+            // TODO: still needed for debug? System.err.println(">>>> PeerListContentProvider::PartnerProposal::getContent "  + peer.toString());
             return peer.getName();
         }
 
         @Override
         public int getCursorPosition()
         {
-            System.err.println(">>>> PeerListContentProposal::IbanProposal::getCursorPosition "  + peer.toString());// TODO: still needed for debug?
-           return peer.getName().length();
+            // TODO: still needed for debug? System.err.println(">>>> PeerListContentProposal::IbanProposal::getCursorPosition "  + peer.toString());
+            if (peer.getName() != null)
+                return peer.getName().length();
+           else
+               return 0;
         }          
     }
 
     public PeerListContentProposalProvider(PeerList peerList)
     {
         super();
-        System.err.println(">>>> PeerListContentProvider::PeerContentProvider "  + Arrays.toString(peerList.toArray()));// TODO: still needed for debug?
+        // TODO: still needed for debug? System.err.println(">>>> PeerListContentProvider::PeerContentProvider "  + Arrays.toString(peerList.toArray()));
         this.peerList = peerList;
-        //this.contentProposal = new PeerListContentProposal();
     }
 
     public IContentProposal[] getProposals(String contents, int position)
     {
-        System.err.println(">>>> PeerListContentProvider::getProposals "  + contents);// TODO: still needed for debug?
-        ArrayList proposals = new ArrayList();
-        PeerList l = peerList.findPeer(contents);
+        // TODO: still needed for debug? System.err.println(">>>> PeerListContentProvider::getProposals "  + contents);
+        List<IContentProposal> proposals = new ArrayList<IContentProposal>();
+        PeerList l = peerList.findPeer(contents, false);
         if (l != null)
-        {
-            System.err.println(">>>> PeerListContentProvider::getProposals() PeerList: " + Arrays.toString(l.toArray()));// TODO: still needed for debug?
             for (Peer p : l)
-            {
-                System.err.println(">>>> PeerListContentProvider::getProposals() peer   : " + p.toString());// TODO: still needed for debug?
                 proposals.add(makeContentProposal(p));
-            }
-        }
-        System.err.println(">>>> PeerListContentProvider::getProposals() proposals: " + Arrays.toString(proposals.toArray()));// TODO: still needed for debug?
         return (IContentProposal[]) proposals.toArray(new IContentProposal[proposals.size()]);
     }
 
-//    public void setContentProposalClass(PeerListContentProposal contentProposal)
-//    {
-//        this.contentProposal = contentProposal;
-//    }
-
     protected IContentProposal makeContentProposal(Peer peer)
     {
-        System.err.println(">>>> PeerListContentProvider::makeContentProposal(peer) peer: " + peer.toString());// TODO: still needed for debug?
+        // TODO: still needed for debug? System.err.println(">>>> PeerListContentProvider::makeContentProposal(peer) peer: " + peer.toString());
         return (IContentProposal) new PeerListContentProposal(peer);
     }
 

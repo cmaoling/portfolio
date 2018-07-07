@@ -23,7 +23,7 @@ public abstract class SharesLabelProvider extends OwnerDrawLabelProvider
 {
     private static final char POINT = new DecimalFormatSymbols().getDecimalSeparator();
 
-    private final NumberFormat format = new DecimalFormat("#,##0.###"); //$NON-NLS-1$
+    private final NumberFormat format = new DecimalFormat("#,##0.#####"); //$NON-NLS-1$
 
     private ColumnViewer viewer;
     private TextLayout cachedTextLayout;

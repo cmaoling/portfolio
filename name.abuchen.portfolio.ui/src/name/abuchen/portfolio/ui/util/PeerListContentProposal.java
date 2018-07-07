@@ -37,7 +37,7 @@ public class PeerListContentProposal implements IContentProposal
     public String getLabel()
     {
         System.err.println(">>>> PeerListContentProposal::getLabel "  + peer.toString());// TODO: still needed for debug?
-       return peer.getName() + " (" + peer.getIban() + ")";
+       return peer.getName() + (peer.getIban().length() > 0 ? " (" + peer.getIban() + ")" : "");
     }
 
     public int getCursorPosition()

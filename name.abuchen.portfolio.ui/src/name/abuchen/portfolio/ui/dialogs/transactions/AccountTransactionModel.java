@@ -14,6 +14,7 @@ import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Peer;
+import name.abuchen.portfolio.model.PeerList;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityEvent;
 import name.abuchen.portfolio.model.Transaction;
@@ -37,6 +38,7 @@ public class AccountTransactionModel extends AbstractModel
     }
 
     public static final Security EMPTY_SECURITY = new Security("-----", ""); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Peer     EMPTY_PEER     = new Peer().voidAccount();
 
     private final Client client;
     private AccountTransaction.Type type;
@@ -111,6 +113,8 @@ public class AccountTransactionModel extends AbstractModel
             throw new UnsupportedOperationException(Messages.MsgMissingSecurity);
         if (account == null)
             throw new UnsupportedOperationException(Messages.MsgMissingAccount);
+        if (peer == null && supportsPeer())
+            throw new UnsupportedOperationException(Messages.MsgMissingPeer);
 
         AccountTransaction t;
 
@@ -140,10 +144,12 @@ public class AccountTransactionModel extends AbstractModel
         t.setType(type);
         t.setNote(note);
 
-        System.err.println(">> AccountTransactionModel::applyChanges: peer " + peer.toString());
-        // TODO: may need to map Peer to existing one
-        // TODO: Change Type DEPOSIT/REMOVAL <> TRANSFER
-        t.setPeer(peer);
+        if (supportsPeer())
+        {
+            // DEBUG: System.err.println(">> AccountTransactionModel::applyChanges: peer " + peer.toString() + " " + (EMPTY_PEER.equals(peer) ? null : peer) + "[" + iban != null + "] (" + Iban.isValid(iban) + ")");           // TODO: may need to map Peer to existing one
+            // TODO:  Change Type DEPOSIT/REMOVAL <> TRANSFER
+            t.setPeer(EMPTY_PEER.equals(peer) ? null : peer);
+        }
 
         t.clearUnits();
 
@@ -184,7 +190,21 @@ public class AccountTransactionModel extends AbstractModel
         setTaxes(0);
         setFxTaxes(0);
         setNote(null);
-        setPeer(new Peer());
+    }
+
+
+    public boolean supportsPeer()
+    {
+        switch (type)
+        {
+            case REMOVAL:
+            case DEPOSIT:
+            case INTEREST:
+            case INTEREST_CHARGE:
+                return true;
+            default:
+                return false;
+        }
     }
 
     public boolean supportsShares()
@@ -258,10 +278,21 @@ public class AccountTransactionModel extends AbstractModel
         this.shares  = transaction.getShares();
         this.total   = transaction.getAmount();
         this.peer    = transaction.getPeer();
-        if (this.peer == null)
-            this.peer = new Peer();
-        this.partner = this.peer.getName();
-        this.iban    = this.peer.getIban();
+        if (supportsPeer())
+        {
+            if (this.peer == null)
+                this.peer = EMPTY_PEER;
+            if (peer != EMPTY_PEER)
+            {
+                this.partner = this.peer.getName();
+                this.iban    = this.peer.getIban();
+            }
+            else
+            {
+                this.partner = "";
+                this.iban    = "";
+            }
+        }
 
         // both will be overwritten if forex data exists
         this.exchangeRate = BigDecimal.ONE;
@@ -440,57 +471,94 @@ public class AccountTransactionModel extends AbstractModel
 
     public String getPartner()
     {
-        System.err.println(">>>> AccountTransactionModel::getPartner() partner   : " + peer.toString() + " > " + peer.getName()); // TODO: still needed for debug?
-        return peer.getName();
+     // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::getPartner() partner   : " + (peer != null ? peer.toString() : "<null>") + "> Name: " + (peer != null ? peer.getName(): "=/="));
+     // TODO: still needed for debug? new Exception().printStackTrace(System.err);
+        if (peer == null || EMPTY_PEER.equals(peer))
+            return "";
+        else
+            return peer.getName();
     }
 
     public void setPartner(String partner)
     {
-        System.err.println(">>>> AccountTransactionModel::setPartner() partner   : " + partner ); // TODO: still needed for debug?
-        new Exception().printStackTrace(System.err);
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::setPartner() PRE  partner   : " + partner + "  this.partner: " + (this.partner != null ? this.partner.toString() : "<null>"));
+        // TODO: still needed for debug? new Exception().printStackTrace(System.err);
         firePropertyChange(Properties.partner.name(), this.partner, this.partner = partner); //this.peer.setName(peerStr)
     }
 
     public String getIban()
     {
-        System.err.println(">>>> AccountTransactionModel::getIban() peer : " + peer.toString() + ">" + peer.getIban()); // TODO: still needed for debug?
-        return peer.getIban();
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::getIban() peer : " + (peer != null ? peer.toString() : "<null>") + "> IBAN: " + (peer != null ? peer.getIban() : "=/="));
+        // TODO: still needed for debug? new Exception().printStackTrace(System.err);
+        if (peer == null || EMPTY_PEER.equals(peer))
+            return "";
+        else
+            return peer.getIban();
     }
 
     public void setIban(String iban)
     {
-        System.err.println(">>>> AccountTransactionModel::setIban() iban   : " + iban); // TODO: still needed for debug?
-        new Exception().printStackTrace(System.err);
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::setIban() iban PRE   : " + (iban != null ? iban : "<null>")); // TODO: still needed for debug?
+        // TODO: still needed for debug? new Exception().printStackTrace(System.err);
         firePropertyChange(Properties.iban.name(), this.iban, this.iban = iban); // this.peer.setIban(iban)
-        //firePropertyChange(Properties.partner.name(), this.partner,this.partner = foreignCurrencyAmount);
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::setIban() iban POST  : " + (this.iban != null ? this.iban : "<null>")); // TODO: still needed for debug?
     }
 
     public Peer getPeer()
     {
-        System.err.println(">>>> AccountTransactionModel::getPeer() peer : " + peer.toString()); // TODO: still needed for debug?
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::getPeer() peer : " + (peer != null ? peer.toString() : "<null>")); // TODO: still needed for debug?
+        // TODO: still needed for debug? new Exception().printStackTrace(System.err);
         return peer;
-    }
-
-    public void setPeer(String partner, String iban)
-    {
-        System.err.println(">>>> AccountTransactionModel::setPeer() partner : " + partner + " IBAN: " + iban);
-        new Exception().printStackTrace(System.err);
     }
 
     public void setPeer(Peer peer)
     {
-        System.err.println(">>>> AccountTransactionModel::setPeer() peer : " + peer.toString());
-        new Exception().printStackTrace(System.err);
-        this.peer = peer;
-        if (partner != null)
-            System.err.println(">PRE AccountTransactionModel::setPeer() partner : " + partner.toString() + " => " + peer.getName());
-        if (iban != null)
-            System.err.println(">PRE AccountTransactionModel::setPeer() iban : " + iban.toString() + " => " + peer.getIban());
-        firePropertyChange(Properties.partner.name(), this.partner, this.partner = peer.getName()); //this.peer.setName(peerStr)
-        firePropertyChange(Properties.iban.name(), this.iban, this.iban = peer.getIban()); // this.peer.setIban(iban)
-        firePropertyChange(Properties.note.name(), this.partner, this.partner = peer.getName()); //this.peer.setName(peerStr)
-        System.err.println("POST AccountTransactionModel::setPeer() partner : " + partner.toString());
-        System.err.println("POST AccountTransactionModel::setPeer() iban : " + iban.toString());
+        if (peer == null)
+        {
+            this.peer = peer;
+            return;
+        }
+        // TODO: still needed for debug? 
+        //        new Exception().printStackTrace(System.err);
+        //        if (this.peer != null)
+        //            System.err.println(">PRE AccountTransactionModel::setPeer() OLD peer : " + this.peer.toString());
+        //        if (peer != null)
+        //            System.err.println(">PRE AccountTransactionModel::setPeer() NEW peer : " + peer.toString());
+        //        if (partner != null)
+        //            System.err.println(">PRE AccountTransactionModel::setPeer() partner : " + partner.toString());
+        //        if (iban != null)
+        //            System.err.println(">PRE AccountTransactionModel::setPeer() iban : " + iban.toString());
+        firePropertyChange(Properties.peer.name(), this.peer, this.peer = peer); //this.peer.setName(peerStr)
+        //        System.err.println(">A AccountTransactionModel::setPeer()");
+        //        new Exception().printStackTrace(System.err);
+        //        if (peer != null)
+        //            System.err.println("POST AccountTransactionModel::setPeer() peer : " + peer.toString());
+        //        if (partner != null)
+        //            System.err.println("POST AccountTransactionModel::setPeer() partner : " + partner.toString());
+        //        if (iban != null)
+        //            System.err.println("POST AccountTransactionModel::setPeer() iban : " + iban.toString());
+    }
+
+    public boolean matchPeer(String matchStr)
+    {
+        PeerList peerList = client.getPeers().findPeer(matchStr, true);
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::matchPeer() POST matchStr : " + matchStr + "  this.partner: " + (this.partner != null ? this.partner.toString() : "<null>") + "  this.iban: " + (this.iban != null ? this.iban.toString() : "<null>")); // TODO: still needed for debug?
+        // TODO: still needed for debug? new Exception().printStackTrace(System.err);
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::matchPeer() peerList   : " + (peerList != null ? peerList.toString()  : "<null>"));
+        if (peerList == null)
+            return false;
+        if (peerList.size() == 1 && matchStr.length() >= 3)
+        {
+           this.peer = peerList.get(0);
+           firePropertyChange(Properties.peer.name(), "", this.peer);
+           firePropertyChange(Properties.iban.name(), "", this.peer.getIban());
+           firePropertyChange(Properties.partner.name(), "", this.peer.getName());
+           return true;
+        }
+        else if (peerList.size() > 1)
+            System.err.println(">>>> AccountTransactionModel::matchPeer() peerList   : " + peerList.toString() + " peer : " + (peer != null ? peer.toString() : "<null>") ); // TODO: still needed for debug?
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::matchPeer() peer : " + (peer != null ? peer.toString() : "<null>") ); // TODO: still needed for debug?
+        return false;
     }
 
     /// ==== CONSTRUCTION AREA ====== END =====
