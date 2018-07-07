@@ -42,7 +42,6 @@ public class IbanColumn extends Column
         @Override
         public Object getValue(Object element)
         {
-            System.err.println(">>>> IbanColumn::getValue ");
             if (element instanceof Account)
             {
                 Account s = Adaptor.adapt(Account.class, element);
@@ -63,14 +62,13 @@ public class IbanColumn extends Column
             final StringWriter sw = new StringWriter();
             final PrintWriter pw = new PrintWriter(sw, true);
             new Exception().printStackTrace(pw);
-            String newValue = ((String) value).trim();
+            String newValue = Iban.suggestIban(((String) value).trim());
 
             String oldValue = "fjewfij23p"+ newValue;
             if (element instanceof Account)
                 oldValue = Adaptor.adapt(Account.class, element).getIban();
             else if (element instanceof Peer)
                 oldValue = Adaptor.adapt(Peer.class, element).getIban();                
-            System.err.println(">>>> IbanColumn::setValue new: " + newValue + " | old: " + oldValue);// TODO: still needed for debug?
             if (!newValue.equals(oldValue))
             {
                 if (element instanceof Account)
