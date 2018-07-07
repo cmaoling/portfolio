@@ -8,7 +8,6 @@ import static name.abuchen.portfolio.ui.util.SWTHelper.widest;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -23,7 +22,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
-import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -37,8 +35,6 @@ import org.eclipse.swt.widgets.Text;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.Client;
-import name.abuchen.portfolio.model.Peer;
-import name.abuchen.portfolio.model.PeerList;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityEvent;
 import name.abuchen.portfolio.money.CurrencyConverter;
@@ -51,12 +47,10 @@ import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.UIConstants;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionModel.Properties;
-import name.abuchen.portfolio.ui.dialogs.transactions.AbstractTransactionDialog.AutoCompleteInput;
+import name.abuchen.portfolio.ui.dialogs.transactions.AbstractTransactionDialog.PeerPicker;
 import name.abuchen.portfolio.ui.util.DatePicker;
 import name.abuchen.portfolio.ui.util.FormDataFactory;
 import name.abuchen.portfolio.ui.util.LabelOnly;
-import name.abuchen.portfolio.ui.util.PeerListContentProposalListener;
-import name.abuchen.portfolio.ui.util.PeerListContentProposalProvider;
 import name.abuchen.portfolio.ui.util.SimpleDateTimeDateSelectionProperty;
 
 @SuppressWarnings("restriction")
@@ -116,72 +110,14 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         accounts.bindValue(Properties.account.name(), Messages.MsgMissingAccount);
         accounts.bindCurrency(Properties.accountCurrencyCode.name());
 
-        /// ==== CONSTRUCTION AREA ===== START ====
-
-        PeerList peerList = client.getPeers(); // [TODO: Switch to Transfer] .addAccounts(client.getAccounts());
-
-        // peer
-//        Label lblPartner = new Label(editArea, SWT.LEFT);
-//        lblPartner.setText(Messages.ColumnPeer);
-//        Text valuePartner = new Text(editArea, SWT.BORDER);
-//        context.bindValue(WidgetProperties.text(SWT.Modify).observe(valuePartner),
-//                        BeanProperties.value(Properties.partner.name()).observe(model));
-        AutoCompleteInput iban = new AutoCompleteInput(editArea, Messages.ColumnIBAN, new PeerListContentProposalProvider(peerList)
+        final PeerPicker peers = setupPeers(editArea, model().supportsPeer());
+        if (peers != null) 
         {
-            public IContentProposal[] getProposals(String contents, int position)
-            {
-                System.err.println(">>>> PeerListContentProvider::anonymousIBAN::getProposals(peer) contents: " + contents);
-                IContentProposal[] Atmp = super.getProposals(contents, position);
-                List<IContentProposal> Ltmp = new ArrayList(Arrays.asList(Atmp));
-                Peer Ptmp = new Peer();
-                IContentProposal Ctmp = makeContentProposal(Ptmp);
-                Ltmp.add(0, Ctmp);
-                System.err.println(">>>> PeerListContentProvider::anonymousIBAN::getProposals(peer) tmp: " + Ltmp.toString());
-                return Ltmp.toArray(new IContentProposal[Ltmp.size()]);
-            }
-
-            protected IContentProposal makeContentProposal(Peer peer)
-            {
-                System.err.println(">>>> PeerListContentProvider::anonymousIBAN::makeContentProposal(peer) peer: " + peer.toString());
-                return (IContentProposal) new PeerListContentProposalProvider.IbanProposal(peer);
-           }
-        }, new PeerListContentProposalListener(model()));
-        iban.bindValue(Properties.iban.name(), Messages.MsgMissingPeer);
-        iban.setVisible(!model().supportsShares());
-
-//        Label lblIban = new Label(editArea, SWT.LEFT);
-//        lblIban.setText(Messages.ColumnIBAN);
-//        Text valueIban = new Text(editArea, SWT.BORDER);
-//        context.bindValue(WidgetProperties.text(SWT.Modify).observe(valueIban),
-//                        BeanProperties.value(Properties.iban.name()).observe(model));
-
-        Label lblPartner = new Label(editArea, SWT.LEFT);
-        lblPartner.setText(Messages.ColumnPartner);
-        Text valuePartner = new Text(editArea, SWT.BORDER);
-        context.bindValue(WidgetProperties.text(SWT.Modify).observe(valuePartner),
-                        BeanProperties.value(Properties.partner.name()).observe(model));
-
-//        AutoCompleteInput partner = new AutoCompleteInput(editArea, Messages.ColumnPeer, new PeerListContentProposalProvider(peerList)
-//        {
-//            protected IContentProposal makeContentProposal(Peer peer) {
-//                System.err.println(">>>> PeerListContentProvider::anonymousPartner::makeContentProposal(peer) peer: " + peer.toString());
-//                return (IContentProposal) new PeerListContentProposalProvider.PartnerProposal(peer);
-//           }
-//        }, new PeerListContentProposalListener(model()));
-//        partner.bindValue(Properties.partner.name(), Messages.MsgMissingPeer);
-//        partner.setVisible(!model().supportsShares());
-
-        Label lblPeer = new Label(editArea, SWT.RIGHT);
-        lblPeer.setText(Messages.MsgMissingPeer);
-//        lblPeer.bindValue(WidgetProperties.text().observe(lnlPeer), //
-//                        BeanProperties.value(Properties.peer.name()).observe(model));
- 
-//        ComboInput peers = new ComboInput(editArea, Messages.ColumnPeer);
-//        peers.value.setInput(client.getPeers().addAccounts(client.getAccounts()));
-//        peers.bindValue(Properties.peer.name(), Messages.MsgMissingPeer);
-//        peers.bindCurrency(Properties.accountCurrencyCode.name());
-
-        /// ==== CONSTRUCTION AREA ====== END =====
+            peers.bindPartner(Properties.partner.name());
+            peers.bindIban(Properties.iban.name(), Messages.MsgInvalidIBAN);
+            peers.bindPeer(Properties.peer.name());
+            peers.setVisible(model().supportsPeer(), client.getPeers().contains(model().getPeer()));
+        }
 
         // date & time
 
@@ -291,8 +227,11 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         else
         {
             forms = startingWith(accounts.value.getControl(), accounts.label).suffix(accounts.currency);
-            forms = forms.thenBelow(valuePartner).width(amountWidth*2).label(lblPartner);
-            forms.thenRight(iban.label).thenRight(iban.value).width(amountWidth*3).thenRight(lblPeer).width(amountWidth*2);
+        }
+        if (peers != null)
+        {
+            forms = forms.thenBelow(peers.valuePartner).width(amountWidth*2).label(peers.lblPartner);
+            forms.thenRight(peers.iban.label).thenRight(peers.iban.value).width(amountWidth*3).thenRight(peers.lblPeer).width(amountWidth*2);
         }
 
         // date
@@ -367,12 +306,12 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
 
         model.addPropertyChangeListener(Properties.iban.name(), event -> { // NOSONAR
             System.err.println(">>>> AccountTransactionDialog::addPropertyChangeListener iban: " + event.toString());
-            iban.value.setText((String) event.getNewValue());
         });
 
-        model.addPropertyChangeListener(Properties.partner.name(), event -> { // NOSONAR
-            System.err.println(">>>> AccountTransactionDialog::addPropertyChangeListener partner: " + event.toString());
-            lblPeer.setText((String) event.getNewValue());
+        model.addPropertyChangeListener(Properties.peer.name(), event -> { // NOSONAR
+            System.err.println(">>>> AccountTransactionDialog::addPropertyChangeListener peer: " + event.toString());
+            peers.setVisible(model().supportsPeer(), client.getPeers().contains(model().getPeer()));
+            //peers.lblPeer.setText((String) event.getNewValue());
             // TODO:Update actual Partner field in Dialog?
         });
 
@@ -403,6 +342,16 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         securities.bindValue(Properties.security.name(), Messages.MsgMissingSecurity);
         securities.bindCurrency(Properties.securityCurrencyCode.name());
         return securities;
+    }
+
+    private PeerPicker setupPeers(Composite editArea, boolean supported)
+    {
+        if (!supported)
+            return null;
+        if (model().getPeer() == null)
+            model().setPeer(AccountTransactionModel.EMPTY_PEER);
+        PeerPicker peerPicker = new PeerPicker(editArea, client.getPeers(), (AccountTransactionModel) this.model);
+        return     peerPicker;
     }
 
     private void showSharesContextMenu()

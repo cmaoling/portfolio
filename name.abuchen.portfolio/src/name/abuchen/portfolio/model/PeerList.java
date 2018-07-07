@@ -35,7 +35,6 @@ public class PeerList extends ArrayList<Peer>
         Peer peer = (Peer) o;
         if (peer == null)
             return false;
-        System.err.println(">>>> PeerList::contains() peer   : " + peer.toString()); // TODO: still needed for debug?
         return super.contains(peer);
     }
 
@@ -43,27 +42,30 @@ public class PeerList extends ArrayList<Peer>
     public boolean remove(Object o)
     {
         Peer peer = (Peer) o;
-        System.err.println(">>>> PeerList::remove() peer   : " + peer.toString()); // TODO: still needed for debug?
         return super.remove(peer);
     }
 
-    public PeerList findPeer(String search)
+    public PeerList findPeer(String search, boolean exact)
     {
+        if (search.length() <= 3)
+            return null;
         // TODO: still needed for debug? System.err.println(">>>> PeerList::findPeer() peers   : " + Arrays.toString(this.toArray()));
         PeerList peerList = new PeerList();
         for (Peer peer : this)
         {
             //System.err.println(">>>> PeerList::findPeer() peer   : " + peer.toString() + " vs. " + search);
             if (peer.getIban() != null && peer.getIban().length() >= search.length()
-                            && peer.getIban().toLowerCase().contains(search.toLowerCase()))
-                peerList.add(peer);
+                            && peer.getIban().toLowerCase().contains(search.toLowerCase())
+                            && (!exact || peer.getIban().equalsIgnoreCase(search)))
+                    peerList.add(peer);
             else if (peer.getName().length() >= search.length()
-                            && peer.getName().toLowerCase().contains(search.toLowerCase()))
+                            && peer.getName().toLowerCase().contains(search.toLowerCase())
+                            && (!exact || peer.getName().equalsIgnoreCase(search)))
                 peerList.add(peer);
         }
         if (peerList.size() == 0)
             return null;
-        System.err.println(">>>> PeerList::findPeer() matches   : " + peerList.size() + " " + Arrays.toString(peerList.toArray()));
+        // TODO: still needed for debug? System.err.println(">>>> PeerList::findPeer() matches   : " + peerList.size() + " " + Arrays.toString(peerList.toArray()));
         return peerList;
     }
 

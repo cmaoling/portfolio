@@ -668,6 +668,7 @@ public class Messages extends NLS
     public static String MsgIncorrectConvertedSubTotal;
     public static String MsgIncorrectSubTotal;
     public static String MsgIncorrectTotal;
+    public static String MsgInvalidIBAN;
     public static String MsgInfoChangingCurrencyNotPossible;
     public static String MsgInfoRetiredSecurities;
     public static String MsgJavaVersionTooOldForLetsEncrypt;
