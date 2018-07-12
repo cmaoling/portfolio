@@ -166,6 +166,12 @@ public class Peer implements Named
             account.getTransactions().stream()
                             .filter(t -> this.equals(t.getPeer()))
                             .forEach(element -> answer.add(new DedicatedTransaction(account, element)));
+            account.getTransactions().stream()
+                            .filter((t) -> AccountTransaction.Type.TRANSFER_IN.equals(t.getType()) || AccountTransaction.Type.TRANSFER_OUT.equals(t.getType()))
+                            .filter((t) -> this.getAccount() != null)
+                            .filter((t) -> this.getAccount().equals((Account) t.getCrossEntry().getOwner(t)))
+                            .forEach(element -> answer.add(new DedicatedTransaction(account, element)));
+                            //.forEach(element -> System.err.println("[ " + element.getCrossEntry().getCrossTransaction(element).toString() + "]   <" + (element != null? element.toString() : "") + "> <" + (element.getPeer() != null ? element.getPeer().toString() : "getPeer<null>") + "> <" + (this != null ? this.toString() : "<null>") + ">"));
         }
         return answer;
     }
