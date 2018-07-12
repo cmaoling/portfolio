@@ -157,33 +157,16 @@ public class Peer implements Named
         return this;
     }
 
-//  TODO: #41 Is this an orphan method or needed?    
-//    public List<DedicatedTransaction> getDedicatedTransactions()
-//    {
-//        if (this.account != null)
-//            return this.account.getDedicatedTransactions();
-//        return null;
-//    }
-
-    public List<TransactionPair<?>> getTransactions(Client client)
+    public List<DedicatedTransaction> getTransactions(Client client)
     {
-        List<TransactionPair<?>> answer = new ArrayList<>();
+        List<DedicatedTransaction> answer = new ArrayList<>();
 
         for (Account account : client.getAccounts())
         {
-            account.getTransactions().stream() //
+            account.getTransactions().stream()
                             .filter(t -> this.equals(t.getPeer()))
-                            .filter(t -> t.getType() == AccountTransaction.Type.INTEREST
-                                            || t.getType() == AccountTransaction.Type.DIVIDENDS
-                                            || t.getType() == AccountTransaction.Type.DIVIDEND_CHARGE
-                                            || t.getType() == AccountTransaction.Type.TAXES
-                                            || t.getType() == AccountTransaction.Type.TAX_REFUND
-                                            || t.getType() == AccountTransaction.Type.FEES
-                                            || t.getType() == AccountTransaction.Type.FEES_REFUND)
-                            .map(t -> new TransactionPair<AccountTransaction>(account, t)) //
-                            .forEach(answer::add);
+                            .forEach(element -> answer.add(new DedicatedTransaction(account, element)));
         }
-
         return answer;
     }
 

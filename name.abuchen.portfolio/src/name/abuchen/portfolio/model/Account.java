@@ -128,16 +128,6 @@ public class Account implements TransactionOwner<AccountTransaction>, Investment
         return transactions;
     }
 
-//  TODO: #41 Is this an orphan method or needed?
-//    public List<DedicatedTransaction> getDedicatedTransactions()
-//    {
-//        List<AccountTransaction> transactions = this.getTransactions();
-//        List<DedicatedTransaction> dedicatedTransactions = new ArrayList<>();
-//        for (AccountTransaction transaction : transactions)
-//            dedicatedTransactions.add(new DedicatedTransaction(this, transaction));
-//        return dedicatedTransactions;
-//    }
-
     @Override
     public void addTransaction(AccountTransaction transaction)
     {

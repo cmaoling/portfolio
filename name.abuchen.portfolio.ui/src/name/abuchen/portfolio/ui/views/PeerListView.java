@@ -333,8 +333,6 @@ public class PeerListView extends AbstractListView implements ModificationListen
     // bottom table: transactions
     // //////////////////////////////////////////////////////////////
 
-    // TODO #41 not working at this point
-
     @Override
     protected void createBottomTable(Composite parent)
     {
