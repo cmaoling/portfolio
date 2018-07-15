@@ -53,6 +53,7 @@ public class AccountTransactionModel extends AbstractModel
     private String iban;
 
     private LocalDate date = LocalDate.now();
+    private LocalDate cutoffDate = LocalDate.now();
     private long shares;
 
     private long fxGrossAmount;
@@ -173,7 +174,7 @@ public class AccountTransactionModel extends AbstractModel
         }
         if (type == AccountTransaction.Type.DIVIDENDS)
         {
-                security.addEvent((new SecurityEvent(date, SecurityEvent.Type.STOCK_DIVIDEND)).setAmount(getFxCurrencyCode(), dividendAmount));
+                security.addEvent((new SecurityEvent(cutoffDate, SecurityEvent.Type.STOCK_DIVIDEND)).setAmount(getFxCurrencyCode(), dividendAmount));
         }
 
     }
@@ -275,6 +276,7 @@ public class AccountTransactionModel extends AbstractModel
         this.account = account;
         LocalDateTime transactionDate = transaction.getDateTime();
         this.date    = transactionDate.toLocalDate();
+        this.cutoffDate = this.date.minusDays((long) (EMPTY_SECURITY.equals(this.security) || !supportsShares()? 0 : this.security.getDelayedDividend()));
         this.shares  = transaction.getShares();
         this.total   = transaction.getAmount();
         this.peer    = transaction.getPeer();
@@ -332,9 +334,9 @@ public class AccountTransactionModel extends AbstractModel
 
     public void setEvent(SecurityEvent event)
     {
-        this.date = event.getDate().plusDays((long) this.security.getDelayedDividend());
         this.dividendAmount = event.getAmount().getValue();
-        this.grossAmount = calculateGrossAmount4Total();
+        setDate(event.getDate().plusDays((long) this.security.getDelayedDividend()));
+        triggerTotal(calculateTotal());
     }
 
     @Override
@@ -432,12 +434,13 @@ public class AccountTransactionModel extends AbstractModel
                             .getTimeSeries(getSecurityCurrencyCode(), getAccountCurrencyCode());
 
             if (series != null)
-                setExchangeRate(series.lookupRate(date).orElse(new ExchangeRate(date, BigDecimal.ONE)).getValue());
+                setExchangeRate(series.lookupRate(cutoffDate).orElse(new ExchangeRate(cutoffDate, BigDecimal.ONE)).getValue());
             else
                 setExchangeRate(BigDecimal.ONE);
         }
     }
 
+    @SuppressWarnings("nls")
     private void updateShares()
     {
         // do not auto-suggest shares and quote when editing an existing
@@ -450,7 +453,7 @@ public class AccountTransactionModel extends AbstractModel
 
         CurrencyConverter converter = new CurrencyConverterImpl(getExchangeRateProviderFactory(),
                         client.getBaseCurrency());
-        ClientSnapshot snapshot = ClientSnapshot.create(client, converter, date);
+        ClientSnapshot snapshot = ClientSnapshot.create(client, converter, cutoffDate);
         SecurityPosition p = snapshot.getJointPortfolio().getPositionsBySecurity().get(security);
         setShares(p != null ? p.getShares() : 0);
     }
@@ -460,9 +463,12 @@ public class AccountTransactionModel extends AbstractModel
         return date;
     }
 
+    @SuppressWarnings("nls")
     public void setDate(LocalDate date)
     {
         firePropertyChange(Properties.date.name(), this.date, this.date = date);
+        cutoffDate = date.minusDays((long) (EMPTY_SECURITY.equals(this.security) || !supportsShares()? 0 : this.security.getDelayedDividend()));
+        System.err.println(">>>> AccountTransactionModel::setDate() date : " + date + " cutoff: " + cutoffDate);
         updateShares();
         updateExchangeRate();
     }
@@ -750,6 +756,7 @@ public class AccountTransactionModel extends AbstractModel
                         / (double) Values.Share.factor());
     }
 
+    @SuppressWarnings("nls")
     private long calculateTotal()
     {
         long totalTaxes = taxes + Math.round(exchangeRate.doubleValue() * fxTaxes);

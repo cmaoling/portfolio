@@ -320,6 +320,7 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         model.addPropertyChangeListener(Properties.date.name(), e -> warnings.check());
 
         model.firePropertyChange(Properties.exchangeRateCurrencies.name(), "", model().getExchangeRateCurrencies()); //$NON-NLS-1$
+        model.firePropertyChange(Properties.total.name(), "", model().getTotal()); //$NON-NLS-1$
     }
 
     private ComboInput setupSecurities(Composite editArea)
