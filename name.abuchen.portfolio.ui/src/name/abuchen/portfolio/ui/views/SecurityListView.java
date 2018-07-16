@@ -1009,6 +1009,25 @@ public class SecurityListView extends AbstractListView implements ModificationLi
             {
                 return ((SecurityEvent) element).getType().toString();
             }
+
+            @Override
+            public Color getForeground(Object element)
+            {
+                Security security = (Security) prices.getData(Security.class.toString());
+                if (security == null)
+                    return Colors.DARK_RED;
+
+                SecurityEvent event = (SecurityEvent) element;
+
+                LocalDate date = event.getDate().plusDays((long) security.getDelayedDividend());
+                List<TransactionPair<?>> transactions = security.getTransactions(getClient(), date.minusDays(5), date.plusDays(5));
+
+                if (transactions.isEmpty())
+                    return Colors.DARK_GRAY;
+                else
+                    return Colors.DARK_GREEN;
+
+            }
         });
         support.addColumn(column);
 

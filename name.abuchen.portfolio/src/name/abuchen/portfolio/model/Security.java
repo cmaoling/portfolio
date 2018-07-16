@@ -612,6 +612,25 @@ public final class Security implements Attributable, InvestmentVehicle
         return answer;
     }
 
+    public List<TransactionPair<?>> getTransactions(Client client, LocalDate start, LocalDate stop)
+    {
+        List<TransactionPair<?>> answer = new ArrayList<>();
+
+        for (Account account : client.getAccounts())
+        {
+            account.getTransactions().stream() //
+                            .filter(t -> this.equals(t.getSecurity()))
+                            .filter(t -> t.getType() == AccountTransaction.Type.DIVIDENDS
+                                            || t.getType() == AccountTransaction.Type.DIVIDEND_CHARGE)
+                            .filter(t -> t.getDateTime().toLocalDate().isAfter(start))
+                            .filter(t -> t.getDateTime().toLocalDate().isBefore(stop))
+                            .map(t -> new TransactionPair<AccountTransaction>(account, t)) //
+                            .forEach(answer::add);
+        }
+
+        return answer;
+    }
+
     public boolean hasTransactions(Client client)
     {
         for (Portfolio portfolio : client.getPortfolios())
