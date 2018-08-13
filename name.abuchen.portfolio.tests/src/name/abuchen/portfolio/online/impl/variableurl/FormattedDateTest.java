@@ -15,6 +15,7 @@ import com.google.common.collect.Iterators;
 
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
+import name.abuchen.portfolio.online.impl.variableurl.urls.VariableURL;
 
 @SuppressWarnings("nls")
 public class FormattedDateTest
@@ -22,7 +23,7 @@ public class FormattedDateTest
     @Test
     public void testMaxFailedAttempts()
     {
-        assertMaxFailedAttempts("https://192.0.2.1/quotes.php?day={DATE:yyyy-MM-dd}", 100);
+        assertMaxFailedAttempts("https://192.0.2.1/quotes.php?day={DATE:yyyy-MM-dd}", 0);
         assertMaxFailedAttempts("https://192.0.2.1/quotes.php?month={DATE:yyyy-MM}", 4);
         assertMaxFailedAttempts("https://192.0.2.1/quotes.php?year={DATE:yyyy}", 1);
     }

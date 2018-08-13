@@ -10,9 +10,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,6 +41,8 @@ import name.abuchen.portfolio.money.CurrencyUnit;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
+import name.abuchen.portfolio.online.impl.AlphavantageQuoteFeed;
+import name.abuchen.portfolio.online.impl.YahooFinanceQuoteFeed;
 
 @SuppressWarnings("nls")
 public class IBFlexStatementExtractor implements Extractor
@@ -59,6 +63,10 @@ public class IBFlexStatementExtractor implements Extractor
         this.exchanges.put("SWX", "SW");
         this.exchanges.put("TSE", "TO");
         this.exchanges.put("VENTURE", "V");
+        this.exchanges.put("IBIS", "DE");
+        this.exchanges.put("TGATE", "DE");
+        this.exchanges.put("SWB", "SG");
+        this.exchanges.put("FWB", "F");
     }
 
     private LocalDateTime convertDate(String date) throws DateTimeParseException
@@ -72,7 +80,7 @@ public class IBFlexStatementExtractor implements Extractor
             return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")).atStartOfDay();
         }
     }
-    
+
     private LocalDateTime convertDate(String date, String time) throws DateTimeParseException
     {
         return LocalDateTime.parse(String.format("%s %s", date, time), DateTimeFormatter.ofPattern("yyyyMMdd HHmmss"))
@@ -205,7 +213,7 @@ public class IBFlexStatementExtractor implements Extractor
                 if (element.getAttribute("symbol").length() > 0)
                     transaction.setSecurity(this.getOrCreateSecurity(element, true));
 
-                if(amount <= 0)
+                if (amount <= 0)
                 {
                     transaction.setType(AccountTransaction.Type.TAXES);
                 }
@@ -254,7 +262,8 @@ public class IBFlexStatementExtractor implements Extractor
          */
         private Function<Element, Item> buildPortfolioTransaction = element -> {
             String assetCategory = element.getAttribute("assetCategory");
-            if (!"STK".equals(assetCategory))
+
+            if (!Arrays.asList("STK", "OPT").contains(assetCategory))
                 return null;
 
             // Unused Information from Flexstatement Trades, to be used in the
@@ -287,7 +296,8 @@ public class IBFlexStatementExtractor implements Extractor
 
             // Share Quantity
             Double qty = Math.abs(Double.parseDouble(element.getAttribute("quantity")));
-            transaction.setShares(Math.round(qty.doubleValue() * Values.Share.factor()));
+            Double multiplier = Double.parseDouble(Optional.ofNullable(element.getAttribute("multiplier")).orElse("1"));
+            transaction.setShares(Math.round(qty.doubleValue() * Values.Share.factor() * multiplier.doubleValue()));
 
             // fees
             double fees = Math.abs(Double.parseDouble(element.getAttribute("ibCommission")));
@@ -389,7 +399,7 @@ public class IBFlexStatementExtractor implements Extractor
                 BigDecimal inverseRate = BigDecimal.ONE.divide(fxRateToBase, 10, RoundingMode.HALF_DOWN);
 
                 BigDecimal baseCurrencyMoney = BigDecimal.valueOf(amount.doubleValue())
-                                .setScale(5, RoundingMode.HALF_DOWN).divide(inverseRate, RoundingMode.HALF_DOWN);
+                                .setScale(2, RoundingMode.HALF_DOWN).divide(inverseRate, RoundingMode.HALF_DOWN);
 
                 unit = new Unit(unitType,
                                 Money.of(ibAccountCurrency,
@@ -465,6 +475,7 @@ public class IBFlexStatementExtractor implements Extractor
                     }
                     catch (Exception e)
                     {
+
                         errors.add(e);
                     }
                 }
@@ -505,13 +516,17 @@ public class IBFlexStatementExtractor implements Extractor
         private Security getOrCreateSecurity(Element element, boolean doCreate)
         {
             // Lookup the Exchange Suffix for Yahoo
-            String tickerSymbol = element.getAttribute("symbol");
-            // yahoo uses '-' instead of ' '
-            String yahooSymbol = tickerSymbol == null ? tickerSymbol : tickerSymbol.replaceAll(" ", "-");
+            Optional<String> tickerSymbol = Optional.ofNullable(element.getAttribute("symbol"));
+            String assetCategory = element.getAttribute("assetCategory");
             String exchange = element.getAttribute("exchange");
+            String quoteFeed = QuoteFeed.MANUAL;
+
+            // yahoo uses '-' instead of ' '
             String currency = asCurrencyUnit(element.getAttribute("currency"));
             String isin = element.getAttribute("isin");
             String cusip = element.getAttribute("cusip");
+            Optional<String> computedTickerSymbol = tickerSymbol.map(t -> t.replaceAll(" ", "-"));
+
             // Store cusip in isin if isin is not available
             if (isin.length() == 0 && cusip.length() > 0)
                 isin = cusip;
@@ -519,11 +534,40 @@ public class IBFlexStatementExtractor implements Extractor
             String conID = element.getAttribute("conid");
             String description = element.getAttribute("description");
 
-            if (tickerSymbol != null)
+            if ("OPT".equals(assetCategory))
             {
-                String exch = exchanges.get(exchange);
-                if (exch != null && exch.length() > 0)
-                    yahooSymbol = tickerSymbol + '.' + exch;
+                computedTickerSymbol = tickerSymbol.map(t -> t.replaceAll("\\s+", ""));
+                // e.g a put option for oracle: ORCL 171117C00050000
+                if (computedTickerSymbol.filter(p -> p.matches(".*\\d{6}[CP]\\d{8}")).isPresent())
+                    quoteFeed = YahooFinanceQuoteFeed.ID;
+            }
+
+            if ("STK".equals(assetCategory))
+            {
+                computedTickerSymbol = tickerSymbol;
+                if (!"USD".equals(currency))
+                {
+                    // some symbols in IB included the exchange as lower key
+                    // without "." at the end, e.g. BMWd for BMW trading at d
+                    // (Xetra, DE), so we'll get rid of this
+                    computedTickerSymbol = computedTickerSymbol.map(t -> t.replaceAll("[a-z]*$", ""));
+
+                    // another curiosity, sometimes the ticker symbol has EUR
+                    // appended, e.g. Deutsche Bank is DBKEUR, BMW is BMWEUR.
+                    // Also notices this during cash transactions (dividend
+                    // payments)
+                    if ("EUR".equals(currency))
+                        computedTickerSymbol = computedTickerSymbol.map(t -> t.replaceAll("EUR$", ""));
+
+                    // at last, lets add the exchange to the ticker symbol.
+                    // Since all european stock have ISIN set, this should not
+                    // produce duplicate security (later on)
+                    if (tickerSymbol.isPresent() && exchanges.containsKey(exchange))
+                        computedTickerSymbol = computedTickerSymbol.map(t -> t + '.' + exchanges.get(exchange));
+
+                }
+                // For Stock, lets use Alphavante quote feed by default
+                quoteFeed = AlphavantageQuoteFeed.ID;
             }
 
             for (Security s : allSecurities)
@@ -533,14 +577,14 @@ public class IBFlexStatementExtractor implements Extractor
                     return s;
                 if (isin.length() > 0 && isin.equals(s.getIsin()))
                     return s;
-                if (yahooSymbol != null && yahooSymbol.length() > 0 && yahooSymbol.equals(s.getTickerSymbol()))
+                if (computedTickerSymbol.isPresent() && computedTickerSymbol.get().equals(s.getTickerSymbol()))
                     return s;
             }
 
             if (!doCreate)
                 return null;
 
-            Security security = new Security(description, isin, yahooSymbol, QuoteFeed.MANUAL);
+            Security security = new Security(description, isin, computedTickerSymbol.orElse(null), quoteFeed);
             // We use the Wkn to store the IB conID as a unique identifier
             security.setWkn(conID);
             security.setCurrencyCode(currency);

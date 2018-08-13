@@ -30,6 +30,8 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
+import name.abuchen.portfolio.online.impl.variableurl.Factory;
+import name.abuchen.portfolio.online.impl.variableurl.urls.VariableURL;
 import name.abuchen.portfolio.util.Strings;
 
 public class HTMLTableQuoteFeed extends QuoteFeed
@@ -333,21 +335,23 @@ public class HTMLTableQuoteFeed extends QuoteFeed
         try
         {
             String escapedUrl = new URI(url).toASCIIString();
-            return parse(Jsoup.connect(escapedUrl).userAgent(OnlineHelper.getUserAgent()).timeout(30000).get(), errors);
+            return parse(escapedUrl,
+                            Jsoup.connect(escapedUrl).userAgent(OnlineHelper.getUserAgent()).timeout(30000).get(),
+                            errors);
         }
         catch (URISyntaxException | IOException e)
         {
-            errors.add(e);
+            errors.add(new IOException(url + '\n' + e.getMessage(), e));
             return Collections.emptyList();
         }
     }
 
     protected List<LatestSecurityPrice> parseFromHTML(String html, List<Exception> errors)
     {
-        return parse(Jsoup.parse(html), errors);
+        return parse("n/a", Jsoup.parse(html), errors); //$NON-NLS-1$
     }
 
-    private List<LatestSecurityPrice> parse(Document document, List<Exception> errors)
+    private List<LatestSecurityPrice> parse(String url, Document document, List<Exception> errors)
     {
         // check if language is provided
         String language = document.select("html").attr("lang"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -379,7 +383,7 @@ public class HTMLTableQuoteFeed extends QuoteFeed
                     }
                     catch (Exception e)
                     {
-                        errors.add(e);
+                        errors.add(new IOException(url + '\n' + e.getMessage(), e));
                     }
                 }
 
@@ -390,7 +394,7 @@ public class HTMLTableQuoteFeed extends QuoteFeed
 
         // if no quotes could be extract, log HTML for further analysis
         if (prices.isEmpty())
-            errors.add(new IOException(MessageFormat.format(Messages.MsgNoQuotesFoundInHTML, document.html())));
+            errors.add(new IOException(MessageFormat.format(Messages.MsgNoQuotesFoundInHTML, url, document.html())));
 
         return prices;
     }
