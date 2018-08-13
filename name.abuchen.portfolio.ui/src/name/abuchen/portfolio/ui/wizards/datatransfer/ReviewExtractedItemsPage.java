@@ -55,12 +55,18 @@ import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.Annotated;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.money.CurrencyConverter;
+import name.abuchen.portfolio.money.CurrencyConverterImpl;
+import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
+import name.abuchen.portfolio.snapshot.PortfolioSnapshot;
+import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.ui.AbstractClientJob;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
@@ -105,6 +111,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
     private List<Extractor.InputFile> files;
 
     private List<ExtractedEntry> allEntries = new ArrayList<>();
+
+    private ExchangeRateProviderFactory factory;
 
     public ReviewExtractedItemsPage(Client client, Extractor extractor, IPreferenceStore preferences,
                     List<Extractor.InputFile> files, String pageId)
@@ -400,6 +408,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
             public Image getImage(ExtractedEntry entry)
             {
                 Annotated subject = entry.getItem().getSubject();
+                System.err.println(">>>> ReviewExtractedItemsPage::getImage subject: " + subject. toString()); // TODO: still needed for debug?
                 if (subject instanceof AccountTransaction)
                     return Images.ACCOUNT.image();
                 else if (subject instanceof PortfolioTransaction)
@@ -412,6 +421,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                     return Images.ACCOUNT.image();
                 else if (subject instanceof PortfolioTransferEntry)
                     return Images.PORTFOLIO.image();
+                else if (subject instanceof Peer)
+                    return Images.PEER.image();
                 else
                     return null;
             }
@@ -444,14 +455,58 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         layout.setColumnData(column.getColumn(), new ColumnPixelData(80, true));
 
         column = new TableViewerColumn(viewer, SWT.NONE);
-        column.getColumn().setText(Messages.ColumnSecurity);
+        column.getColumn().setText(Messages.ColumnSecurity + "/" + Messages.ColumnPeer);
         column.setLabelProvider(new FormattedLabelProvider() // NOSONAR
         {
             @Override
             public String getText(ExtractedEntry entry)
             {
                 Security security = entry.getItem().getSecurity();
-                return security != null ? security.getName() : null;
+                Peer     peer     = entry.getItem().getPeer();
+                if (security != null)
+                    return security.getName();
+                else if (peer != null)
+                    return peer.getName();
+                else
+                    return  null;
+            }
+        });
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(250, true));
+
+        column = new TableViewerColumn(viewer, SWT.NONE);
+        column.getColumn().setText(Messages.ColumnIBAN);
+        column.setLabelProvider(new FormattedLabelProvider() // NOSONAR
+        {
+            @Override
+            public String getText(ExtractedEntry entry)
+            {
+                if (entry.getItem() instanceof Extractor.AccountTransferItem
+                     || entry.getItem() instanceof Extractor.TransactionItem
+                     || entry.getItem() instanceof Extractor.PeerItem)
+                {
+                    Peer peer = entry.getItem().getPeer();
+                    if (peer != null)
+                        return peer.getIban();
+                    Security security = entry.getItem().getSecurity();
+                    if (security != null)
+                        return Messages.LabelNotAvailable;
+                    return Messages.MsgMissingPeer;
+                }
+                else
+                    return entry.getItem().toString();
+            }
+        });
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(250, true));
+
+        column = new TableViewerColumn(viewer, SWT.NONE);
+        column.getColumn().setText(Messages.ColumnNote);
+        column.setLabelProvider(new FormattedLabelProvider()
+        {
+            @Override
+            public String getText(ExtractedEntry entry)
+            {
+                String note = entry.getItem().getNote();
+                return note != null ? note : null;
             }
         });
         layout.setColumnData(column.getColumn(), new ColumnPixelData(250, true));
@@ -539,6 +594,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
     @Override
     public void beforePage()
     {
+        System.err.println(">>>> ReviewExtracted::beforePage"); // TODO: still needed for debug?
         setTitle(extractor instanceof AssistantPDFExtractor ? Messages.PDFImportWizardAssistant : extractor.getLabel());
 
         if (!doExtractBeforeEveryPageDisplay
@@ -562,6 +618,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
             return;
         }
 
+        System.err.println(">>>> ReviewExtracted::runExtractionJob"); // TODO: still needed for debug?
         try
         {
             new AbstractClientJob(client, extractor.getLabel())
@@ -579,6 +636,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                                         .extract(files, errors).stream() //
                                         .map(ExtractedEntry::new) //
                                         .collect(Collectors.toList());
+                        entries.forEach(ee -> ee.setDefaultImported());
 
                         // Logging them is not a bad idea if the whole method
                         // fails
@@ -653,6 +711,26 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
             entry.clearStatus();
             for (ImportAction action : actions)
                 entry.addStatus(entry.getItem().apply(action, this));
+            if (entry.getItem().getShares() == 0 && entry.getItem() instanceof Extractor.TransactionItem)
+            {
+                Security security = entry.getItem().getSecurity();
+                LocalDateTime date = entry.getItem().getDate();
+                if (security != null && getPortfolio() != null && date != null)
+                {
+                    CurrencyConverter converter = new CurrencyConverterImpl(factory, client.getBaseCurrency());
+                    for (Portfolio portfolio : client.getPortfolios())
+                    {
+                        if (portfolio.toString().equals(getPortfolio().toString()))
+                        {
+                            PortfolioSnapshot snapshot = PortfolioSnapshot.create(portfolio, converter, date.toLocalDate());
+                            SecurityPosition position = snapshot.getPositionsBySecurity().get(security);
+                            if ((position != null) && (entry.getItem() instanceof Extractor.TransactionItem))
+                                ((Extractor.TransactionItem) entry.getItem()).getTransaction().setShares(position.getShares());
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 

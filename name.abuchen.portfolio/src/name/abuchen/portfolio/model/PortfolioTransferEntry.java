@@ -8,6 +8,12 @@ public class PortfolioTransferEntry extends CrossEntry implements Annotated
     private PortfolioTransaction transactionFrom;
     private Portfolio portfolioTo;
     private PortfolioTransaction transactionTo;
+    private Suggestion quoteSuggestion;
+
+    public enum Suggestion
+    {
+        none, purchase, market, goodwill;
+    }
 
     public PortfolioTransferEntry()
     {
@@ -18,6 +24,8 @@ public class PortfolioTransferEntry extends CrossEntry implements Annotated
         this.transactionTo = new PortfolioTransaction();
         this.transactionTo.setType(PortfolioTransaction.Type.TRANSFER_IN);
         this.transactionTo.setCrossEntry(this);
+
+        this.quoteSuggestion = Suggestion.none;
     }
 
     public PortfolioTransferEntry(Portfolio portfolioFrom, Portfolio portfolioTo)
@@ -126,6 +134,16 @@ public class PortfolioTransferEntry extends CrossEntry implements Annotated
         this.transactionTo.setNote(note);
     }
 
+    public Suggestion getQuoteSuggestion()
+    {
+        return this.quoteSuggestion;
+    }
+
+    public void setQuoteSuggestion(Suggestion suggestion)
+    {
+        this.quoteSuggestion = suggestion;
+    }
+
     @Override
     public void insert()
     {
@@ -183,5 +201,13 @@ public class PortfolioTransferEntry extends CrossEntry implements Annotated
             return portfolioFrom;
         else
             throw new UnsupportedOperationException();
+    }
+
+    public String toString()
+    {
+        return String.format("FROM: %s \nTO: %s\n Suggestion: %s",
+                        transactionFrom.toString(),
+                        transactionTo.toString(),
+                        (quoteSuggestion != null ? quoteSuggestion.toString() : "<null>"));
     }
 }

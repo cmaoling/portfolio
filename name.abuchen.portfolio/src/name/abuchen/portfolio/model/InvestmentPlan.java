@@ -1,6 +1,7 @@
 package name.abuchen.portfolio.model;
 
 import java.text.MessageFormat;
+//REVISIT import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import name.abuchen.portfolio.util.TradeCalendar;
 
 public class InvestmentPlan implements Named, Adaptable
 {
+
     private String name;
     private String note;
     private Security security;
@@ -170,14 +172,20 @@ public class InvestmentPlan implements Named, Adaptable
         return this.transactions;
     }
 
-    public void removeTransaction(PortfolioTransaction transaction)
+    @Deprecated
+    public void removeTransaction(Transaction transaction)
     {
         this.transactions.remove(transaction);
     }
 
-    public void removeTransaction(AccountTransaction transaction)
+    public void removeTransaction(PortfolioTransaction portfolioTransaction)
     {
-        this.transactions.remove(transaction);
+        this.transactions.remove(portfolioTransaction);
+    }
+
+    public void removeTransaction(AccountTransaction accountTransaction)
+    {
+        this.transactions.remove(accountTransaction);
     }
 
     public String getCurrencyCode()
@@ -301,49 +309,81 @@ public class InvestmentPlan implements Named, Adaptable
 
     private Transaction createSecurityTx(CurrencyConverter converter, LocalDate tDate)
     {
+        if (account == null && portfolio == null)
+            return null;
+
         String targetCurrencyCode = getCurrencyCode();
-        boolean needsCurrencyConversion = !targetCurrencyCode.equals(security.getCurrencyCode());
-
         Transaction.Unit forex = null;
-        long price = getSecurity().getSecurityPrice(tDate).getValue();
         long availableAmount = amount - fees;
+        long shares          = 0L;
 
-        if (needsCurrencyConversion)
+//      REVISIT  
+//        long yourmilliseconds = System.currentTimeMillis();
+//        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
+//        Date resultdate = new Date(yourmilliseconds);
+
+        String note = MessageFormat.format(Messages.InvestmentPlanAutoNoteLabel, Values.DateTime.format(LocalDateTime.now()), name); //sdf.format(resultdate)
+
+        if (security != null && portfolio != null)
         {
-            Money availableMoney = Money.of(targetCurrencyCode, amount - fees);
-            availableAmount = converter.with(security.getCurrencyCode()).convert(tDate, availableMoney).getAmount();
+            long price = getSecurity().getSecurityPrice(tDate).getValue();
+            boolean needsCurrencyConversion = !targetCurrencyCode.equals(security.getCurrencyCode());
+            if (needsCurrencyConversion)
+            {
+                Money availableMoney = Money.of(targetCurrencyCode, amount - fees);
+                availableAmount = converter.with(security.getCurrencyCode()).convert(tDate, availableMoney).getAmount();
 
-            forex = new Transaction.Unit(Unit.Type.GROSS_VALUE, //
+                forex = new Transaction.Unit(Unit.Type.GROSS_VALUE, //
                             availableMoney, //
                             Money.of(security.getCurrencyCode(), availableAmount), //
                             converter.with(targetCurrencyCode).getRate(tDate, security.getCurrencyCode()).getValue());
-        }
+            }
 
-        long shares = Math
-                        .round(availableAmount * Values.Share.factor() * Values.Quote.factorToMoney() / (double) price);
+            shares = Math.round(availableAmount * Values.Share.factor() * Values.Quote.factorToMoney() / (double) price);
+        }
 
         if (account != null)
         {
-            // create buy transaction
-            BuySellEntry entry = new BuySellEntry(portfolio, account);
-            entry.setType(PortfolioTransaction.Type.BUY);
-            entry.setDate(tDate.atStartOfDay());
-            entry.setShares(shares);
-            entry.setCurrencyCode(targetCurrencyCode);
-            entry.setAmount(amount);
-            entry.setSecurity(getSecurity());
-            entry.setNote(MessageFormat.format(Messages.InvestmentPlanAutoNoteLabel,
-                            Values.DateTime.format(LocalDateTime.now()), name));
+            if (portfolio != null)
+            {
+                // create buy transaction
+                BuySellEntry entry = new BuySellEntry(portfolio, account);
+                entry.setType(PortfolioTransaction.Type.BUY);
+                entry.setDate(tDate.atStartOfDay());
+                entry.setShares(shares);
+                entry.setCurrencyCode(targetCurrencyCode);
+                entry.setAmount(amount);
+                entry.setSecurity(getSecurity());
+                entry.setNote(note);
 
-            if (fees != 0)
-                entry.getPortfolioTransaction()
-                                .addUnit(new Transaction.Unit(Unit.Type.FEE, Money.of(targetCurrencyCode, fees)));
+                if (fees != 0)
+                    entry.getPortfolioTransaction()
+                                    .addUnit(new Transaction.Unit(Unit.Type.FEE, Money.of(targetCurrencyCode, fees)));
 
-            if (forex != null)
-                entry.getPortfolioTransaction().addUnit(forex);
+                if (forex != null)
+                    entry.getPortfolioTransaction().addUnit(forex);
 
-            entry.insert();
-            return entry.getPortfolioTransaction();
+                entry.insert();
+                return (Transaction) entry.getPortfolioTransaction();
+            }
+            else
+            {
+                // create deposit transaction
+                AccountTransaction transaction = new AccountTransaction();
+                transaction.setType(AccountTransaction.Type.DEPOSIT);
+                transaction.setDateTime(tDate.atStartOfDay());
+                transaction.setCurrencyCode(targetCurrencyCode);
+                transaction.setAmount(amount);
+                transaction.setNote(note);
+
+                if (fees != 0)
+                    transaction.addUnit(new Transaction.Unit(Unit.Type.FEE, Money.of(targetCurrencyCode, fees)));
+
+                if (forex != null)
+                    transaction.addUnit(forex);
+                account.addTransaction(transaction);
+                return (Transaction) transaction;
+            }
         }
         else
         {
@@ -355,8 +395,7 @@ public class InvestmentPlan implements Named, Adaptable
             transaction.setCurrencyCode(targetCurrencyCode);
             transaction.setAmount(amount);
             transaction.setShares(shares);
-            transaction.setNote(MessageFormat.format(Messages.InvestmentPlanAutoNoteLabel,
-                            Values.DateTime.format(LocalDateTime.now()), name));
+            transaction.setNote(note);
 
             if (fees != 0)
                 transaction.addUnit(new Transaction.Unit(Unit.Type.FEE, Money.of(targetCurrencyCode, fees)));
@@ -365,7 +404,7 @@ public class InvestmentPlan implements Named, Adaptable
                 transaction.addUnit(forex);
 
             portfolio.addTransaction(transaction);
-            return transaction;
+            return (Transaction) transaction;
         }
     }
 

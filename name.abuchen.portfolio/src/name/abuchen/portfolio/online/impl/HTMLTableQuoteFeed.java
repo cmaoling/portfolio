@@ -1,11 +1,8 @@
 package name.abuchen.portfolio.online.impl;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.MessageFormat;
@@ -18,10 +15,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Scanner;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
@@ -36,11 +30,9 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.impl.variableurl.Factory;
-import name.abuchen.portfolio.online.impl.variableurl.VariableURL;
 import name.abuchen.portfolio.util.Strings;
 
-public class HTMLTableQuoteFeed implements QuoteFeed
+public class HTMLTableQuoteFeed extends QuoteFeed
 {
     private abstract static class Column
     {
@@ -312,35 +304,16 @@ public class HTMLTableQuoteFeed implements QuoteFeed
             return Collections.emptyList();
         }
 
-        VariableURL variableURL = Factory.fromString(feedURL);
-        variableURL.setSecurity(security);
+        List<LatestSecurityPrice> answer = cache.lookup(feedURL);
+        if (answer != null)
+            return answer;
 
-        SortedSet<LatestSecurityPrice> newPricesByDate = new TreeSet<>(new SecurityPrice.ByDate());
-        long failedAttempts = 0;
-        long maxFailedAttempts = variableURL.getMaxFailedAttempts();
+        answer = parseFromURL(feedURL, errors);
 
-        for (String url : variableURL)
-        {
-            List<LatestSecurityPrice> answer = cache.lookup(url);
+        if (!answer.isEmpty())
+            cache.put(feedURL, answer);
 
-            if (answer == null)
-            {
-                answer = parseFromURL(url, errors);
-
-                if (!answer.isEmpty())
-                    cache.put(url, answer);
-            }
-
-            int sizeBefore = newPricesByDate.size();
-            newPricesByDate.addAll(answer);
-
-            if (newPricesByDate.size() > sizeBefore)
-                failedAttempts = 0;
-            else if (++failedAttempts > maxFailedAttempts)
-                break;
-        }
-
-        return new ArrayList<>(newPricesByDate);
+        return answer;
     }
 
     @Override
@@ -530,50 +503,50 @@ public class HTMLTableQuoteFeed implements QuoteFeed
      * @param args
      *            list of URLs and/or local files
      */
-    public static void main(String[] args) throws IOException
-    {
-        PrintWriter writer = new PrintWriter(System.out); // NOSONAR
-        for (String arg : args)
-            if (arg.charAt(0) != '#')
-                doLoad(arg, writer);
-        writer.flush();
-    }
-
-    @SuppressWarnings("nls")
-    private static void doLoad(String source, PrintWriter writer) throws IOException
-    {
-        writer.println("--------");
-        writer.println(source);
-        writer.println("--------");
-
-        List<LatestSecurityPrice> prices;
-        List<Exception> errors = new ArrayList<>();
-
-        if (source.startsWith("http"))
-        {
-            prices = new HTMLTableQuoteFeed().parseFromURL(source, errors);
-        }
-        else
-        {
-            try (Scanner scanner = new Scanner(new File(source), StandardCharsets.UTF_8.name()))
-            {
-                String html = scanner.useDelimiter("\\A").next();
-                prices = new HTMLTableQuoteFeed().parseFromHTML(html, errors);
-            }
-        }
-
-        for (Exception error : errors)
-            error.printStackTrace(writer); // NOSONAR
-
-        for (LatestSecurityPrice p : prices)
-        {
-            writer.print(Values.Date.format(p.getDate()));
-            writer.print("\t");
-            writer.print(Values.Quote.format(p.getValue()));
-            writer.print("\t");
-            writer.print(Values.Quote.format(p.getLow()));
-            writer.print("\t");
-            writer.println(Values.Quote.format(p.getHigh()));
-        }
-    }
+//    public static void main(String[] args) throws IOException
+//    {
+//        PrintWriter writer = new PrintWriter(System.out); // NOSONAR
+//        for (String arg : args)
+//            if (arg.charAt(0) != '#')
+//                doLoad(arg, writer);
+//        writer.flush();
+//    }
+//
+//    @SuppressWarnings("nls")
+//    private static void doLoad(String source, PrintWriter writer) throws IOException
+//    {
+//        writer.println("--------");
+//        writer.println(source);
+//        writer.println("--------");
+//
+//        List<LatestSecurityPrice> prices;
+//        List<Exception> errors = new ArrayList<>();
+//
+//        if (source.startsWith("http"))
+//        {
+//            prices = new HTMLTableQuoteFeed().parseFromURL(source, errors);
+//        }
+//        else
+//        {
+//            try (Scanner scanner = new Scanner(new File(source), StandardCharsets.UTF_8.name()))
+//            {
+//                String html = scanner.useDelimiter("\\A").next();
+//                prices = new HTMLTableQuoteFeed().parseFromHTML(html, errors);
+//            }
+//        }
+//
+//        for (Exception error : errors)
+//            error.printStackTrace(writer); // NOSONAR
+//
+//        for (LatestSecurityPrice p : prices)
+//        {
+//            writer.print(Values.Date.format(p.getDate()));
+//            writer.print("\t");
+//            writer.print(Values.Quote.format(p.getValue()));
+//            writer.print("\t");
+//            writer.print(Values.Quote.format(p.getLow()));
+//            writer.print("\t");
+//            writer.println(Values.Quote.format(p.getHigh()));
+//        }
+//    }
 }

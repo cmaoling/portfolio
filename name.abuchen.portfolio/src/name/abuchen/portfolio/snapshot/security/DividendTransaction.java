@@ -8,7 +8,7 @@ import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.MoneyCollectors;
 import name.abuchen.portfolio.money.Values;
 
-public class DividendTransaction extends Transaction
+public class DividendTransaction extends AccountTransaction
 {
     private Account account;
 
@@ -25,14 +25,15 @@ public class DividendTransaction extends Transaction
      */
     public static DividendTransaction from(AccountTransaction t)
     {
-        if (t.getType() != Type.DIVIDENDS && t.getType() != Type.INTEREST)
+        if (t.getType() != Type.DIVIDENDS && t.getType() != Type.DIVIDEND_CHARGE && t.getType() != Type.INTEREST)
             throw new IllegalArgumentException();
 
         DividendTransaction dt = new DividendTransaction();
+        dt.setType(t.getType());
         dt.setDateTime(t.getDateTime());
         dt.setSecurity(t.getSecurity());
         dt.setCurrencyCode(t.getCurrencyCode());
-        dt.setAmount(t.getAmount());
+        dt.setAmount((t.getType().equals(AccountTransaction.Type.DIVIDEND_CHARGE) ? -1 : 1) * t.getAmount());
         dt.setShares(t.getShares());
         dt.setNote(t.getNote());
         dt.addUnits(t.getUnits());

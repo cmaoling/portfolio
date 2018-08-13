@@ -23,7 +23,7 @@ public class Client
 {
     /* package */static final int MAJOR_VERSION = 1;
 
-    public static final int CURRENT_VERSION = 37;
+    public static final int CURRENT_VERSION = 40;
     public static final int VERSION_WITH_CURRENCY_SUPPORT = 29;
 
     private transient PropertyChangeSupport propertyChangeSupport;
@@ -53,6 +53,7 @@ public class Client
     private List<InvestmentPlan> plans;
     private List<Taxonomy> taxonomies;
     private List<Dashboard> dashboards;
+    private PeerList peers = new PeerList();
 
     private Map<String, String> properties;
     private ClientSettings settings;
@@ -95,6 +96,11 @@ public class Client
 
         if (dashboards == null)
             dashboards = new ArrayList<>();
+
+        if (peers == null)
+        {
+            peers = new PeerList();
+        }
 
         if (settings == null)
             settings = new ClientSettings();
@@ -146,6 +152,21 @@ public class Client
     public void removePlan(InvestmentPlan plan)
     {
         plans.remove(plan);
+    }
+
+    public PeerList getPeers()
+    {
+        return peers;
+    }
+
+    public boolean addPeer(Peer peer)
+    {
+        return peers.add(peer);
+    }
+
+    public boolean removePeer(Peer peer)
+    {
+        return peers.remove(peer);
     }
 
     public List<Security> getSecurities()
@@ -295,7 +316,17 @@ public class Client
 
     public List<Account> getAccounts()
     {
-        return Collections.unmodifiableList(accounts);
+        return getAccounts(true);
+    }
+
+    public List<Account> getAccounts(boolean readonly)
+    {
+        if (readonly)
+            return Collections.unmodifiableList(accounts);
+        else
+            return accounts.stream() //
+                            .sorted(new Account.ByName()) //
+                            .collect(Collectors.toList());
     }
 
     /**
@@ -324,7 +355,15 @@ public class Client
 
     public List<Portfolio> getPortfolios()
     {
-        return Collections.unmodifiableList(portfolios);
+        return getPortfolios(true);
+    }
+
+    public List<Portfolio> getPortfolios(boolean readonly)
+    {
+        if (readonly)
+            return Collections.unmodifiableList(portfolios);
+        else
+            return portfolios;
     }
 
     /**

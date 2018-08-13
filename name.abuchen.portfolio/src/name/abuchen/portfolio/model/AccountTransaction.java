@@ -15,7 +15,7 @@ public class AccountTransaction extends Transaction
     {
         DEPOSIT(false), REMOVAL(true), //
         INTEREST(false), INTEREST_CHARGE(true), //
-        DIVIDENDS(false), //
+        DIVIDENDS(false), DIVIDEND_CHARGE(true), //
         FEES(true), FEES_REFUND(false), //
         TAXES(true), TAX_REFUND(false), //
         BUY(true), SELL(false), //
@@ -44,6 +44,35 @@ public class AccountTransaction extends Transaction
         public String toString()
         {
             return RESOURCES.getString("account." + name()); //$NON-NLS-1$
+        }
+
+        public Type getSibling()
+        {
+            switch (this)
+            {
+                case DEPOSIT:
+                    return REMOVAL;
+                case REMOVAL:
+                    return DEPOSIT;
+                case INTEREST:
+                    return INTEREST_CHARGE;
+                case INTEREST_CHARGE:
+                    return INTEREST;
+                case DIVIDEND_CHARGE:
+                    return DIVIDENDS;
+                case DIVIDENDS:
+                    return DIVIDEND_CHARGE;
+                case FEES:
+                    return FEES_REFUND;
+                case FEES_REFUND:
+                    return FEES;
+                case TAXES:
+                    return TAX_REFUND;
+                case TAX_REFUND:
+                    return TAXES;
+                default:
+                    return this;
+            }
         }
     }
 
@@ -76,6 +105,8 @@ public class AccountTransaction extends Transaction
 
     private Type type;
 
+    private Peer peer;
+
     public AccountTransaction()
     {
         // needed for xstream de-serialization
@@ -85,6 +116,22 @@ public class AccountTransaction extends Transaction
     {
         super(date, currencyCode, amount, security, 0, null);
         this.type = type;
+        voidPeer();
+    }
+
+    public Peer getPeer()
+    {
+        return peer;
+    }
+
+    public void setPeer(Peer peer)
+    {
+        this.peer = peer;
+    }
+
+    public void voidPeer()
+    {
+        this.peer = null;
     }
 
     public Type getType()
@@ -104,7 +151,7 @@ public class AccountTransaction extends Transaction
     public long getGrossValueAmount()
     {
         // at the moment, only dividend transaction support taxes
-        if (!(this.type == Type.DIVIDENDS || this.type == Type.INTEREST))
+        if (!(this.type == Type.DIVIDENDS || this.type == Type.INTEREST || this.type == Type.DIVIDEND_CHARGE))
             throw new UnsupportedOperationException();
 
         long taxes = getUnits().filter(u -> u.getType() == Unit.Type.TAX)
@@ -125,7 +172,14 @@ public class AccountTransaction extends Transaction
     @Override
     public String toString()
     {
-        return String.format("%s %-17s %s %9s %s", Values.DateTime.format(this.getDateTime()), type.name(), getCurrencyCode(), //$NON-NLS-1$
-                        Values.Amount.format(getAmount()), getSecurity() != null ? getSecurity().getName() : ""); //$NON-NLS-1$
+        return String.format("%s %-17s %s %9s %s %s %s"
+                        , Values.Date.format(getDateTime().toLocalDate())
+                        , type.name()
+                        , getCurrencyCode() //$NON-NLS-1$
+                        , Values.Amount.format(getAmount())
+                        , getSecurity() != null ? getSecurity().getName() : "<no Security>"
+                        , peer != null ? peer.getName() : "<no Peer>"
+                        , getCrossEntry() != null && getCrossEntry().getCrossOwner(this) != null? getCrossEntry().getCrossOwner(this).toString() : "<no XEntry>"
+                            ); //$NON-NLS-1$
     }
 }

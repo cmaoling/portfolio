@@ -971,7 +971,6 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                                         t.setType(AccountTransaction.Type.TAX_REFUND);
                                         break;
                                     default:
-                                        break;
                                 }
                             }
                         })

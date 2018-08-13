@@ -114,6 +114,11 @@ public class DataSeriesSet
                         Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA).getRGB());
         availableSeries.add(series);
 
+        series = new DataSeries(DataSeries.Type.CLIENT, ClientDataSeries.DIVIDEND_CHARGE, Messages.LabelDividendCharge,
+                        Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED).getRGB());
+        series.setLineChart(false);
+        availableSeries.add(series);
+
         series = new DataSeries(DataSeries.Type.CLIENT, ClientDataSeries.INTEREST, Messages.LabelInterest,
                         Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN).getRGB());
         series.setLineChart(false);
@@ -196,12 +201,18 @@ public class DataSeriesSet
                 continue;
 
             availableSeries.add(new DataSeries(DataSeries.Type.SECURITY, security, security.getName(), //
-                            wheel.getRGB(index++)));
+                            wheel.getRGB(index++), false));
+            availableSeries.add(new DataSeries(DataSeries.Type.SECURITY, security, security.getName() + " ("+ Messages.LabelPerformanceNormalizedPerYear + ")", //
+                            wheel.getRGB(index++), true));
         }
 
         for (Portfolio portfolio : client.getPortfolios())
+        {
             availableSeries.add(new DataSeries(DataSeries.Type.PORTFOLIO, portfolio, portfolio.getName(), //
-                            wheel.getRGB(index++)));
+                            wheel.getRGB(index++), false));
+            availableSeries.add(new DataSeries(DataSeries.Type.PORTFOLIO, portfolio, portfolio.getName() + " ("+ Messages.LabelPerformanceNormalizedPerYear + ")", //
+                        wheel.getRGB(index++), true));
+        }
 
         // portfolio + reference account
         for (Portfolio portfolio : client.getPortfolios())
@@ -229,8 +240,12 @@ public class DataSeriesSet
         }
 
         for (Account account : client.getAccounts())
+        {
             availableSeries.add(
-                            new DataSeries(DataSeries.Type.ACCOUNT, account, account.getName(), wheel.getRGB(index++)));
+                            new DataSeries(DataSeries.Type.ACCOUNT, account, account.getName(), wheel.getRGB(index++), false));
+            availableSeries.add(
+                            new DataSeries(DataSeries.Type.ACCOUNT, account, account.getName() + " ("+ Messages.LabelPerformanceNormalizedPerYear + ")", wheel.getRGB(index++), true));
+        }
 
         for (Taxonomy taxonomy : client.getTaxonomies())
         {

@@ -8,10 +8,12 @@ import java.util.List;
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.ImportAction.Context;
 import name.abuchen.portfolio.datatransfer.ImportAction.Status;
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.Annotated;
 import name.abuchen.portfolio.model.BuySellEntry;
+import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
@@ -42,6 +44,8 @@ public interface Extractor
     
     public abstract static class Item
     {
+        public abstract Peer getPeer();
+
         public abstract Annotated getSubject();
 
         public abstract Security getSecurity();
@@ -49,6 +53,13 @@ public interface Extractor
         public abstract String getTypeInformation();
 
         public abstract LocalDateTime getDate();
+
+        public abstract String getNote();
+
+        public boolean getDefaultImported()
+        {
+            return true;
+        }
 
         public Money getAmount()
         {
@@ -90,7 +101,22 @@ public interface Extractor
         }
 
         @Override
+        public Peer getPeer()
+        {
+
+            System.err.println(">>>> Extractor::TransactionItem::getPeer: " + transaction.toString()); // TODO: still needed for debug?
+            if (transaction instanceof AccountTransaction)
+                return ((AccountTransaction) transaction).getPeer();
+            return null;
+        }
+
+        @Override
         public Annotated getSubject()
+        {
+            return transaction;
+        }
+
+        public Transaction getTransaction()
         {
             return transaction;
         }
@@ -131,6 +157,12 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return transaction.getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             if (transaction instanceof AccountTransaction)
@@ -149,6 +181,12 @@ public interface Extractor
         public BuySellEntryItem(BuySellEntry entry)
         {
             this.entry = entry;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            return null;
         }
 
         @Override
@@ -188,6 +226,12 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return entry.getAccountTransaction().getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             return action.process(entry, context.getAccount(), context.getPortfolio());
@@ -203,6 +247,18 @@ public interface Extractor
         {
             this.entry = entry;
             this.isOutbound = isOutbound;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            System.err.println(">>>> Extractor::AccountTransferItem::getPeer entry.source: " + entry.getSourceTransaction().toString()); // TODO: still needed for debug?
+            System.err.println(">>>> Extractor::AccountTransferItem::getPeer entry.target: " + entry.getTargetTransaction().toString()); // TODO: still needed for debug?
+            System.err.println(">>>> Extractor::AccountTransferItem::getPeer outbound " + isOutbound + " entry: " + entry.toString()); // TODO: still needed for debug?
+            if (isOutbound)
+                return entry.getSourceTransaction().getPeer();
+            else
+                return entry.getTargetTransaction().getPeer();
         }
 
         @Override
@@ -237,12 +293,37 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return entry.getSourceTransaction().getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
+            // TODO: still needed for debug?System.err.println(">>>> Extractor::apply entry.source: " + entry.getSourceTransaction().toString());
+            // TODO: still needed for debug?System.err.println(">>>> Extractor::apply entry.target: " + entry.getTargetTransaction().toString());
+            Account source;
+            Account target;
             if (isOutbound)
-                return action.process(entry, context.getAccount(), context.getSecondaryAccount());
+            {
+                source = context.getAccount();
+                target = context.getSecondaryAccount();
+            }
             else
-                return action.process(entry, context.getSecondaryAccount(), context.getAccount());
+            {
+                source = context.getSecondaryAccount();
+                target = context.getAccount();
+            }
+            // TODO: still needed for debug?System.err.println(">>>> Extractor::apply intermediate source: " + source.toString());
+            // TODO: still needed for debug?System.err.println(">>>> Extractor::apply intermediate target: " + target.toString());
+            if (entry.getSourceTransaction().getPeer() != null && entry.getSourceTransaction().getPeer().links2Account())
+                target = entry.getSourceTransaction().getPeer().getAccount();
+            if (entry.getTargetTransaction().getPeer() != null && entry.getTargetTransaction().getPeer().links2Account())
+                source = entry.getTargetTransaction().getPeer().getAccount();
+            System.err.println(">>>> Extractor::apply source: " + source.toString()); // TODO: still needed for debug?
+            System.err.println(">>>> Extractor::apply target: " + target.toString()); // TODO: still needed for debug?
+            return action.process(entry, source, target);
         }
     }
 
@@ -253,6 +334,12 @@ public interface Extractor
         public PortfolioTransferItem(PortfolioTransferEntry entry)
         {
             this.entry = entry;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            return null;
         }
 
         @Override
@@ -292,6 +379,12 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return entry.getSourceTransaction().getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             return action.process(entry, context.getPortfolio(), context.getSecondaryPortfolio());
@@ -305,6 +398,12 @@ public interface Extractor
         public SecurityItem(Security security)
         {
             this.security = security;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            return null;
         }
 
         @Override
@@ -332,9 +431,75 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return security.getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             return action.process(security);
+        }
+    }
+
+    static class PeerItem extends Item
+    {
+        private Peer peer;
+
+        public PeerItem(Peer peer)
+        {
+            this.peer = peer;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            // TODO: still needed for debug? System.err.println(">>>> Extractor::PeerItem peer::getPeer " + peer.toString());
+            return peer;
+        }
+
+        @Override
+        public Annotated getSubject()
+        {
+            // TODO: still needed for debug? System.err.println(">>>> Extractor::PeerItem peer::getSubject " + peer.toString());
+            return peer;
+        }
+
+        @Override
+        public String getTypeInformation()
+        {
+            return Messages.LabelPeer;
+        }
+
+        @Override
+        public LocalDateTime getDate()
+        {
+            return null;
+        }
+
+        @Override
+        public Security getSecurity()
+        {
+            return null;
+        }
+
+        @Override
+        public String getNote()
+        {
+            return peer.getNote();
+        }
+
+        @Override
+        public Status apply(ImportAction action, Context context)
+        {
+            return action.process(peer);
+        }
+
+        @Override
+        public boolean getDefaultImported()
+        {
+            return false;
         }
     }
 

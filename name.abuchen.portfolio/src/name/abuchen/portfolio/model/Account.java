@@ -6,20 +6,25 @@ import java.util.List;
 import java.util.UUID;
 
 import name.abuchen.portfolio.money.CurrencyUnit;
+import name.abuchen.portfolio.util.Iban;
 
 public class Account implements TransactionOwner<AccountTransaction>, InvestmentVehicle
 {
-    private String uuid;
-    private String name;
-    private String currencyCode = CurrencyUnit.EUR;
-    private String note;
+    private String  uuid;
+    private String  name;
+    private String  currencyCode = CurrencyUnit.EUR;
+    private String  note;
+    private String  iban;
     private boolean isRetired = false;
+    private Peer    peer;
 
     private List<AccountTransaction> transactions = new ArrayList<>();
 
     public Account()
     {
         this.uuid = UUID.randomUUID().toString();
+        this.note = "";
+        setPeer();
     }
 
     public Account(String name)
@@ -50,6 +55,35 @@ public class Account implements TransactionOwner<AccountTransaction>, Investment
     public void setName(String name)
     {
         this.name = name;
+    }
+
+    public String getIban()
+    {
+        return iban;
+    }
+
+    public void setIban(String iban)
+    {
+        this.iban = iban;
+    }
+
+    public boolean hasIban()
+    {
+        if (iban != null && !Iban.IBANNUMBER_DUMMY.equals(iban))
+            return Iban.isValid(iban);
+        else
+            return false;
+    }
+
+    public Peer asPeer()
+    {
+        return peer;
+    }
+
+    public void setPeer()
+    {
+        this.peer = new Peer();
+        this.peer.setAccount(this);
     }
 
     @Override
@@ -126,6 +160,7 @@ public class Account implements TransactionOwner<AccountTransaction>, Investment
                                 case FEES_REFUND:
                                     return t.getAmount();
                                 case FEES:
+                                case DIVIDEND_CHARGE:
                                 case INTEREST_CHARGE:
                                 case TAXES:
                                 case REMOVAL:

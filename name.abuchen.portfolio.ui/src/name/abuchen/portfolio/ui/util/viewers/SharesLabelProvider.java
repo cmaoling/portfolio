@@ -23,7 +23,7 @@ public abstract class SharesLabelProvider extends OwnerDrawLabelProvider
 {
     private static final char POINT = new DecimalFormatSymbols().getDecimalSeparator();
 
-    private final NumberFormat format = new DecimalFormat("#,##0.###"); //$NON-NLS-1$
+    private final NumberFormat format = new DecimalFormat("#,##0.#####"); //$NON-NLS-1$
 
     private ColumnViewer viewer;
     private TextLayout cachedTextLayout;
@@ -73,7 +73,7 @@ public abstract class SharesLabelProvider extends OwnerDrawLabelProvider
             s = s.substring(0, p);
 
         TextLayout textLayout = getSharedTextLayout(event.display);
-        textLayout.setText(s + ",000"); //$NON-NLS-1$
+        textLayout.setText(s + ",00000"); //$NON-NLS-1$
 
         return textLayout.getBounds();
     }
