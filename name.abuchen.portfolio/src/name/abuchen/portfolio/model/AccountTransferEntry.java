@@ -69,27 +69,37 @@ public class AccountTransferEntry extends CrossEntry implements Annotated
         return accountTo;
     }
 
-    public void setTransactionOwner(TransactionOwner<Transaction> owner)
+    public void setPrimaryTransactionOwner(TransactionOwner<Transaction> owner)
     {
         Object subject = (Object) owner;
-        if (subject instanceof Account && !this.accountFrom.equals((Account) subject))
-            this.accountTo = (Account) subject;
+        if (subject instanceof Account)
+        {
+            if (!this.accountFrom.equals((Account) subject))
+                this.accountTo = (Account) subject;
+        }
+        else
+            throw new IllegalArgumentException();
     }
 
-    public void setOtherTransactionOwner(TransactionOwner<Transaction> owner)
+    public void setSecondaryTransactionOwner(TransactionOwner<Transaction> owner)
     {
         Object subject = (Object) owner;
-        if (subject instanceof Account && !this.accountTo.equals((Account) subject))
-            this.accountFrom = (Account) subject;
+        if (subject instanceof Account)
+        {
+            if (!this.accountTo.equals((Account) subject))
+                this.accountFrom = (Account) subject;
+        }
+        else
+            throw new IllegalArgumentException();
     }
 
-    public TransactionOwner<Transaction> getTransactionOwner()
+    public TransactionOwner<Transaction> getPrimaryTransactionOwner()
     {
         TransactionOwner<Transaction> owner = (TransactionOwner<Transaction>) this.getOwner(transactionTo);
         return owner;
     }
 
-    public TransactionOwner<Transaction> getOtherTransactionOwner()
+    public TransactionOwner<Transaction> getSecondaryTransactionOwner()
     {
         TransactionOwner<Transaction> owner = (TransactionOwner<Transaction>) this.getOwner(transactionFrom);
         return owner;
@@ -126,6 +136,7 @@ public class AccountTransferEntry extends CrossEntry implements Annotated
         this.transactionTo.setNote(note);
     }
 
+    @Override
     public void insert()
     {
         accountFrom.addTransaction(transactionFrom);

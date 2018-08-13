@@ -67,27 +67,37 @@ public class PortfolioTransferEntry extends CrossEntry implements Annotated
         return this.portfolioTo;
     }
 
-    public void setTransactionOwner(TransactionOwner<Transaction> owner)
+    public void setPrimaryTransactionOwner(TransactionOwner<Transaction> owner)
     {
         Object subject = (Object) owner;
-        if (subject instanceof Portfolio && !this.portfolioFrom.equals((Portfolio) subject))
-            this.portfolioTo = (Portfolio) subject;
+        if (subject instanceof Portfolio)
+        {
+            if (!this.portfolioFrom.equals((Portfolio) subject))
+                this.portfolioTo = (Portfolio) subject;
+        }
+        else
+            throw new IllegalArgumentException();
     }
 
-    public void setOtherTransactionOwner(TransactionOwner<Transaction> owner)
+    public void setSecondaryTransactionOwner(TransactionOwner<Transaction> owner)
     {
         Object subject = (Object) owner;
-        if (subject instanceof Portfolio && !this.portfolioTo.equals((Portfolio) subject))
-            this.portfolioFrom = (Portfolio) subject;
+        if (subject instanceof Portfolio)
+        {
+            if (!this.portfolioTo.equals((Portfolio) subject))
+                this.portfolioFrom = (Portfolio) subject;
+        }
+        else
+            throw new IllegalArgumentException();
     }
 
-    public TransactionOwner<Transaction> getTransactionOwner()
+    public TransactionOwner<Transaction> getPrimaryTransactionOwner()
     {
         TransactionOwner<Transaction> owner = (TransactionOwner<Transaction>) this.getOwner(transactionTo);
         return owner;
     }
 
-    public TransactionOwner<Transaction> getOtherTransactionOwner()
+    public TransactionOwner<Transaction> getSecondaryTransactionOwner()
     {
         TransactionOwner<Transaction> owner = (TransactionOwner<Transaction>) this.getOwner(transactionFrom);
         return owner;
@@ -136,6 +146,7 @@ public class PortfolioTransferEntry extends CrossEntry implements Annotated
         this.transactionTo.setNote(note);
     }
 
+    @Override
     public void insert()
     {
         portfolioFrom.addTransaction(transactionFrom);

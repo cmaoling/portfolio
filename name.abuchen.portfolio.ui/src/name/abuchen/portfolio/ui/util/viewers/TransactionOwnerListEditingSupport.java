@@ -3,6 +3,7 @@ package name.abuchen.portfolio.ui.util.viewers;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
@@ -35,13 +36,14 @@ public class TransactionOwnerListEditingSupport extends ListEditingSupport
         this.client = client;
     }
 
+    @SuppressWarnings("unchecked")
     private Transaction getTransaction(Object element)
     {
         Transaction t;
         if (element instanceof Transaction)
             t = (Transaction) element;
         else if (element instanceof TransactionPair)
-            t = (Transaction) ((TransactionPair) element).getTransaction();
+            t = (Transaction) ((TransactionPair<Transaction>) element).getTransaction();
         else
             throw new UnsupportedOperationException();
         return t;
@@ -58,38 +60,45 @@ public class TransactionOwnerListEditingSupport extends ListEditingSupport
         boolean canEdit = (adapt(t.getCrossEntry()) != null); 
         if (canEdit)
         {
-            List<?> options; 
-            if (attributeName.equals("transactionOwner"))
-            {
-                if (t.getCrossEntry().getOwner(t) instanceof Account)
-                    options = client.getAccounts();
-                else if (t.getCrossEntry().getOwner(t) instanceof Portfolio)
-                    options = client.getPortfolios();
-                else
-                    throw new IllegalArgumentException();
-            }
-            else if (attributeName.equals("otherTransactionOwner"))
-            {
-                if (t.getCrossEntry().getCrossOwner(t) instanceof Account)
-                    options = client.getAccounts();
-                else if (t.getCrossEntry().getCrossOwner(t) instanceof Portfolio)
-                    options = client.getPortfolios();
-                else
-                    throw new IllegalArgumentException();
-            }
+            TransactionOwner<? extends Transaction> owner;
+            if (attributeName.equals("primaryTransactionOwner")) //$NON-NLS-1$
+                owner = t.getCrossEntry().getOwner(t);
+            else if (attributeName.equals("secondaryTransactionOwner")) //$NON-NLS-1$
+                owner = t.getCrossEntry().getCrossOwner(t);
             else
                 throw new IllegalArgumentException();
-            setComboBoxItems(new ArrayList<Object>(options));
+
+            final TransactionOwner<? extends Transaction> skip;
+            if (t.getCrossEntry().getOwner(t).getClass().equals(t.getCrossEntry().getCrossOwner(t).getClass()))
+                skip  = t.getCrossEntry().getOwner(t);
+            else
+                skip  = null;
+
+            List<?> options; 
+            if (owner instanceof Account)
+            {
+                Account account = (Account) owner;
+                options = client.getAccounts().stream().filter(a -> {return (skip != null?!skip.equals(a):true);}).filter(a -> account.getCurrencyCode().equals(a.getCurrencyCode())).collect(Collectors.toList());
+            }
+            else if (owner instanceof Portfolio)
+                options = client.getPortfolios().stream().filter(p -> {return (skip != null?!skip.equals(p):true);}).collect(Collectors.toList());
+            else
+                throw new IllegalArgumentException();
+
+            if (options.size() > 1)
+                setComboBoxItems(new ArrayList<Object>(options));
+            else
+                return false;
         }
         return canEdit;
     }
 
     private String switchAttributeName(String attributeName)
     {
-        if (attributeName.equals("transactionOwner"))
-            return "otherTransactionOwner";
-        else if (attributeName.equals("otherTransactionOwner"))
-            return "transactionOwner";
+        if (attributeName.equals("primaryTransactionOwner")) //$NON-NLS-1$
+            return "secondaryTransactionOwner"; //$NON-NLS-1$
+        else if (attributeName.equals("secondaryTransactionOwner")) //$NON-NLS-1$
+            return "primaryTransactionOwner"; //$NON-NLS-1$
         else
             throw new IllegalArgumentException();
     }
@@ -155,8 +164,19 @@ public class TransactionOwnerListEditingSupport extends ListEditingSupport
     {
         Transaction transaction = getTransaction(element);
         Object subject = adapt(transaction.getCrossEntry());
-        TransactionOwner<Transaction> owner      = (TransactionOwner<Transaction>) transaction.getCrossEntry().getOwner(transaction);
-        TransactionOwner<Transaction> crossOwner = (TransactionOwner<Transaction>) transaction.getCrossEntry().getCrossOwner(transaction);
+        TransactionOwner<Transaction> owner;
+        TransactionOwner<Transaction> crossOwner;
+        if (transaction.getCrossEntry().getOwner(transaction) instanceof TransactionOwner && transaction.getCrossEntry().getCrossOwner(transaction) instanceof TransactionOwner)
+        {
+            @SuppressWarnings("unchecked")
+            TransactionOwner<Transaction> tmpOwner      = (TransactionOwner<Transaction>) transaction.getCrossEntry().getOwner(transaction);
+            @SuppressWarnings("unchecked")
+            TransactionOwner<Transaction> tmpCrossOwner = (TransactionOwner<Transaction>) transaction.getCrossEntry().getCrossOwner(transaction);
+            owner      = tmpOwner;
+            crossOwner = tmpCrossOwner;
+        }
+        else
+            throw new IllegalArgumentException();
         
         int index = (Integer) value;
         if (index < 0)
