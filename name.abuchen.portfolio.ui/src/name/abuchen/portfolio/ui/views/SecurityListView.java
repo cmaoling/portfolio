@@ -109,6 +109,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
             manager.add(new SimpleAction(Messages.SecurityMenuNewSecurity, a -> {
                 Security newSecurity = new Security();
                 newSecurity.setFeed(QuoteFeed.MANUAL);
+                newSecurity.setCurrencyCode(getClient().getBaseCurrency());
                 openEditDialog(newSecurity);
             }));
 
@@ -877,7 +878,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 return null;
             }
         });
-        new TransactionOwnerListEditingSupport(getClient(), CrossEntry.class, "primarytransactionOwner") //$NON-NLS-1$
+        new TransactionOwnerListEditingSupport(getClient(), CrossEntry.class, "primaryTransactionOwner") //$NON-NLS-1$
         .addListener(this).attachTo(column);
         support.addColumn(column);
 

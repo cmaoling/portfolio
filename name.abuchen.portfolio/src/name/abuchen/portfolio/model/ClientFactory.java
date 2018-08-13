@@ -267,7 +267,7 @@ public class ClientFactory
 
                         client = new XmlSerialization().load(new InputStreamReader(zipin, StandardCharsets.UTF_8));
 
-                        try
+                        try // NOSONAR
                         {
                             // explicitly close the stream to force bad padding
                             // exceptions to occur inside this try-catch-block
@@ -566,6 +566,7 @@ public class ClientFactory
                 // SecurityEvent has no more details
                 convertSecurityEventDetails(client);
             case 37:
+                // added boolean attribute type
                 // Portfoliotransfer has Quotesuggestion
                 introduceQuoteSuggestion4Transfer(client);
             case 38:
@@ -1002,7 +1003,7 @@ public class ClientFactory
             for (AttributeType t : typesWithQuotes)
             {
                 Object value = attributes.get(t);
-                if (value != null && value instanceof Long)
+                if (value instanceof Long)
                     attributes.put(t, ((Long) value).longValue() * decimalPlacesAdded);
             }
         });
