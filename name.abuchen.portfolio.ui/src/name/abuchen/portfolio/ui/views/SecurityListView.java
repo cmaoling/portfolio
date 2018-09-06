@@ -878,8 +878,8 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 return null;
             }
         });
-        new TransactionOwnerListEditingSupport(getClient(), CrossEntry.class, "primaryTransactionOwner") //$NON-NLS-1$
-        .addListener(this).attachTo(column);
+        new TransactionOwnerListEditingSupport(getClient(), TransactionOwnerListEditingSupport.EditMode.OWNER)
+                        .addListener(this).attachTo(column);
         support.addColumn(column);
 
         column = new Column(Messages.ColumnOffsetAccount, SWT.NONE, 120);
@@ -896,8 +896,8 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                     return pair.getOwner().toString();
             }
         });
-        new TransactionOwnerListEditingSupport(getClient(), CrossEntry.class, "secondaryTransactionOwner") //$NON-NLS-1$
-        .addListener(this).attachTo(column);
+        new TransactionOwnerListEditingSupport(getClient(), TransactionOwnerListEditingSupport.EditMode.CROSSOWNER)
+                        .addListener(this).attachTo(column);
         support.addColumn(column);
 
         column = new NoteColumn();

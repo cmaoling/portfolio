@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import name.abuchen.portfolio.model.Transaction;
 
-public class AccountTransferEntry extends CrossEntry implements Annotated
+public class AccountTransferEntry implements CrossEntry, Annotated
 {
     private Account accountFrom;
     private AccountTransaction transactionFrom;
@@ -27,6 +27,16 @@ public class AccountTransferEntry extends CrossEntry implements Annotated
         this();
         this.accountFrom = accountFrom;
         this.accountTo = accountTo;
+    }
+
+    public void setSourceTransaction(AccountTransaction transaction)
+    {
+        this.transactionFrom = transaction;
+    }
+
+    public void setTargetTransaction(AccountTransaction transaction)
+    {
+        this.transactionTo = transaction;
     }
 
     public AccountTransaction getSourceTransaction()
@@ -159,6 +169,20 @@ public class AccountTransferEntry extends CrossEntry implements Annotated
             return accountTo;
         else
             throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setOwner(Transaction t, TransactionOwner<? extends Transaction> owner)
+    {
+        if (!(owner instanceof Account))
+            throw new IllegalArgumentException();
+
+        if (t.equals(transactionFrom) && !accountTo.equals(owner))
+            accountFrom = (Account) owner;
+        else if (t.equals(transactionTo) && !accountFrom.equals(owner))
+            accountTo = (Account) owner;
+        else
+            throw new IllegalArgumentException();
     }
 
     @Override
