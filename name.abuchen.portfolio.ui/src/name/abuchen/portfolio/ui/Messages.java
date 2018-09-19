@@ -739,9 +739,11 @@ public class Messages extends NLS
     public static String PerformanceTabAssetsAtEnd;
     public static String PerformanceTabAssetsAtStart;
     public static String PerformanceTabCalculation;
+    public static String PerformanceTabDividends;
     public static String PerformanceTabEarnings;
     public static String PerformanceTabEarningsByAccount;
     public static String PerformanceTabFees;
+    public static String PerformanceTabInterests;
     public static String PerformanceTabOverview;
     public static String PerformanceTabTaxes;
     public static String PortfolioFilterRetiredPortfolios;

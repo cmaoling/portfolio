@@ -75,8 +75,10 @@ public class PerformanceView extends AbstractHistoricView
     private StatementOfAssetsViewer snapshotEnd;
     private TableViewer earnings;
     private TableViewer earningsByAccount;
-    private TableViewer taxes;
+    private TableViewer dividends;
     private TableViewer fees;
+    private TableViewer interests;
+    private TableViewer taxes;
 
     @Override
     protected String getDefaultTitle()
@@ -120,8 +122,10 @@ public class PerformanceView extends AbstractHistoricView
 
         earnings.setInput(snapshot.getEarnings());
         earningsByAccount.setInput(new GroupEarningsByAccount(snapshot).getItems());
-        taxes.setInput(snapshot.getTaxes());
+        dividends.setInput(snapshot.getDividends());
         fees.setInput(snapshot.getFees());
+        interests.setInput(snapshot.getInterests());
+        taxes.setInput(snapshot.getTaxes());
     }
 
     @Override
@@ -141,8 +145,10 @@ public class PerformanceView extends AbstractHistoricView
         snapshotEnd = createStatementOfAssetsItem(folder, Messages.PerformanceTabAssetsAtEnd);
         earnings = createTransactionViewer(folder, Messages.PerformanceTabEarnings);
         createEarningsByAccountsItem(folder, Messages.PerformanceTabEarningsByAccount);
-        taxes = createTransactionViewer(folder, Messages.PerformanceTabTaxes);
+        dividends = createTransactionViewer(folder, Messages.PerformanceTabDividends);
         fees = createTransactionViewer(folder, Messages.PerformanceTabFees);
+        interests = createTransactionViewer(folder, Messages.PerformanceTabInterests);
+        taxes = createTransactionViewer(folder, Messages.PerformanceTabTaxes);
 
         folder.setSelection(0);
 

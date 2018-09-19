@@ -113,6 +113,8 @@ public class ClientPerformanceSnapshot
     private final List<TransactionPair<?>> earnings = new ArrayList<>();
     private final List<TransactionPair<?>> fees = new ArrayList<>();
     private final List<TransactionPair<?>> taxes = new ArrayList<>();
+    private final List<TransactionPair<?>> dividends = new ArrayList<>();
+    private final List<TransactionPair<?>> interests = new ArrayList<>();
     private double irr;
 
     public ClientPerformanceSnapshot(Client client, CurrencyConverter converter, LocalDate startDate, LocalDate endDate)
@@ -166,9 +168,19 @@ public class ClientPerformanceSnapshot
         return earnings;
     }
 
+    public List<TransactionPair<?>> getDividends()
+    {
+        return dividends;
+    }
+
     public List<TransactionPair<?>> getFees()
     {
         return fees;
+    }
+
+    public List<TransactionPair<?>> getInterests()
+    {
+        return interests;
     }
 
     public List<TransactionPair<?>> getTaxes()
@@ -306,10 +318,18 @@ public class ClientPerformanceSnapshot
                     case DIVIDENDS:
                     case INTEREST:
                         addEarningTransaction(account, t, mEarnings, mOtherEarnings, mTaxes, earningsBySecurity);
+                        if (AccountTransaction.Type.DIVIDENDS.equals(t.getType()))
+                            dividends.add(new TransactionPair<AccountTransaction>(account, t));
+                        else if (AccountTransaction.Type.INTEREST.equals(t.getType()))
+                            interests.add(new TransactionPair<AccountTransaction>(account, t));
                         break;
                     case DIVIDEND_CHARGE:
                     case INTEREST_CHARGE:
                         addExpenseTransaction(account, t, mEarnings, mOtherEarnings, mTaxes, earningsBySecurity);
+                        if (AccountTransaction.Type.DIVIDEND_CHARGE.equals(t.getType()))
+                            dividends.add(new TransactionPair<AccountTransaction>(account, t));
+                        else if (AccountTransaction.Type.INTEREST_CHARGE.equals(t.getType()))
+                            interests.add(new TransactionPair<AccountTransaction>(account, t));
                         break;
                     case DEPOSIT:
                         mDeposits.add(t.getMonetaryAmount().with(converter.at(t.getDateTime())));
