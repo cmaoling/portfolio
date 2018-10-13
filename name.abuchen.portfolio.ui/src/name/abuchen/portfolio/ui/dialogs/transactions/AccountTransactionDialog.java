@@ -123,9 +123,10 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         Label lblDate = new Label(editArea, SWT.RIGHT);
         lblDate.setText(Messages.ColumnDate);
         DatePicker valueDate = new DatePicker(editArea);
+        IObservableValue<?> targetDate = new SimpleDateTimeDateSelectionProperty().observe(valueDate.getControl());
         @SuppressWarnings("unchecked")
         IObservableValue<?> dateObservable = BeanProperties.value(Properties.date.name()).observe(model);
-        context.bindValue(new SimpleDateTimeDateSelectionProperty().observe(valueDate.getControl()), dateObservable);
+        context.bindValue(targetDate, dateObservable);
 
         // shares
 
@@ -202,9 +203,10 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         Label lblNote = new Label(editArea, SWT.LEFT);
         lblNote.setText(Messages.ColumnNote);
         Text valueNote = new Text(editArea, SWT.BORDER);
+        IObservableValue<?> targetNote = WidgetProperties.text(SWT.Modify).observe(valueNote);
         @SuppressWarnings("unchecked")
         IObservableValue<?> noteObservable = BeanProperties.value(Properties.note.name()).observe(model);
-        context.bindValue(WidgetProperties.text(SWT.Modify).observe(valueNote), noteObservable);
+        context.bindValue(targetNote, noteObservable);
 
         //
         // form layout
