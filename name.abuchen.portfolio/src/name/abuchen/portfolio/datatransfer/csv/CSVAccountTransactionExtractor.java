@@ -44,6 +44,7 @@ import name.abuchen.portfolio.money.Money;
     {
         List<Field> fields = getFields();
         fields.add(new DateField(Messages.CSVColumn_Date));
+        fields.add(new Field(Messages.CSVColumn_Time).setOptional(true));
         fields.add(new ISINField(Messages.CSVColumn_ISIN).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_TickerSymbol).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_WKN).setOptional(true));
@@ -73,7 +74,7 @@ import name.abuchen.portfolio.money.Money;
         Type type = inferType(rawValues, field2column, security, amount);
 
         // extract remaining fields
-        LocalDateTime date = getDate(Messages.CSVColumn_Date, rawValues, field2column);
+        LocalDateTime date = getDate(Messages.CSVColumn_Date, Messages.CSVColumn_Time, rawValues, field2column);
         if (date == null)
             throw new ParseException(MessageFormat.format(Messages.CSVImportMissingField, Messages.CSVColumn_Date), 0);
         String note = getText(Messages.CSVColumn_Note, rawValues, field2column);
@@ -96,7 +97,7 @@ import name.abuchen.portfolio.money.Money;
                 AccountTransferEntry entry = new AccountTransferEntry();
                 entry.setAmount(Math.abs(amount.getAmount()));
                 entry.setCurrencyCode(amount.getCurrencyCode());
-                entry.setDate(date);
+                entry.setDate(date.withHour(0).withMinute(0));
                 entry.setNote(note);
                 if (peer != null)
                 {
@@ -153,7 +154,7 @@ import name.abuchen.portfolio.money.Money;
                 t.setCurrencyCode(amount.getCurrencyCode());
                 if (dividendType || type == Type.TAX_REFUND)
                     t.setSecurity(security);
-                t.setDateTime(date);
+                t.setDateTime(date.withHour(0).withMinute(0));
                 String extNote = getText(Messages.CSVColumn_ISIN, rawValues, field2column);
                 if (extNote != null && security.getIsin() == "")
                 {

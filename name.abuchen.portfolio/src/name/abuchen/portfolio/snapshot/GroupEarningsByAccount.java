@@ -165,7 +165,8 @@ public class GroupEarningsByAccount
 
             if (!dividends.isZero() || !fees.isZero() || !interest.isZero() || !sum.isZero() || !taxes.isZero())
             {
-                Item item = new Item(account, dividends.toMoney(), fees.toMoney(), interest.toMoney(), sum.toMoney(), taxes.toMoney());
+                Item item = new Item(account, dividends.toMoney(), fees.toMoney(), interest.toMoney(), sum.toMoney(),
+                                taxes.toMoney());
                 items.add(item);
             }
         }

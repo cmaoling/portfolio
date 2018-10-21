@@ -98,12 +98,12 @@ public abstract class Transaction implements Annotated
         @Override
         public String toString()
         {
-            return String.format("%-17s %s %s %s"  //$NON-NLS-1$
-                            , type.name()
-                            , amount.toString()
-                            , (forex != null ? forex.toString() : "<no forex>") //$NON-NLS-1$
-                            , (exchangeRate != null ? exchangeRate.toString() : "<no exchange>")  //$NON-NLS-1$
-                                );
+            return String.format("%-17s %s %s %s", //$NON-NLS-1$
+                            type.name(), //
+                            amount.toString(), //
+                            (forex != null ? forex.toString() : "<no forex>"), //$NON-NLS-1$
+                            (exchangeRate != null ? exchangeRate.toString() : "<no exchange>") //$NON-NLS-1$
+            );
         }
     }
 
@@ -137,7 +137,8 @@ public abstract class Transaction implements Annotated
         this(date, currencyCode, amount, null, 0, null);
     }
 
-    public Transaction(LocalDateTime date, String currencyCode, long amount, Security security, long shares, String note)
+    public Transaction(LocalDateTime date, String currencyCode, long amount, Security security, long shares,
+                    String note)
     {
         this.date = date;
         this.currencyCode = currencyCode;
@@ -146,17 +147,17 @@ public abstract class Transaction implements Annotated
         this.shares = shares;
         this.note = note;
     }
-    
+
     public LocalDateTime getDateTime()
     {
         return date;
     }
-    
+
     public void setDateTime(LocalDateTime date)
     {
         this.date = date;
     }
-    
+
     public String getCurrencyCode()
     {
         return currencyCode;
