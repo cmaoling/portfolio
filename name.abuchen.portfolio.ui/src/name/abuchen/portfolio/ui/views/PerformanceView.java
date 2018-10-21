@@ -12,13 +12,13 @@ import org.eclipse.jface.layout.TreeColumnLayout;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
-import org.eclipse.jface.viewers.ColumnPixelData;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.window.ToolTip;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -57,6 +57,7 @@ import name.abuchen.portfolio.ui.util.TreeViewerCSVExporter;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnViewerSorter;
 import name.abuchen.portfolio.ui.util.viewers.ShowHideColumnHelper;
+import name.abuchen.portfolio.ui.views.columns.NameColumn;
 import name.abuchen.portfolio.ui.views.columns.NoteColumn;
 
 public class PerformanceView extends AbstractHistoricView
@@ -170,18 +171,14 @@ public class PerformanceView extends AbstractHistoricView
 
         calculation = new TreeViewer(container, SWT.FULL_SELECTION);
 
-        calculation.addSelectionChangedListener(event -> {
-            Object selection = ((IStructuredSelection) event.getSelection()).getFirstElement();
-            if (selection != null && selection instanceof ClientPerformanceSnapshot.Position
-                            && ((ClientPerformanceSnapshot.Position) selection).getSecurity() != null)
-                selectionService.setSelection(new SecuritySelection(getClient(),
-                                ((ClientPerformanceSnapshot.Position) selection).getSecurity()));
-        });
+        ColumnViewerToolTipSupport.enableFor(calculation, ToolTip.NO_RECREATE);
 
         final Font boldFont = JFaceResources.getFontRegistry().getBold(container.getFont().getFontData()[0].getName());
 
-        TreeViewerColumn column = new TreeViewerColumn(calculation, SWT.NONE);
-        column.getColumn().setText(Messages.ColumnLable);
+        ShowHideColumnHelper support = new ShowHideColumnHelper(getClass().getSimpleName() + "-calculation", //$NON-NLS-1$
+                        getPreferenceStore(), calculation, layout);
+
+        Column column = new NameColumn("label", Messages.ColumnLabel, SWT.NONE, 350); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -238,10 +235,9 @@ public class PerformanceView extends AbstractHistoricView
                 return null;
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(350));
+        support.addColumn(column);
 
-        column = new TreeViewerColumn(calculation, SWT.RIGHT);
-        column.getColumn().setText(Messages.ColumnValue);
+        column = new NameColumn("value", Messages.ColumnValue, SWT.RIGHT, 80); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -268,13 +264,22 @@ public class PerformanceView extends AbstractHistoricView
                 return null;
             }
         });
+        support.addColumn(column);
 
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(80));
+        support.createColumns();
 
         calculation.getTree().setHeaderVisible(true);
         calculation.getTree().setLinesVisible(true);
 
         calculation.setContentProvider(new PerformanceContentProvider());
+
+        calculation.addSelectionChangedListener(event -> {
+            Object selection = ((IStructuredSelection) event.getSelection()).getFirstElement();
+            if (selection != null && selection instanceof ClientPerformanceSnapshot.Position
+                            && ((ClientPerformanceSnapshot.Position) selection).getSecurity() != null)
+                selectionService.setSelection(new SecuritySelection(getClient(),
+                                ((ClientPerformanceSnapshot.Position) selection).getSecurity()));
+        });
 
         CTabItem item = new CTabItem(folder, SWT.NONE);
         item.setText(title);
@@ -552,7 +557,7 @@ public class PerformanceView extends AbstractHistoricView
 
         earningsByAccount = new TableViewer(container, SWT.FULL_SELECTION);
 
-        ShowHideColumnHelper support = new ShowHideColumnHelper(PerformanceView.class.getSimpleName() + "@byaccounts", //$NON-NLS-1$
+        ShowHideColumnHelper support = new ShowHideColumnHelper(PerformanceView.class.getSimpleName() + "@byaccounts2", //$NON-NLS-1$
                         getPreferenceStore(), earningsByAccount, layout);
 
         Column column = new Column(Messages.ColumnSource, SWT.LEFT, 400);
@@ -574,7 +579,34 @@ public class PerformanceView extends AbstractHistoricView
         column.setSorter(ColumnViewerSorter.create(GroupEarningsByAccount.Item.class, "account")); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnAmount, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnDividendPayment, SWT.RIGHT, 80);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object element)
+            {
+                GroupEarningsByAccount.Item item = (GroupEarningsByAccount.Item) element;
+                return Values.Money.format(item.getDividends(), getClient().getBaseCurrency());
+            }
+        });
+        column.setSorter(ColumnViewerSorter.create(GroupEarningsByAccount.Item.class, "dividends")); //$NON-NLS-1$
+        support.addColumn(column);
+
+        column = new Column(Messages.ColumnInterest, SWT.RIGHT, 80);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object element)
+            {
+                GroupEarningsByAccount.Item item = (GroupEarningsByAccount.Item) element;
+                return Values.Money.format(item.getInterest(), getClient().getBaseCurrency());
+            }
+        });
+        column.setSorter(ColumnViewerSorter.create(GroupEarningsByAccount.Item.class, "interest")); //$NON-NLS-1$
+        support.addColumn(column);
+
+        column = new Column(Messages.ColumnEarnings, SWT.RIGHT, 80);
+        column.setDescription(Messages.ColumnEarnings_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -585,6 +617,32 @@ public class PerformanceView extends AbstractHistoricView
             }
         });
         column.setSorter(ColumnViewerSorter.create(GroupEarningsByAccount.Item.class, "sum")); //$NON-NLS-1$
+        support.addColumn(column);
+
+        column = new Column(Messages.ColumnFees, SWT.RIGHT, 80);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object element)
+            {
+                GroupEarningsByAccount.Item item = (GroupEarningsByAccount.Item) element;
+                return Values.Money.format(item.getFees(), getClient().getBaseCurrency());
+            }
+        });
+        column.setSorter(ColumnViewerSorter.create(GroupEarningsByAccount.Item.class, "fees")); //$NON-NLS-1$
+        support.addColumn(column);
+
+        column = new Column(Messages.ColumnTaxes, SWT.RIGHT, 80);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object element)
+            {
+                GroupEarningsByAccount.Item item = (GroupEarningsByAccount.Item) element;
+                return Values.Money.format(item.getTaxes(), getClient().getBaseCurrency());
+            }
+        });
+        column.setSorter(ColumnViewerSorter.create(GroupEarningsByAccount.Item.class, "taxes")); //$NON-NLS-1$
         support.addColumn(column);
 
         support.createColumns();

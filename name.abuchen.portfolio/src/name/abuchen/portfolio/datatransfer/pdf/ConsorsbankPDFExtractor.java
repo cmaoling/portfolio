@@ -35,6 +35,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
 
         // documents since Q4 2017 look different
         addQ42017DividendTransaction();
+        addQ42017IncomeTransaction();
     }
 
     @Override
@@ -62,7 +63,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
         pdfTransaction.section("wkn", "isin", "name", "currency") //
                         .find("(Wertpapier|Bezeichnung) WKN ISIN") //
                         .match("^(?<name>.*) (?<wkn>[^ ]*) (?<isin>[^ ]*)$") //
-                        .match("(Kurs|Preis pro Anteil) (\\d+,\\d+) (?<currency>\\w{3}+) .*")
+                        .match("(Kurs|Preis pro Anteil) ([\\d.]+,\\d+) (?<currency>\\w{3}+) .*")
                         .assign((t, v) -> t.setSecurity(getOrCreateSecurity(v)))
 
                         .section("shares") //
@@ -105,7 +106,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
         pdfTransaction.section("wkn", "isin", "name", "currency") //
                         .find("(Wertpapier|Bezeichnung) WKN ISIN") //
                         .match("^(?<name>.*) (?<wkn>[^ ]*) (?<isin>[^ ]*)$") //
-                        .match("(Kurs|Preis pro Anteil) (\\d+,\\d+) (?<currency>\\w{3}+) .*")
+                        .match("(Kurs|Preis pro Anteil) ([\\d.]+,\\d+) (?<currency>\\w{3}+) .*")
                         .assign((t, v) -> t.setSecurity(getOrCreateSecurity(v)))
 
                         .section("shares") //
@@ -145,7 +146,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
         pdfTransaction.section("wkn", "isin", "name", "currency") //
                         .find("(Wertpapier|Bezeichnung) WKN ISIN") //
                         .match("^(?<name>.*) (?<wkn>[^ ]*) (?<isin>[^ ]*)$") //
-                        .match("(Kurs|Preis pro Anteil) (\\d+,\\d+) (?<currency>\\w{3}+) .*")
+                        .match("(Kurs|Preis pro Anteil) ([\\d.]+,\\d+) (?<currency>\\w{3}+) .*")
                         .assign((t, v) -> t.setSecurity(getOrCreateSecurity(v)))
 
                         .section("shares") //
@@ -411,24 +412,30 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
     @SuppressWarnings("nls")
     private void addTaxAdjustmentTransaction()
     {
-        
+
         DocumentType type = new DocumentType("Nachträgliche Verlustverrechnung");
         this.addDocumentTyp(type);
-        
+
         Block block = new Block(" Erstattung/Belastung \\(-\\) von Steuern");
         type.addBlock(block);
-        block.set(new Transaction<AccountTransaction>().subject(() -> {
-            AccountTransaction t = new AccountTransaction();
-            t.setType(AccountTransaction.Type.TAX_REFUND);
-            t.setCurrencyCode(CurrencyUnit.EUR); // nirgends im Dokument ist die Währung aufgeführt.
-            return t;
-        })
-                        
-                        // Den Steuerausgleich buchen wir mit Wertstellung 10.07.2017
+        block.set(new Transaction<AccountTransaction>()
+
+                        .subject(() -> {
+                            AccountTransaction t = new AccountTransaction();
+                            t.setType(AccountTransaction.Type.TAX_REFUND);
+
+                            // nirgends im Dokument ist die Währung aufgeführt.
+                            t.setCurrencyCode(CurrencyUnit.EUR);
+                            return t;
+                        })
+
+                        // Den Steuerausgleich buchen wir mit Wertstellung
+                        // 10.07.2017
                         .section("date")
                         .match(" *Den Steuerausgleich buchen wir mit Wertstellung (?<date>\\d+.\\d+.\\d{4}) .*")
                         .assign((t, v) -> t.setDateTime(asDate(v.get("date"))))
 
+                        // @formatter:off
                         // Erstattung/Belastung (-) von Steuern
                         // Anteil                             100,00%
                         // KapSt Person 1                                 :                79,89
@@ -436,15 +443,34 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
                         // KiSt  Person 1                                 :                 6,36
                         // ======================================================================
                         //                                                                 90,61
-                        .section("amount")
-                        .find(" *Erstattung/Belastung \\(-\\) von Steuern *")
-                        .find(" *=* *")
-                        .match(" *(?<amount>[\\d.]+,\\d{2}) *")
-                        .assign((t, v) -> t.setAmount(asAmount(v.get("amount"))))
-                        
+                        // @formatter:on
+
+                        .section("amount", "sign") //
+                        .find(" *Erstattung/Belastung \\(-\\) von Steuern *") //
+                        .find(" *=* *") //
+                        .match(" *(?<amount>[\\d.]+,\\d{2})(?<sign>-?).*") //
+                        .assign((t, v) -> {
+                            t.setAmount(asAmount(v.get("amount")));
+
+                            if ("-".equals(v.get("sign")))
+                                t.setType(AccountTransaction.Type.TAXES);
+                        })
+
                         .wrap(t -> new TransactionItem(t)));
     }
-    
+
+    @SuppressWarnings("nls")
+    private void addQ42017IncomeTransaction()
+    {
+        DocumentType type = new DocumentType("Ertragsgutschrift");
+        this.addDocumentTyp(type);
+
+        Block block = new Block("Ertragsgutschrift.*");
+        type.addBlock(block);
+
+        block.set(newQ42017DividendTransaction(type));
+    }
+
     @SuppressWarnings("nls")
     private void addQ42017DividendTransaction()
     {
@@ -454,7 +480,13 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
         Block block = new Block("Dividendengutschrift.*");
         type.addBlock(block);
 
-        block.set(new Transaction<AccountTransaction>()
+        block.set(newQ42017DividendTransaction(type));
+    }
+
+    @SuppressWarnings("nls")
+    private Transaction<AccountTransaction> newQ42017DividendTransaction(DocumentType type)
+    {
+        return new Transaction<AccountTransaction>()
 
                         .subject(() -> {
                             AccountTransaction t = new AccountTransaction();
@@ -462,12 +494,22 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
                             return t;
                         })
 
-                        .section("name", "wkn", "isin", "currency") //
-                        .find("Wertpapierbezeichnung WKN ISIN") //
-                        .match("(?<name>.*) (?<wkn>[^ ]*) (?<isin>[^ ]*)$") //
-                        .match("Dividende pro Stück ([\\d.]+,\\d+) (?<currency>\\w{3}+).*").assign((t, v) -> {
-                            t.setSecurity(getOrCreateSecurity(v));
-                        })
+                        .oneOf( //
+                                        section -> section.attributes("name", "wkn", "isin", "currency") //
+                                                        .find("Wertpapierbezeichnung WKN ISIN") //
+                                                        .match("(?<name>.*) (?<wkn>[^ ]*) (?<isin>[^ ]*)$") //
+                                                        .match("Dividende pro Stück ([\\d.]+,\\d+) (?<currency>\\w{3}+).*") //
+                                                        .assign((t, v) -> {
+                                                            t.setSecurity(getOrCreateSecurity(v));
+                                                        }),
+
+                                        section -> section.attributes("name", "wkn", "isin", "currency") //
+                                                        .find("Wertpapierbezeichnung WKN ISIN") //
+                                                        .match("(?<name>.*) (?<wkn>[^ ]*) (?<isin>[^ ]*)$") //
+                                                        .match("Ertragsausschüttung je Anteil ([\\d.]+,\\d+) (?<currency>\\w{3}+).*")
+                                                        .assign((t, v) -> {
+                                                            t.setSecurity(getOrCreateSecurity(v));
+                                                        }))
 
                         .section("amount", "currency") //
                         .match("Netto zugunsten IBAN (.*) (?<amount>[\\d.]+,\\d+) (?<currency>\\w{3}+)$")
@@ -550,7 +592,8 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
                             t.addUnit(new Unit(Unit.Type.TAX, tax));
                         })
 
-                        .wrap(t -> t.getAmount() != 0 ? new TransactionItem(t) : null));
+                        .wrap(t -> t.getAmount() != 0 ? new TransactionItem(t) : null);
+
     }
 
     @Override
