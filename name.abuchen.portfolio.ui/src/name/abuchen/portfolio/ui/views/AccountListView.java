@@ -208,16 +208,13 @@ public class AccountListView extends AbstractListView implements ModificationLis
     @Override
     public void notifyModelUpdated()
     {
-        new Exception().printStackTrace(System.err);
-        return;
-// TODO: really no impact, that this is aborted?
-//        resetInput();
-//
-//        Account account = (Account) ((IStructuredSelection) accounts.getSelection()).getFirstElement();
-//        if (getClient().getAccounts().contains(account))
-//            accounts.setSelection(new StructuredSelection(account));
-//        else
-//            accounts.setSelection(StructuredSelection.EMPTY);
+        resetInput();
+
+        Account account = (Account) ((IStructuredSelection) accounts.getSelection()).getFirstElement();
+        if (getClient().getAccounts().contains(account))
+            accounts.setSelection(new StructuredSelection(account));
+        else
+            accounts.setSelection(StructuredSelection.EMPTY);
     }
 
     @Override
