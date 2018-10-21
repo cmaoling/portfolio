@@ -34,6 +34,7 @@ public class Messages extends NLS
     public static String CSVColumn_Shares;
     public static String CSVColumn_Taxes;
     public static String CSVColumn_TickerSymbol;
+    public static String CSVColumn_Time;
     public static String CSVColumn_Type;
     public static String CSVColumn_Value;
     public static String CSVColumn_WKN;
@@ -126,6 +127,7 @@ public class Messages extends NLS
     public static String LabelNoCurrencyDescription;
     public static String LabelNoRatio;
     public static String LabelRemovals;
+    public static String LabelReportingPeriodCurrentMonth;
     public static String LabelPeer;
     public static String LabelPotentialDuplicate;
     public static String LabelReportingPeriodFromXtoY;

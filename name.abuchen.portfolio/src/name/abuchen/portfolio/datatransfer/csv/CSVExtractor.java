@@ -3,6 +3,7 @@ package name.abuchen.portfolio.datatransfer.csv;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.text.ParseException;
+import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -149,24 +150,50 @@ public abstract class CSVExtractor implements Extractor
         return Long.valueOf((long) Math.round(num.doubleValue() * values.factor()));
     }
 
-    protected LocalDateTime getDate(String name, String[] rawValues, Map<String, Column> field2column) throws ParseException
+    protected LocalDateTime getDate(String dateColumn, String timeColumn, String[] rawValues,
+                    Map<String, Column> field2column) throws ParseException
     {
-        String value = getText(name, rawValues, field2column);
-        if (value == null)
+        String dateValue = getText(dateColumn, rawValues, field2column);
+        if (dateValue == null)
             return null;
         Date date;
         try
         {
-            date = (Date) field2column.get(name).getFormat().getFormat().parseObject(value);
+            date = (Date) field2column.get(dateColumn).getFormat().getFormat().parseObject(dateValue);
         }
         catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
         {
             if (e instanceof ParseException)
-                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber());
+                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(dateColumn).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber());
             else
                 throw e;
         }
-        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());  //REVISIT .toLocalDate()
+        LocalDateTime result = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+
+        if (timeColumn == null)
+            return result;
+
+        String timeValue = getText(timeColumn, rawValues, field2column);
+        if (timeValue != null)
+        {
+            int p = timeValue.indexOf(':');
+            if (p > 0)
+            {
+                try
+                {
+                    int hour = Integer.parseInt(timeValue.substring(0, p));
+                    int minute = Integer.parseInt(timeValue.substring(p + 1));
+
+                    result = result.withHour(hour).withMinute(minute);
+                }
+                catch (NumberFormatException | DateTimeException ignore)
+                {
+                    // ignore time, just use the date - not parseable
+                }
+            }
+        }
+
+        return result;
     }
 
     protected final BigDecimal getBigDecimal(String name, String[] rawValues, Map<String, Column> field2column)

@@ -122,6 +122,7 @@ public class Messages extends NLS
     public static String ColumnAutoGenerate;
     public static String ColumnDelayedDividend;
     public static String ColumnDeltaPercent;
+    public static String ColumnDeltaPercentRelative;
     public static String ColumnDeltaShares;
     public static String ColumnDeltaValue;
     public static String ColumnDesiredAllocation;
@@ -140,6 +141,8 @@ public class Messages extends NLS
     public static String ColumnDividendMovingAverageTotalRateOfReturn;
     public static String ColumnDividendMovingAverageTotalRateOfReturn_Description;
     public static String ColumnDividendMovingAverageTotalRateOfReturn_MenuLabel;
+    public static String ColumnEarnings;
+    public static String ColumnEarnings_Description;
     public static String ColumnEntity;
     public static String ColumnErrorMessages;
     public static String ColumnEventType;
@@ -166,7 +169,7 @@ public class Messages extends NLS
     public static String ColumnIRRPerformanceOption;
     public static String ColumnISIN;
     public static String ColumnIssue;
-    public static String ColumnLable;
+    public static String ColumnLabel;
     public static String ColumnLastDividendPayment;
     public static String ColumnLastDividendPayment_MenuLabel;
     public static String ColumnLastTrade;
@@ -394,6 +397,7 @@ public class Messages extends NLS
     public static String LabelAbsoluteInvestedCapital;
     public static String LabelAccounts;
     public static String LabelAccumulatedDividends;
+    public static String LabelAccumulatedEarnings;
     public static String LabelAccumulatedInterest;
     public static String LabelAccumulatedInterestCharge;
     public static String LabelAccumulatedTaxes;
@@ -437,12 +441,14 @@ public class Messages extends NLS
     public static String LabelCurrencies;
     public static String LabelCurrencyConverter;
     public static String LabelCurrentDate;
+    public static String LabelCurrentMonth;
     public static String LabelDashboard;
     public static String LabelDataSeries;
     public static String LabelDefaultReferenceAccountName;
     public static String LabelDelta;
     public static String LabelDoImport;
     public static String LabelDoNotImport;
+    public static String LabelEarnings;
     public static String LabelError;
     public static String LabelEvent;
     public static String LabelEventFeed;
@@ -471,6 +477,7 @@ public class Messages extends NLS
     public static String LabelLevelNameNumber;
     public static String LabelLevelNumber;
     public static String LabelNamePlusCopy;
+    public static String LabelNet;
     public static String LabelNewClassification;
     public static String LabelNewFieldByType;
     public static String LabelNewTaxonomy;
@@ -515,6 +522,7 @@ public class Messages extends NLS
     public static String LabelSecurityPerformance;
     public static String LabelSecurityTransfer;
     public static String LabelSelectYear;
+    public static String LabelSelectYearSince;
     public static String LabelSemiVolatility;
     public static String LabelSettings;
     public static String LabelShowOnlyOneYear;
@@ -530,8 +538,11 @@ public class Messages extends NLS
     public static String LabelDividendsSelectStartYear;
     public static String LabelGreenWhiteRed;
     public static String LabelGreenYellowRed;
+    public static String LabelGross;
+    public static String LabelGrossNetCalculation;
     public static String LabelHeading;
     public static String LabelHeatmap;
+    public static String LabelHeatmapEarnings;
     public static String LabelHeatmapOrnament;
     public static String LabelHistoricalReturnsAndVolatiltity;
     public static String LabelKeyIndicators;
@@ -600,6 +611,7 @@ public class Messages extends NLS
     public static String MenuCreateAccountOrTransaction;
     public static String MenuCreateColumnConfig;
     public static String MenuCreatePortfolioOrTransaction;
+    public static String MenuDeleteAllTransactions;
     public static String MenuDeleteDashboardColumn;
     public static String MenuDeleteWidget;
     public static String MenuEditEvent;
@@ -669,6 +681,7 @@ public class Messages extends NLS
     public static String MsgDialogNotAValidISIN;
     public static String MsgEmbeddedBrowserError;
     public static String MsgErrorConvertedAmount;
+    public static String MsgErrorConvertToBuySellCurrencyMismatch;
     public static String MsgErrorDividendsYearBetween1900AndNow;
     public static String MsgErrorExchangeMissing;
     public static String MsgErrorMinimumHeightRequired;
