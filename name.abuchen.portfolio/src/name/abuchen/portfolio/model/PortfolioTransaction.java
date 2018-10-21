@@ -220,7 +220,13 @@ public class PortfolioTransaction extends Transaction
     @Override
     public String toString()
     {
-        return String.format("%s %-17s %s %9s %s", Values.DateTime.format(this.getDateTime()), type.name(), getCurrencyCode(), //$NON-NLS-1$
-                        Values.Amount.format(getAmount()), getSecurity().getName());
+        return String.format("%s %-17s  Amount: %s %9s Shares: %4s Security: %s",
+                        (Values.DateTime.format(getDateTime()) != null ? Values.DateTime.format(getDateTime()) : "<null>"),
+                        (type.name() != null ? type.name() : "<null>"),
+                        (getCurrencyCode() != null ? getCurrencyCode() : "<null>"),
+                        (Values.Amount.format(getAmount()) != null ? Values.Amount.format(getAmount()) : "<null>"),
+                        (Values.Share.format(getShares()) != null ? Values.Share.format(getShares()) : "<null>"),
+                        (getSecurity() != null ? getSecurity().getName() : "<null>")
+                        );
     }
 }

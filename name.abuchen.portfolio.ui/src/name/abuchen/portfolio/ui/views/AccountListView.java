@@ -43,6 +43,7 @@ import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransaction.Type;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.BuySellEntry;
+import name.abuchen.portfolio.model.CrossEntry;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.model.TransactionPair;
@@ -81,6 +82,7 @@ import name.abuchen.portfolio.ui.views.columns.CurrencyColumn.CurrencyEditingSup
 import name.abuchen.portfolio.ui.views.columns.NameColumn;
 import name.abuchen.portfolio.ui.views.columns.NameColumn.NameColumnLabelProvider;
 import name.abuchen.portfolio.ui.views.columns.NoteColumn;
+import name.abuchen.portfolio.ui.views.columns.IbanColumn;
 
 public class AccountListView extends AbstractListView implements ModificationListener
 {
@@ -206,13 +208,16 @@ public class AccountListView extends AbstractListView implements ModificationLis
     @Override
     public void notifyModelUpdated()
     {
-        resetInput();
-
-        Account account = (Account) ((IStructuredSelection) accounts.getSelection()).getFirstElement();
-        if (getClient().getAccounts().contains(account))
-            accounts.setSelection(new StructuredSelection(account));
-        else
-            accounts.setSelection(StructuredSelection.EMPTY);
+        new Exception().printStackTrace(System.err);
+        return;
+// TODO: really no impact, that this is aborted?
+//        resetInput();
+//
+//        Account account = (Account) ((IStructuredSelection) accounts.getSelection()).getFirstElement();
+//        if (getClient().getAccounts().contains(account))
+//            accounts.setSelection(new StructuredSelection(account));
+//        else
+//            accounts.setSelection(StructuredSelection.EMPTY);
     }
 
     @Override
@@ -285,6 +290,10 @@ public class AccountListView extends AbstractListView implements ModificationLis
                 return ((Account) element).getTransactions().isEmpty();
             }
         });
+        accountColumns.addColumn(column);
+
+        column = new IbanColumn();
+        column.getEditingSupport().addListener(this);
         accountColumns.addColumn(column);
 
         column = new NoteColumn();
@@ -498,7 +507,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
                 {
                     return ((BuySellEntry) t.getCrossEntry()).getPortfolioTransaction().getShares();
                 }
-                else if (t.getType() == Type.DIVIDENDS && t.getShares() != 0)
+                else if ((t.getType() == Type.DIVIDENDS || t.getType() == Type.DIVIDEND_CHARGE) && t.getShares() != 0)
                 {
                     return t.getShares();
                 }
@@ -538,7 +547,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
                     PortfolioTransaction pt = ((BuySellEntry) t.getCrossEntry()).getPortfolioTransaction();
                     return Values.Quote.format(pt.getGrossPricePerShare(), getClient().getBaseCurrency());
                 }
-                else if (t.getType() == Type.DIVIDENDS && t.getShares() != 0)
+                else if ((t.getType() == Type.DIVIDENDS || t.getType() == Type.DIVIDEND_CHARGE) && t.getShares() != 0)
                 {
                     long perShare = Math.round(t.getGrossValueAmount() * Values.Share.divider()
                                     * Values.Quote.factorToMoney() / t.getShares());
@@ -558,14 +567,19 @@ public class AccountListView extends AbstractListView implements ModificationLis
         });
         transactionsColumns.addColumn(column);
 
-        column = new Column(Messages.ColumnOffsetAccount, SWT.None, 120);
+        column = new Column(Messages.ColumnOffsetAccount + "/" + Messages.ColumnPeer, SWT.None, 120);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
             public String getText(Object e)
             {
                 AccountTransaction t = (AccountTransaction) e;
-                return t.getCrossEntry() != null ? t.getCrossEntry().getCrossOwner(t).toString() : null;
+                if (t.getCrossEntry() != null)
+                    return "[" + t.getCrossEntry().getCrossOwner(t).toString() + "]";
+                else if (t.getPeer() != null)
+                    return t.getPeer().getName();
+                else
+                    return null;
             }
 
             @Override
@@ -753,6 +767,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
                 case REMOVAL:
                 case FEES:
                 case INTEREST_CHARGE:
+                case DIVIDEND_CHARGE:
                 case TAXES:
                 case BUY:
                 case TRANSFER_OUT:

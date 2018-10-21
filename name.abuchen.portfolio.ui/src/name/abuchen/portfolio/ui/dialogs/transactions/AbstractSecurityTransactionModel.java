@@ -342,6 +342,7 @@ public abstract class AbstractSecurityTransactionModel extends AbstractModel
     public void setDate(LocalDate date)
     {
         firePropertyChange(Properties.date.name(), this.date, this.date = date);
+        updateSharesAndQuote();
         updateExchangeRate();
     }
 

@@ -11,6 +11,7 @@ import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.CrossEntry;
 import name.abuchen.portfolio.model.PortfolioTransaction;
+import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.model.Transaction.Unit;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.MutableMoney;
@@ -28,12 +29,12 @@ public class GroupEarningsByAccount
 
         public Item(Account account, Money dividends, Money fees, Money interest, Money sum, Money taxes)
         {
-            this.account = account;
+            this.account   = account;
             this.dividends = dividends;
-            this.fees = fees;
-            this.interest = interest;
-            this.sum = sum;
-            this.taxes = taxes;
+            this.fees      = fees;
+            this.interest  = interest;
+            this.sum       = sum;
+            this.taxes     = taxes;
         }
 
         public Account getAccount()
@@ -78,10 +79,10 @@ public class GroupEarningsByAccount
         for (Account account : client.getAccounts())
         {
             MutableMoney dividends = MutableMoney.of(account.getCurrencyCode());
-            MutableMoney fees = MutableMoney.of(account.getCurrencyCode());
-            MutableMoney interest = MutableMoney.of(account.getCurrencyCode());
-            MutableMoney sum = MutableMoney.of(account.getCurrencyCode());
-            MutableMoney taxes = MutableMoney.of(account.getCurrencyCode());
+            MutableMoney fees      = MutableMoney.of(account.getCurrencyCode());
+            MutableMoney interest  = MutableMoney.of(account.getCurrencyCode());
+            MutableMoney sum       = MutableMoney.of(account.getCurrencyCode());
+            MutableMoney taxes     = MutableMoney.of(account.getCurrencyCode());
 
             for (AccountTransaction at : account.getTransactions())
             {
@@ -91,48 +92,30 @@ public class GroupEarningsByAccount
                     {
                         case DIVIDENDS:
                             dividends.add(at.getGrossValue());
-                            sum.add(at.getGrossValue());
-                            taxes.add(at.getUnitSum(Unit.Type.TAX));
-                            fees.add(at.getUnitSum(Unit.Type.FEE));
+                            break;
+                        case DIVIDEND_CHARGE:
+                            dividends.subtract(at.getGrossValue());
                             break;
                         case INTEREST:
                             interest.add(at.getGrossValue());
-                            sum.add(at.getGrossValue());
-                            taxes.add(at.getUnitSum(Unit.Type.TAX));
-                            fees.add(at.getUnitSum(Unit.Type.FEE));
                             break;
                         case INTEREST_CHARGE:
                             interest.subtract(at.getGrossValue());
-                            sum.subtract(at.getGrossValue());
-                            taxes.add(at.getUnitSum(Unit.Type.TAX));
-                            fees.add(at.getUnitSum(Unit.Type.FEE));
                             break;
                         case FEES:
-                            fees.add(at.getMonetaryAmount());
-                            break;
-                        case FEES_REFUND:
                             fees.subtract(at.getMonetaryAmount());
                             break;
+                        case FEES_REFUND:
+                            fees.add(at.getMonetaryAmount());
+                            break;
                         case TAXES:
-                            taxes.add(at.getMonetaryAmount());
+                            taxes.subtract(at.getMonetaryAmount());
                             break;
                         case TAX_REFUND:
-                            taxes.subtract(at.getMonetaryAmount());
+                            taxes.add(at.getMonetaryAmount());
                             break;
                         case BUY:
                         case SELL:
-                            CrossEntry crossEntry = at.getCrossEntry();
-                            if (crossEntry instanceof BuySellEntry)
-                            {
-                                PortfolioTransaction pt = ((BuySellEntry) crossEntry).getPortfolioTransaction();
-                                taxes.add(pt.getUnitSum(Unit.Type.TAX));
-                                fees.add(pt.getUnitSum(Unit.Type.FEE));
-                            }
-                            else
-                            {
-                                throw new UnsupportedOperationException();
-                            }
-                            break;
                         case DEPOSIT:
                         case REMOVAL:
                         case TRANSFER_IN:
@@ -141,6 +124,40 @@ public class GroupEarningsByAccount
                             break;
                         default:
                             throw new UnsupportedOperationException();
+                    }
+                    if (AccountTransaction.Type.DIVIDENDS.equals(at.getType()) || AccountTransaction.Type.INTEREST.equals(at.getType()))
+                            sum.add(at.getGrossValue());
+                    if (AccountTransaction.Type.DIVIDEND_CHARGE.equals(at.getType()) || AccountTransaction.Type.INTEREST_CHARGE.equals(at.getType()))
+                            sum.subtract(at.getMonetaryAmount());
+                    if (AccountTransaction.Type.DIVIDENDS.equals(at.getType())
+                                    || AccountTransaction.Type.DIVIDEND_CHARGE.equals(at.getType())
+                                    || AccountTransaction.Type.INTEREST.equals(at.getType())
+                                    || AccountTransaction.Type.INTEREST_CHARGE.equals(at.getType()))
+                    {
+                        Money tax = at.getUnitSum(Unit.Type.TAX);
+                        Money fee = at.getUnitSum(Unit.Type.FEE);
+                        taxes.subtract(tax);
+                        fees.subtract(fee);
+                    }
+                    if (AccountTransaction.Type.BUY.equals(at.getType()) || AccountTransaction.Type.SELL.equals(at.getType()))
+                    {
+                        CrossEntry ce = at.getCrossEntry();
+                        if (ce instanceof BuySellEntry)
+                        {
+                            Transaction ct = ce.getCrossTransaction(at);
+                            if (ct instanceof PortfolioTransaction)
+                            {
+                                PortfolioTransaction pt = (PortfolioTransaction) ct;
+                                Money tax = pt.getUnitSum(Unit.Type.TAX);
+                                Money fee = pt.getUnitSum(Unit.Type.FEE);
+                                taxes.subtract(tax);
+                                fees.subtract(fee);
+                            }
+                            else
+                                throw new UnsupportedOperationException();
+                        }
+                        else
+                           throw new UnsupportedOperationException();
                     }
                 }
 

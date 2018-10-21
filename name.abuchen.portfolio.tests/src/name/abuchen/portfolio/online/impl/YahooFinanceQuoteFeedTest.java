@@ -42,7 +42,7 @@ public class YahooFinanceQuoteFeedTest
         date = feed.caculateStart(security);
         assertThat(date, equalTo(LocalDate.now()));
     }
-    
+
     @Test
     public void testParsingHistoricalQuotes() throws IOException
     {

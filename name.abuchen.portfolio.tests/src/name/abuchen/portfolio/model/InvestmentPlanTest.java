@@ -3,6 +3,10 @@ package name.abuchen.portfolio.model;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.instanceOf;
+
 import static org.junit.Assert.assertThat;
 
 import java.time.LocalDate;
@@ -90,8 +94,7 @@ public class InvestmentPlanTest
 
         InvestmentPlan investmentPlan = new InvestmentPlan();
         // investmentPlan.setAccount(account); // set portfolio only
-        investmentPlan.setPortfolio(portfolio); // causes securities to be
-                                                // delivered in
+        investmentPlan.setPortfolio(portfolio); // causes securities to be delivered in
         investmentPlan.setSecurity(security);
         investmentPlan.setAmount(Values.Amount.factorize(100));
         investmentPlan.setInterval(1);
@@ -126,10 +129,14 @@ public class InvestmentPlanTest
     public void testGenerationOfDepositTransaction()
     {
         Client client = new Client();
+        //Security security = new SecurityBuilder().addTo(client);
         Account account = new AccountBuilder().addTo(client);
+        //Portfolio portfolio = new PortfolioBuilder(account).addTo(client);
 
         InvestmentPlan investmentPlan = new InvestmentPlan();
-        investmentPlan.setAccount(account);
+        investmentPlan.setAccount(account);        // set account only
+        //investmentPlan.setPortfolio(portfolio);  //  causes deposit to be made
+        //investmentPlan.setSecurity(security);
         investmentPlan.setAmount(Values.Amount.factorize(100));
         investmentPlan.setInterval(1);
         investmentPlan.setStart(LocalDateTime.parse("2016-01-31T00:00"));
@@ -137,8 +144,7 @@ public class InvestmentPlanTest
         investmentPlan.generateTransactions(new TestCurrencyConverter());
 
         List<Transaction> tx = investmentPlan.getTransactions().stream()
-                        .filter(t -> t.getDateTime().isBefore(LocalDateTime.parse("2017-04-10T00:00")))
-                        .collect(Collectors.toList());
+                        .filter(t -> t.getDateTime().isBefore(LocalDateTime.parse("2017-04-10T00:00"))).collect(Collectors.toList());
 
         assertThat(tx.size(), is(15));
 

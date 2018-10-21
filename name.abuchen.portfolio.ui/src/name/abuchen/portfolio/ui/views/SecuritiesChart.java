@@ -52,6 +52,7 @@ import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.model.SecurityEvent;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.model.Transaction.Unit;
@@ -84,6 +85,8 @@ public class SecuritiesChart
         INVESTMENT(Messages.LabelChartDetailInvestments), //
         DIVIDENDS(Messages.LabelChartDetailDividends), //
         EVENTS(Messages.LabelChartDetailEvents), //
+        SPLITS(Messages.LabelChartDetailSplits), //
+        RIGHTS(Messages.LabelChartDetailRights), //
         FIFOPURCHASE(Messages.LabelChartDetailFIFOpurchase), //
         FLOATINGAVGPURCHASE(Messages.LabelChartDetailMovingAveragePurchase + SEPERATOR), //
         SMA50(Messages.LabelChartDetailSMA50), //
@@ -137,7 +140,11 @@ public class SecuritiesChart
 
     private Color colorEventPurchase = Colors.getColor(26, 173, 33);
     private Color colorEventSale = Colors.getColor(232, 51, 69);
-    private Color colorEventDividend = Colors.getColor(128, 0, 128);
+    private Color colorEventDividendPaid = Colors.getColor(128, 0, 128);
+    private Color colorEventDividendPromised  = Colors.getColor(180, 128, 180);
+    private Color colorEventSplit  = Colors.getColor(26, 52, 150);
+    private Color colorEventRight  = Colors.getColor(150, 220, 220);
+    private Color colorEventOther  = Colors.getColor(140, 90, 200);
 
     private Color colorFifoPurchasePrice = Colors.getColor(226, 122, 121);
     private Color colorMovingAveragePurchasePrice = Colors.getColor(150, 82, 81);
@@ -145,7 +152,7 @@ public class SecuritiesChart
     private Color colorSMA50 = Colors.getColor(102, 171, 29);
     private Color colorSMA200 = Colors.getColor(96, 104, 110);
 
-    private Color colorAreaPositive = Colors.getColor(90, 114, 226);
+    private Color colorAreaPositive = Colors.getColor(42, 135, 42); // Colors.getColor(90, 114, 226);
     private Color colorAreaNegative = Colors.getColor(226, 91, 90);
 
     private static final String SEPERATOR = "---"; //$NON-NLS-1$
@@ -602,6 +609,12 @@ public class SecuritiesChart
         if (chartConfig.contains(ChartDetails.DIVIDENDS))
             addDividendMarkerLines();
 
+        if (chartConfig.contains(ChartDetails.SPLITS))
+            addSplitMarkerLines();
+
+        if (chartConfig.contains(ChartDetails.RIGHTS))
+            addRightMarkerLines();
+
         if (chartConfig.contains(ChartDetails.EVENTS))
             addEventMarkerLines();
     }
@@ -728,18 +741,41 @@ public class SecuritiesChart
                         .filter(t -> chartPeriod == null || chartPeriod.isBefore(t.getDateTime().toLocalDate()))
                         .sorted(new Transaction.ByDate()).collect(Collectors.toList());
 
-        if (dividends.isEmpty())
+        List<SecurityEvent> events =   security.getEvents(SecurityEvent.Type.STOCK_DIVIDEND).stream() //
+                        .filter(e -> chartPeriod == null || chartPeriod.isBefore(e.getDate()))
+                        .sorted(new SecurityEvent.ByDate()).collect(Collectors.toList());
+
+        if (dividends.isEmpty() && events.isEmpty())
             return;
 
-        customTooltipEvents.addAll(dividends);
+        if (!dividends.isEmpty())
+            customTooltipEvents.addAll(dividends);
 
         if (chartConfig.contains(ChartDetails.SHOW_MARKER_LINES))
         {
-            dividends.forEach(t -> chart.addMarkerLine(t.getDateTime().toLocalDate(), colorEventDividend,
-                            getDividendLabel(t)));
+            List<LocalDate> dates = new ArrayList<LocalDate>();
+            if (!dividends.isEmpty())
+                dividends.forEach(t -> {
+                    chart.addMarkerLine(t.getDateTime().toLocalDate(), colorEventDividendPaid, getDividendLabel(t));
+                    dates.add(t.getDateTime().toLocalDate());
+                });
+            if (!events.isEmpty())
+                events.forEach(e -> {
+                    boolean busy = false;
+                    for (LocalDate d : dates)
+                    {
+                        if (d.equals(e.getDate()))
+                            busy = true;
+                    }
+                    if (!busy)
+                        chart.addMarkerLine(e.getDate(), colorEventDividendPromised, e.getAmount().getValue().toString());
+                });
         }
         else
         {
+            if (dividends.isEmpty())
+                return;
+
             Date[] dates = dividends.stream().map(AccountTransaction::getDateTime)
                             .map(d -> Date.from(d.atZone(ZoneId.systemDefault()).toInstant()))
                             .collect(Collectors.toList()).toArray(new Date[0]);
@@ -771,7 +807,7 @@ public class SecuritiesChart
             inner.setYAxisId(0);
             inner.setSymbolType(PlotSymbolType.SQUARE);
             inner.setSymbolSize(3);
-            inner.setSymbolColor(colorEventDividend);
+            inner.setSymbolColor(colorEventDividendPaid);
             configureSeriesPainter(inner, dates, values, null, 0, LineStyle.NONE, false, true);
 
             if (chartConfig.contains(ChartDetails.SHOW_DATA_LABELS))
@@ -815,10 +851,23 @@ public class SecuritiesChart
 
     private void addEventMarkerLines()
     {
-        security.getEvents().stream() //
+        security.getEvents(SecurityEvent.Type.STOCK_OTHER).stream() //
                         .filter(e -> chartPeriod == null || chartPeriod.isBefore(e.getDate())) //
-                        .forEach(e -> chart.addMarkerLine(e.getDate(),
-                                        Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY), e.getDetails()));
+                        .forEach(e -> chart.addMarkerLine(e.getDate(), colorEventOther, e.getExplaination()));
+    }
+
+    private void addRightMarkerLines()
+    {
+        security.getEvents(SecurityEvent.Type.STOCK_RIGHT).stream() //
+        .filter(e -> chartPeriod == null || chartPeriod.isBefore(e.getDate())) //
+        .forEach(e -> chart.addMarkerLine(e.getDate(), colorEventRight, e.getExplaination()));
+    }
+
+    private void addSplitMarkerLines()
+    {
+        security.getEvents(SecurityEvent.Type.STOCK_SPLIT).stream() //
+                        .filter(e -> chartPeriod == null || chartPeriod.isBefore(e.getDate())) //
+                        .forEach(e -> chart.addMarkerLine(e.getDate(), colorEventSplit, e.getRatioString()));
     }
 
     private void addBollingerBandsMarkerLines(int bollingerBandsDays, double bollingerBandsFactor)

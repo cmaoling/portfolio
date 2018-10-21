@@ -2,6 +2,8 @@ package name.abuchen.portfolio.model;
 
 import java.time.LocalDateTime;
 
+import name.abuchen.portfolio.model.Transaction;
+
 public class AccountTransferEntry implements CrossEntry, Annotated
 {
     private Account accountFrom;
@@ -65,6 +67,42 @@ public class AccountTransferEntry implements CrossEntry, Annotated
     public Account getTargetAccount()
     {
         return accountTo;
+    }
+
+    public void setPrimaryTransactionOwner(TransactionOwner<Transaction> owner)
+    {
+        Object subject = (Object) owner;
+        if (subject instanceof Account)
+        {
+            if (!this.accountFrom.equals((Account) subject))
+                this.accountTo = (Account) subject;
+        }
+        else
+            throw new IllegalArgumentException();
+    }
+
+    public void setSecondaryTransactionOwner(TransactionOwner<Transaction> owner)
+    {
+        Object subject = (Object) owner;
+        if (subject instanceof Account)
+        {
+            if (!this.accountTo.equals((Account) subject))
+                this.accountFrom = (Account) subject;
+        }
+        else
+            throw new IllegalArgumentException();
+    }
+
+    public TransactionOwner<Transaction> getPrimaryTransactionOwner()
+    {
+        TransactionOwner<Transaction> owner = (TransactionOwner<Transaction>) this.getOwner(transactionTo);
+        return owner;
+    }
+
+    public TransactionOwner<Transaction> getSecondaryTransactionOwner()
+    {
+        TransactionOwner<Transaction> owner = (TransactionOwner<Transaction>) this.getOwner(transactionFrom);
+        return owner;
     }
 
     public void setDate(LocalDateTime date)

@@ -556,17 +556,30 @@ public class ClientFactory
             case 33:
                 // added FEES_REFUND transaction type
             case 34:
+                // SecurityEvent has no more details
+                convertSecurityEventDetails(client);
                 // add optional security to FEES, FEES_REFUND, TAXES
             case 35:
                 // added flag to auto-generate tx from investment plan
             case 36:
                 // converted from LocalDate to LocalDateTime
+                // SecurityEvent has no more details
+                convertSecurityEventDetails(client);
             case 37:
                 // added boolean attribute type
+                // Portfoliotransfer has Quotesuggestion
+                introduceQuoteSuggestion4Transfer(client);
+            case 38:
+                // added DIVIDEND_CHARGE transaction type
+            case 39:
+                // Introducing Peers
+                introducePeers(client);
+                // ...
 
                 client.setVersion(Client.CURRENT_VERSION);
                 break;
             case Client.CURRENT_VERSION:
+                // 
                 break;
             default:
                 break;
@@ -1045,6 +1058,60 @@ public class ClientFactory
         }
     }
 
+    private static void convertSecurityEventDetails(Client client)
+    {
+        for (Security security : client.getSecurities())
+        {
+            for (SecurityEvent event : security.getAllEvents())
+            {
+                String details = event.getDetails();
+                if (details != null)
+                {
+                    String[] ratio = details.split(":"); 
+                    if (ratio.length == 2)
+                    {
+                        event.setRatio(Double.parseDouble(ratio[0]), Double.parseDouble(ratio[1]));
+                        event.clearDetails();
+                    }
+                    else if (details.matches("^[0-9,.]+$"))
+                    {
+                        event.setRatio(Double.parseDouble(details));
+                        event.clearDetails();
+                    }
+                }
+                event.clearAmount();
+                event.clearTypeStr();
+                event.unhide();
+            }
+        }
+    }
+
+    private static void introduceQuoteSuggestion4Transfer(Client client)
+    {
+        for (Portfolio p : client.getPortfolios())
+        {
+            for (PortfolioTransaction t : p.getTransactions())
+            {
+                if (t.getType() == Type.TRANSFER_IN || t.getType() == Type.TRANSFER_OUT)
+                {
+                    if (t.getCrossEntry() instanceof PortfolioTransferEntry)
+                    {
+                        PortfolioTransferEntry pte = (PortfolioTransferEntry) t.getCrossEntry();
+                        pte.setQuoteSuggestion(PortfolioTransferEntry.Suggestion.goodwill);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void introducePeers(Client client)
+    {
+        for (Account a : client.getAccounts())
+        {
+            a.setPeer();
+        }
+    }
+
     @SuppressWarnings("nls")
     private static synchronized XStream xstream()
     {
@@ -1084,6 +1151,10 @@ public class ClientFactory
             xstream.aliasField("t", SecurityPrice.class, "date");
             xstream.useAttributeFor(SecurityPrice.class, "value");
             xstream.aliasField("v", SecurityPrice.class, "value");
+
+            xstream.alias("peer", Peer.class);
+            xstream.useAttributeFor(Peer.class, "name");
+            xstream.useAttributeFor(Peer.class, "IBAN");
 
             xstream.alias("cpi", ConsumerPriceIndex.class);
             xstream.useAttributeFor(ConsumerPriceIndex.class, "year");
