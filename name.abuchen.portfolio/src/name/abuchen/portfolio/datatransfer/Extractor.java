@@ -195,6 +195,11 @@ public interface Extractor
             return entry;
         }
 
+        public BuySellEntry getEntry()
+        {
+            return entry;
+        }
+
         @Override
         public String getTypeInformation()
         {

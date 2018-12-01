@@ -17,6 +17,9 @@ public class ExtractedEntry
     private Status.Code maxCode = Status.Code.OK;
     private List<Status> status = new ArrayList<>();
 
+    private boolean proposedShares = false;
+    private boolean proposedFees = false;
+
     public ExtractedEntry(Item item)
     {
         this.item = item;
@@ -47,6 +50,26 @@ public class ExtractedEntry
         // overrides warnings
         return maxCode == Status.Code.OK
                         || (maxCode == Status.Code.WARNING && isImported != null && isImported.booleanValue());
+    }
+
+    public void setProposedShares(boolean value)
+    {
+        proposedShares = value;
+    }
+
+    public boolean hasProposedShares()
+    {
+        return proposedShares;
+    }
+
+    public void setProposedFees(boolean value)
+    {
+        proposedFees = value;
+    }
+
+    public boolean hasProposedFees()
+    {
+        return proposedFees;
     }
 
     public void addStatus(ImportAction.Status status)

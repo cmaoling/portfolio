@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -60,6 +61,7 @@ import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.CurrencyConverterImpl;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
@@ -111,8 +113,6 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
     private List<Extractor.InputFile> files;
 
     private List<ExtractedEntry> allEntries = new ArrayList<>();
-
-    private ExchangeRateProviderFactory factory;
 
     public ReviewExtractedItemsPage(Client client, Extractor extractor, IPreferenceStore preferences,
                     List<Extractor.InputFile> files, String pageId)
@@ -492,6 +492,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                         return Messages.LabelNotAvailable;
                     return Messages.MsgMissingPeer;
                 }
+                else if (entry.getItem() instanceof Extractor.BuySellEntryItem)
+                    return Messages.LabelNotAvailable;
                 else
                     return entry.getItem().toString();
             }
@@ -711,21 +713,53 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
             entry.clearStatus();
             for (ImportAction action : actions)
                 entry.addStatus(entry.getItem().apply(action, this));
-            if (entry.getItem().getShares() == 0 && entry.getItem() instanceof Extractor.TransactionItem)
+            if ((entry.getItem().getShares() == 0 || entry.hasProposedShares()) && (entry.getItem() instanceof Extractor.TransactionItem || entry.getItem() instanceof Extractor.BuySellEntryItem))
             {
                 Security security = entry.getItem().getSecurity();
                 LocalDateTime date = entry.getItem().getDate();
                 if (security != null && getPortfolio() != null && date != null)
                 {
-                    CurrencyConverter converter = new CurrencyConverterImpl(factory, client.getBaseCurrency());
+                    CurrencyConverter converter = new CurrencyConverterImpl(new ExchangeRateProviderFactory(client), client.getBaseCurrency()); // TODO: replace dummy ExchangeRateProvider
                     for (Portfolio portfolio : client.getPortfolios())
                     {
                         if (portfolio.toString().equals(getPortfolio().toString()))
                         {
                             PortfolioSnapshot snapshot = PortfolioSnapshot.create(portfolio, converter, date.toLocalDate());
                             SecurityPosition position = snapshot.getPositionsBySecurity().get(security);
-                            if ((position != null) && (entry.getItem() instanceof Extractor.TransactionItem))
+                            if (position != null && entry.getItem() instanceof Extractor.TransactionItem && (entry.getItem().getShares() == 0 || entry.hasProposedShares()))
+                            {
                                 ((Extractor.TransactionItem) entry.getItem()).getTransaction().setShares(position.getShares());
+                                entry.setProposedShares(true);
+                            }
+                            else if (entry.getItem() instanceof Extractor.BuySellEntryItem && entry.getItem().getShares() == 0)
+                            {
+                                Extractor.BuySellEntryItem item = (Extractor.BuySellEntryItem) entry.getItem();
+                                double  price      = (double) security.getSecurityPrice(date.toLocalDate()).getValue() / Values.Quote.divider();
+                                double  amount     = (double) item.getAmount().getAmount() / Values.Amount.divider();
+                                double  shareCount = amount / price;
+                                long proposedShares = 0L;
+                                long proposedFees = 0L;
+                                if (security.getCurrencyCode().equals(entry.getItem().getAmount().getCurrencyCode()))
+                                {
+                                    PortfolioTransaction pTransaction = item.getEntry().getPortfolioTransaction();
+                                    if (pTransaction.getType().equals(PortfolioTransaction.Type.BUY))
+                                        proposedShares = (long) Math.floor(shareCount);
+                                    else if (pTransaction.getType().equals(PortfolioTransaction.Type.SELL))
+                                        proposedShares = (long) Math.ceil(shareCount);
+                                    pTransaction.setShares(proposedShares * Values.Share.factor());
+                                    entry.setProposedShares(true);
+                                    if (pTransaction.getUnit(Transaction.Unit.Type.FEE).equals(Optional.empty()))
+                                    {
+                                        double value = (double) proposedShares * price;
+                                        proposedFees = Math.round(Math.abs(amount - value) * Values.Amount.factor());
+                                        Transaction.Unit fee = new Transaction.Unit(Transaction.Unit.Type.FEE, Money.of(security.getCurrencyCode(), proposedFees));
+                                        pTransaction.addUnit(fee);
+                                        entry.setProposedFees(true);
+                                    }
+                                    entry.getItem().getSubject().setNote("[" + Messages.LabelImportWarning + "]" + (entry.getItem().getNote() != null?" " + entry.getItem().getNote():"")); //$NON-NLS-1$ //$NON-NLS-2$
+                                }
+                                //     TODO: else-case w/ handling of convertion between currencies
+                            }
                             break;
                         }
                     }
