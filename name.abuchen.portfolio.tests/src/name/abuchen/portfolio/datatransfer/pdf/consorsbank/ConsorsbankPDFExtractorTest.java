@@ -406,6 +406,35 @@ public class ConsorsbankPDFExtractorTest
     }
 
     @Test
+    public void testErtragsgutschrift12() throws IOException
+    {
+        ConsorsbankPDFExtractor extractor = new ConsorsbankPDFExtractor(new Client());
+        List<Exception> errors = new ArrayList<Exception>();
+
+        List<Item> results = extractor
+                        .extract(PDFInputFile.loadTestCase(getClass(), "ConsorsbankErtragsgutschrift12.txt"), errors);
+
+        assertThat(errors, empty());
+        assertThat(results.size(), is(2));
+
+        AccountTransaction t = results.stream() //
+                        .filter(i -> i instanceof TransactionItem)
+                        .map(i -> (AccountTransaction) ((TransactionItem) i).getSubject()) //
+                        .findAny().get();
+
+        assertThat(t.getSecurity().getName(), is("LTC PROPERTIES INC. Registered Shares DL -,01"));
+        assertThat(t.getSecurity().getIsin(), is("US5021751020"));
+        assertThat(t.getSecurity().getWkn(), is("884625"));
+        assertThat(t.getSecurity().getCurrencyCode(), is(CurrencyUnit.USD));
+
+        assertThat(t.getDateTime(), is(LocalDateTime.parse("2018-05-31T00:00")));
+        assertThat(t.getShares(), is(Values.Share.factorize(18)));
+        assertThat(t.getMonetaryAmount(), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(2.48))));
+
+        assertThat(t.getUnitSum(Unit.Type.TAX), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(0.43))));
+    }
+
+    @Test
     public void testBezug1() throws IOException
     {
         ConsorsbankPDFExtractor extractor = new ConsorsbankPDFExtractor(new Client());
