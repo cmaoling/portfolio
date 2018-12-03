@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.ui;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,8 +23,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 
-import com.ibm.icu.text.MessageFormat;
-
 import name.abuchen.portfolio.model.Classification;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;
@@ -32,6 +31,7 @@ import name.abuchen.portfolio.model.TaxonomyTemplate;
 import name.abuchen.portfolio.model.Watchlist;
 import name.abuchen.portfolio.ui.Sidebar.Entry;
 import name.abuchen.portfolio.ui.dnd.SecurityTransfer;
+import name.abuchen.portfolio.ui.util.ConfirmAction;
 import name.abuchen.portfolio.ui.util.LabelOnly;
 import name.abuchen.portfolio.ui.util.SimpleAction;
 
@@ -141,7 +141,8 @@ import name.abuchen.portfolio.ui.util.SimpleAction;
                 if (subMenu == null || action == null)
                     continue;
 
-                // cannot use the original action b/c it will not highlight the selected entry
+                // cannot use the original action b/c it will not highlight the
+                // selected entry
                 // in the sidebar
                 String text = indent > Sidebar.STEP ? "- " + action.getText() : action.getText(); //$NON-NLS-1$
                 SimpleAction menuAction = new SimpleAction(text, a -> sidebar.select(entry));
@@ -216,23 +217,26 @@ import name.abuchen.portfolio.ui.util.SimpleAction;
             {
                 if (SecurityTransfer.getTransfer().isSupportedType(event.currentDataType))
                 {
-                    Security security = SecurityTransfer.getTransfer().getSecurity();
-                    if (security != null)
+                    List<Security> securities = SecurityTransfer.getTransfer().getSecurities();
+                    if (securities != null)
                     {
-                        // if the security is dragged from another file, add
-                        // a deep copy to the client's securities list
-                        if (!editor.getClient().getSecurities().contains(security))
+                        for (Security security : securities)
                         {
-                            security = security.deepCopy();
-                            editor.getClient().addSecurity(security);
+                            // if the security is dragged from another file, add
+                            // a deep copy to the client's securities list
+                            if (!editor.getClient().getSecurities().contains(security))
+                            {
+                                security = security.deepCopy();
+                                editor.getClient().addSecurity(security);
+                            }
+
+                            if (!watchlist.getSecurities().contains(security))
+                                watchlist.addSecurity(security);
                         }
 
-                        if (!watchlist.getSecurities().contains(security))
-                            watchlist.addSecurity(security);
-
                         editor.markDirty();
-
                         editor.notifyModelUpdated();
+
                     }
                 }
             }
@@ -476,18 +480,9 @@ import name.abuchen.portfolio.ui.util.SimpleAction;
             }
         });
 
-        manager.add(new Action(Messages.MenuTaxonomyDelete)
-        {
-            @Override
-            public void run()
-            {
-                editor.getClient().removeTaxonomy(taxonomy);
-                editor.markDirty();
-                entry.dispose();
-                statementOfAssets.select();
-                scrolledComposite.setMinSize(sidebar.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-            }
-        });
+        manager.add(new ConfirmAction(Messages.MenuTaxonomyDelete,
+                        MessageFormat.format(Messages.MenuTaxonomyDeleteConfirm, taxonomy.getName()),
+                        a -> deleteTaxonomyAndDisposeEntry(taxonomy, entry)));
         manager.add(new Separator());
 
         addMoveUpAndDownActions(taxonomy, entry, manager);
@@ -572,5 +567,14 @@ import name.abuchen.portfolio.ui.util.SimpleAction;
 
         if ("yes".equals(System.getProperty("name.abuchen.portfolio.debug"))) //$NON-NLS-1$ //$NON-NLS-2$
             new Entry(section, new ActivateViewAction("Browser Test", "BrowserTest")); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    private void deleteTaxonomyAndDisposeEntry(Taxonomy taxonomy, Entry entry)
+    {
+        editor.getClient().removeTaxonomy(taxonomy);
+        editor.markDirty();
+        entry.dispose();
+        statementOfAssets.select();
+        scrolledComposite.setMinSize(sidebar.computeSize(SWT.DEFAULT, SWT.DEFAULT));
     }
 }

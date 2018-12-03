@@ -41,7 +41,7 @@ public interface Extractor
             return file.getName();
         }
     }
-    
+
     public abstract static class Item
     {
         public abstract Peer getPeer();
@@ -74,6 +74,72 @@ public interface Extractor
         public abstract Status apply(ImportAction action, Context context);
     }
 
+    /**
+     * Represents an item which cannot be imported because it is either not
+     * supported or not needed. It is used for documents that can be
+     * successfully parsed, but do not contain any transaction relevant to
+     * Portfolio Performance. For example, a tax refund of 0 Euro (Consorsbank)
+     * can be parsed, but is of no further use to PP.
+     */
+    static class NonImportableItem extends Item implements Annotated
+    {
+        private String typeInformation;
+        private String note;
+
+        public NonImportableItem(String typeInformation)
+        {
+            this.typeInformation = typeInformation;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            return null;
+        }
+
+        @Override
+        public Annotated getSubject()
+        {
+            return this;
+        }
+
+        @Override
+        public Security getSecurity()
+        {
+            return null;
+        }
+
+        @Override
+        public String getTypeInformation()
+        {
+            return typeInformation;
+        }
+
+        @Override
+        public LocalDateTime getDate()
+        {
+            return null;
+        }
+
+        @Override
+        public Status apply(ImportAction action, Context context)
+        {
+            return action.process(this);
+        }
+
+        @Override
+        public void setNote(String note)
+        {
+            this.note = note;
+        }
+
+        @Override
+        public String getNote()
+        {
+            return note;
+        }
+    }
+
     static class TransactionItem extends Item
     {
         private Transaction transaction;
@@ -104,7 +170,7 @@ public interface Extractor
         public Peer getPeer()
         {
 
-            System.err.println(">>>> Extractor::TransactionItem::getPeer: " + transaction.toString()); // TODO: still needed for debug?
+            System.err.println(">>>> Extractor::TransactionItem::getPeer: " + transaction.toString()); // TODO: still needed for debug? //$NON-NLS-1$
             if (transaction instanceof AccountTransaction)
                 return ((AccountTransaction) transaction).getPeer();
             return null;
@@ -252,9 +318,9 @@ public interface Extractor
         @Override
         public Peer getPeer()
         {
-            System.err.println(">>>> Extractor::AccountTransferItem::getPeer entry.source: " + entry.getSourceTransaction().toString()); // TODO: still needed for debug?
-            System.err.println(">>>> Extractor::AccountTransferItem::getPeer entry.target: " + entry.getTargetTransaction().toString()); // TODO: still needed for debug?
-            System.err.println(">>>> Extractor::AccountTransferItem::getPeer outbound " + isOutbound + " entry: " + entry.toString()); // TODO: still needed for debug?
+            System.err.println(">>>> Extractor::AccountTransferItem::getPeer entry.source: " + entry.getSourceTransaction().toString()); // TODO: still needed for debug? //$NON-NLS-1$
+            System.err.println(">>>> Extractor::AccountTransferItem::getPeer entry.target: " + entry.getTargetTransaction().toString()); // TODO: still needed for debug? //$NON-NLS-1$
+            System.err.println(">>>> Extractor::AccountTransferItem::getPeer outbound " + isOutbound + " entry: " + entry.toString()); // TODO: still needed for debug? //$NON-NLS-1$ //$NON-NLS-2$
             if (isOutbound)
                 return entry.getSourceTransaction().getPeer();
             else
@@ -321,8 +387,8 @@ public interface Extractor
                 target = entry.getSourceTransaction().getPeer().getAccount();
             if (entry.getTargetTransaction().getPeer() != null && entry.getTargetTransaction().getPeer().links2Account())
                 source = entry.getTargetTransaction().getPeer().getAccount();
-            System.err.println(">>>> Extractor::apply source: " + source.toString()); // TODO: still needed for debug?
-            System.err.println(">>>> Extractor::apply target: " + target.toString()); // TODO: still needed for debug?
+            System.err.println(">>>> Extractor::apply source: " + source.toString()); // TODO: still needed for debug? //$NON-NLS-1$
+            System.err.println(">>>> Extractor::apply target: " + target.toString()); // TODO: still needed for debug? //$NON-NLS-1$
             return action.process(entry, source, target);
         }
     }

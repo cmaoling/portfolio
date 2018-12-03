@@ -58,6 +58,7 @@ import name.abuchen.portfolio.ui.dnd.SecurityDragListener;
 import name.abuchen.portfolio.ui.dnd.SecurityTransfer;
 import name.abuchen.portfolio.ui.util.BookmarkMenu;
 import name.abuchen.portfolio.ui.util.Colors;
+import name.abuchen.portfolio.ui.util.ConfirmActionWithSelection;
 import name.abuchen.portfolio.ui.util.viewers.BooleanEditingSupport;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnEditingSupport;
@@ -688,7 +689,11 @@ public final class SecuritiesTable implements ModificationListener
         manager.add(new HideSecurityAction(selection));
         if (watchlist == null)
         {
-            manager.add(new DeleteSecurityAction(selection));
+            manager.add(new ConfirmActionWithSelection(Messages.SecurityMenuDeleteSecurity,
+                            MessageFormat.format(Messages.SecurityMenuDeleteSingleSecurityConfirm,
+                                            selection.getFirstElement()),
+                            Messages.SecurityMenuDeleteMultipleSecurityConfirm, selection,
+                            (s, a) -> deleteSecurity(selection, a)));
         }
         else
         {
@@ -775,53 +780,39 @@ public final class SecuritiesTable implements ModificationListener
         manager.add(new Separator());
     }
 
-    private final class DeleteSecurityAction extends Action
+    private void deleteSecurity(IStructuredSelection selection, Action action)
     {
-        private IStructuredSelection selection;
+        boolean isDirty = false;
+        List<Security> withTransactions = new ArrayList<>();
 
-        private DeleteSecurityAction(IStructuredSelection selection)
+        for (Object obj : selection.toArray())
         {
-            super(Messages.SecurityMenuDeleteSecurity);
+            Security security = (Security) obj;
 
-            this.selection = selection;
+            if (!security.getTransactions(getClient()).isEmpty())
+            {
+                withTransactions.add(security);
+            }
+            else
+            {
+                getClient().removeSecurity(security);
+                isDirty = true;
+            }
         }
 
-        @Override
-        public void run()
+        if (!withTransactions.isEmpty())
         {
-            boolean isDirty = false;
-            List<Security> withTransactions = new ArrayList<>();
+            String label = String.join(", ", //$NON-NLS-1$
+                            withTransactions.stream().map(Security::getName).collect(Collectors.toList()));
 
-            for (Object obj : selection.toArray())
-            {
-                Security security = (Security) obj;
+            MessageDialog.openError(getShell(), Messages.MsgDeletionNotPossible,
+                            MessageFormat.format(Messages.MsgDeletionNotPossibleDetail, label));
+        }
 
-                if (!security.getTransactions(getClient()).isEmpty())
-                {
-                    withTransactions.add(security);
-                }
-                else
-                {
-                    getClient().removeSecurity(security);
-                    isDirty = true;
-                }
-            }
-
-            if (!withTransactions.isEmpty())
-            {
-                String label = String.join(", ", //$NON-NLS-1$
-                                withTransactions.stream().map(Security::getName).collect(Collectors.toList()));
-
-                MessageDialog.openError(getShell(), Messages.MsgDeletionNotPossible,
-                                MessageFormat.format(Messages.MsgDeletionNotPossibleDetail, label));
-            }
-
-            if (isDirty)
-            {
-                markDirty();
-                securities.setInput(getClient().getSecurities());
-            }
-
+        if (isDirty)
+        {
+            markDirty();
+            securities.setInput(getClient().getSecurities());
         }
     }
 
