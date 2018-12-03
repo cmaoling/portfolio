@@ -12,9 +12,15 @@ import java.nio.charset.StandardCharsets;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.FieldPosition;
@@ -705,29 +711,25 @@ public class CSVImporter
 
     public void processFile() throws IOException
     {
-        IOException buffer = null;
         try (FileInputStream stream = new FileInputStream(inputFile))
         {
             processStream(stream);
-            return;
         }
         catch (IOException e)
         {
-            buffer = e;
-        }
-        byte[] ptext = inputFile.toString().getBytes(StandardCharsets.UTF_8);
-        String str = new String(ptext, StandardCharsets.ISO_8859_1);
-        Path path = Paths.get(URI.create("file://" + str)); //$NON-NLS-1$
-        try (InputStream stream = Files.newInputStream(path))
-        {
-            processStream(stream);
-        }
-        catch (IOException e)
-        {
-            if (buffer != null)
-                throw buffer;
-            else
+            // fallback for file names with umlaute on Linux
+            byte[] ptext = inputFile.toString().getBytes(StandardCharsets.UTF_8);
+            String str = new String(ptext, StandardCharsets.ISO_8859_1);
+            Path path = Paths.get(URI.create("file://" + str)); //$NON-NLS-1$
+
+            try (InputStream stream = Files.newInputStream(path))
+            {
+                processStream(stream);
+            }
+            catch (IOException e2)
+            {
                 throw e;
+            }
         }
     }
 

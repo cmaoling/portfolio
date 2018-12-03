@@ -117,22 +117,22 @@ public class SecurityEvent extends SecurityElement
     {
         if (ratio == null || ratio.length != 2)
         {
-            System.err.println("SecurityEvent.getRatioString() - event: " + String.format("[%s] EVENT %tF (ex: %tF): [%s-%s] amount: <%s> ratio: <-/->", 
-                                            (isVisible ? "+"                                           : "o" ),
+            System.err.println("SecurityEvent.getRatioString() - event: " + String.format("[%s] EVENT %tF (ex: %tF): [%s-%s] amount: <%s> ratio: <-/->", //$NON-NLS-1$ //$NON-NLS-2$ 
+                                            (isVisible ? "+"                                           : "o" ), //$NON-NLS-1$ //$NON-NLS-2$
                                             date,
                                             (exDate == null  ? LocalDate.of(1900, Month.JANUARY, 1)  : exDate),
                                              type.toString(),
-                                            (typeStr == null ? ""                                    : typeStr),
+                                            (typeStr == null ? ""                                    : typeStr), //$NON-NLS-1$
                                             (amount == null  ? new Monetary()                        :  amount).toString()
                                             ));
             throw new NoSuchElementException();
         }
         // taken from http://stackoverflow.com/questions/8741107/format-a-double-to-omit-unnecessary-0-and-never-round-off
         double e = ratio[0];
-        String eStr = (long) e == e ? "" + (long) e : "" + e; 
+        String eStr = (long) e == e ? "" + (long) e : "" + e; //$NON-NLS-1$ //$NON-NLS-2$ 
         double d = ratio[1];
-        String dStr = (long) d == d ? "" + (long) d : "" + d; 
-        return  eStr  + ":" + dStr;
+        String dStr = (long) d == d ? "" + (long) d : "" + d; //$NON-NLS-1$ //$NON-NLS-2$
+        return  eStr  + ":" + dStr; //$NON-NLS-1$
     }
 
     public double[] getRatio()
@@ -199,11 +199,11 @@ public class SecurityEvent extends SecurityElement
         }
         else if (type.equals(Type.STOCK_RIGHT))
         {
-            return (ratio == null ? "" : getRatioString()) + (amount == null? "" : " " + Messages.LabelStockRightReference + " - " + getAmount().toString());
+            return (ratio == null ? "" : getRatioString()) + (amount == null? "" : " " + Messages.LabelStockRightReference + " - " + getAmount().toString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         }
         else if (type.equals(Type.STOCK_OTHER))
         {
-            return getTypeStr() + ": " + (ratio == null ? "" : getRatioString()) + (amount == null? "" : " @ " + getAmount().toString());
+            return getTypeStr() + ": " + (ratio == null ? "" : getRatioString()) + (amount == null? "" : " @ " + getAmount().toString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         }
         else
         {
@@ -234,19 +234,20 @@ public class SecurityEvent extends SecurityElement
         return isVisible;
     }
 
+    @Override
     public String toString()
     {
-        return String.format("[%s] EVENT %tF (ex: %tF): [%s-%s] amount: <%s> ratio: <%s> => [%08x] deprecated: value %,10.2f details: <%s>", 
-                        (isVisible ? "+"                                           : "o" ),
+        return String.format("[%s] EVENT %tF (ex: %tF): [%s-%s] amount: <%s> ratio: <%s> => [%08x] deprecated: value %,10.2f details: <%s>", //$NON-NLS-1$ 
+                        (isVisible ? "+"                                           : "o" ), //$NON-NLS-1$ //$NON-NLS-2$
                         date,
                         (exDate == null  ? LocalDate.of(1900, Month.JANUARY, 1)  : exDate),
                          type.toString(),
-                        (typeStr == null ? ""                                    : typeStr),
+                        (typeStr == null ? ""                                    : typeStr), //$NON-NLS-1$
                         (amount == null  ? new Monetary()                        :  amount).toString(),
                         (ratio  == null ? Messages.LabelNoRatio                  :  getRatioString()),
                         this.hashCode(),
                         value / Values.Quote.divider(),
-                        (details == null ? "?"                                   : details.toString())
+                        (details == null ? "?"                                   : details.toString()) //$NON-NLS-1$
                         );
     }
 
@@ -275,7 +276,7 @@ public class SecurityEvent extends SecurityElement
           int result = 1;
           result = prime * result + ((date    == null) ? 0                     : date.hashCode());
           result = prime * result + ((exDate  == null) ? 0                     : exDate.hashCode());
-          result = prime * result + ((details == null) ? "?"                   : details).hashCode();
+          result = prime * result + ((details == null) ? "?"                   : details).hashCode(); //$NON-NLS-1$
           result = prime * result + ((ratio == null)   ? Messages.LabelNoRatio : getRatioString()).hashCode();
           result = prime * result + type.hashCode();
           result = prime * result + getTypeStr().hashCode();
