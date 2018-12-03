@@ -28,12 +28,13 @@ import name.abuchen.portfolio.money.Money;
 
 /* package */ class CSVAccountTransactionExtractor extends BaseCSVExtractor
 {
-    protected static boolean sharesOptional = false;
+    protected boolean sharesOptional;
 
     /* package */ CSVAccountTransactionExtractor(Client client)
     {
         super(client, Messages.CSVDefAccountTransactions);
-        addFields();        
+        addFields();
+        sharesOptional = false;
     }
 
     CSVAccountTransactionExtractor(Client client, String label)
@@ -185,6 +186,8 @@ import name.abuchen.portfolio.money.Money;
             default:
                 throw new IllegalArgumentException(type.toString());
         }
+        // TODO: still needed for debug? for (Item item : items)
+        // TODO: still needed for debug?     System.err.println("CSVAccountTransactionExtratctor:extract items: " + item.getClass().toString() + " = " + item.toString() );         //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     protected Type inferType(String[] rawValues, Map<String, Column> field2column, Security security, Money amount)

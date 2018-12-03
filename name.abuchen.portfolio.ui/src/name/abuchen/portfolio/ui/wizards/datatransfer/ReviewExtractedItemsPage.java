@@ -44,8 +44,10 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Table;
 
+import name.abuchen.portfolio.datatransfer.csv.CSVExtractor;
 import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.ImportAction;
+import name.abuchen.portfolio.datatransfer.Extractor.BuySellEntryItem;
 import name.abuchen.portfolio.datatransfer.actions.CheckCurrenciesAction;
 import name.abuchen.portfolio.datatransfer.actions.CheckValidTypesAction;
 import name.abuchen.portfolio.datatransfer.actions.DetectDuplicatesAction;
@@ -711,60 +713,12 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         for (ExtractedEntry entry : entries)
         {
             entry.clearStatus();
+            Extractor.Item item = entry.getItem();
             for (ImportAction action : actions)
-                entry.addStatus(entry.getItem().apply(action, this));
-            if ((entry.getItem().getShares() == 0 || entry.hasProposedShares()) && (entry.getItem() instanceof Extractor.TransactionItem || entry.getItem() instanceof Extractor.BuySellEntryItem))
-            {
-                Security security = entry.getItem().getSecurity();
-                LocalDateTime date = entry.getItem().getDate();
-                if (security != null && getPortfolio() != null && date != null)
-                {
-                    CurrencyConverter converter = new CurrencyConverterImpl(new ExchangeRateProviderFactory(client), client.getBaseCurrency()); // TODO: replace dummy ExchangeRateProvider
-                    for (Portfolio portfolio : client.getPortfolios())
-                    {
-                        if (portfolio.toString().equals(getPortfolio().toString()))
-                        {
-                            PortfolioSnapshot snapshot = PortfolioSnapshot.create(portfolio, converter, date.toLocalDate());
-                            SecurityPosition position = snapshot.getPositionsBySecurity().get(security);
-                            if (position != null && entry.getItem() instanceof Extractor.TransactionItem && (entry.getItem().getShares() == 0 || entry.hasProposedShares()))
-                            {
-                                ((Extractor.TransactionItem) entry.getItem()).getTransaction().setShares(position.getShares());
-                                entry.setProposedShares(true);
-                            }
-                            else if (entry.getItem() instanceof Extractor.BuySellEntryItem && entry.getItem().getShares() == 0)
-                            {
-                                Extractor.BuySellEntryItem item = (Extractor.BuySellEntryItem) entry.getItem();
-                                double  price      = (double) security.getSecurityPrice(date.toLocalDate()).getValue() / Values.Quote.divider();
-                                double  amount     = (double) item.getAmount().getAmount() / Values.Amount.divider();
-                                double  shareCount = amount / price;
-                                long proposedShares = 0L;
-                                long proposedFees = 0L;
-                                if (security.getCurrencyCode().equals(entry.getItem().getAmount().getCurrencyCode()))
-                                {
-                                    PortfolioTransaction pTransaction = item.getEntry().getPortfolioTransaction();
-                                    if (pTransaction.getType().equals(PortfolioTransaction.Type.BUY))
-                                        proposedShares = (long) Math.floor(shareCount);
-                                    else if (pTransaction.getType().equals(PortfolioTransaction.Type.SELL))
-                                        proposedShares = (long) Math.ceil(shareCount);
-                                    pTransaction.setShares(proposedShares * Values.Share.factor());
-                                    entry.setProposedShares(true);
-                                    if (pTransaction.getUnit(Transaction.Unit.Type.FEE).equals(Optional.empty()))
-                                    {
-                                        double value = (double) proposedShares * price;
-                                        proposedFees = Math.round(Math.abs(amount - value) * Values.Amount.factor());
-                                        Transaction.Unit fee = new Transaction.Unit(Transaction.Unit.Type.FEE, Money.of(security.getCurrencyCode(), proposedFees));
-                                        pTransaction.addUnit(fee);
-                                        entry.setProposedFees(true);
-                                    }
-                                    entry.getItem().getSubject().setNote("[" + Messages.LabelImportWarning + "]" + (entry.getItem().getNote() != null?" " + entry.getItem().getNote():"")); //$NON-NLS-1$ //$NON-NLS-2$
-                                }
-                                //     TODO: else-case w/ handling of convertion between currencies
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
+                entry.addStatus(item.apply(action, this));
+            if (extractor instanceof CSVExtractor)
+                if (((CSVExtractor) extractor).proposeShares(client, getPortfolio(), item))
+                    item.getSubject().setNote("[" + Messages.LabelImportWarning + "]" + (item.getNote() != null?" " + item.getNote():"")); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
 

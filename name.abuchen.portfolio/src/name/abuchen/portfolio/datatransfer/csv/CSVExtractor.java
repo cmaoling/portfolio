@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,7 +20,18 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.FieldFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Header;
+import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.Portfolio;
+import name.abuchen.portfolio.model.PortfolioTransaction;
+import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.model.Transaction;
+import name.abuchen.portfolio.money.CurrencyConverter;
+import name.abuchen.portfolio.money.CurrencyConverterImpl;
+import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
+import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
+import name.abuchen.portfolio.snapshot.PortfolioSnapshot;
+import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.util.Iban;
 import name.abuchen.portfolio.util.Isin;
 
@@ -267,5 +279,85 @@ public abstract class CSVExtractor implements Extractor
         }
         else
             return Enum.valueOf(type, value);
+    }
+
+    public boolean proposeShares(Client client, Portfolio portfolio, Item item)
+    {
+        if (item.getSecurity() == null || item.getDate() == null)
+            return false;
+
+        if (item instanceof Extractor.BuySellEntryItem)
+        {
+            return proposeShares((BuySellEntryItem) item);
+        }
+        else if (item instanceof Extractor.TransactionItem)
+        {
+            return proposeShares(client, portfolio, (TransactionItem) item);
+        }
+        else
+            return false;
+    }
+
+    public boolean proposeShares(Client client, Portfolio portfolio, TransactionItem item)
+    {
+        if (portfolio == null)
+            return false;
+
+        if (item.getShares() == 0 || item.hasProposedShares())
+        {
+            Security security = item.getSecurity();
+            LocalDateTime date = item.getDate();
+
+            CurrencyConverter converter = new CurrencyConverterImpl(new ExchangeRateProviderFactory(client), client.getBaseCurrency()); // TODO: replace dummy ExchangeRateProvider
+            for (Portfolio p : client.getPortfolios())
+                if (portfolio.getUUID().equals(p.getUUID()))
+                {
+                    PortfolioSnapshot snapshot = PortfolioSnapshot.create(portfolio, converter, date.toLocalDate());
+                    SecurityPosition position = snapshot.getPositionsBySecurity().get(security);
+                    item.getTransaction().setShares(position.getShares());
+                    item.setProposedShares(true);
+                    return true;
+                }
+        }
+        return false;
+    }
+
+    public boolean proposeShares(BuySellEntryItem item)
+    {
+        if (item.getShares() == 0 || item.hasProposedShares())
+        {
+            Security security = item.getSecurity();
+            LocalDateTime date = item.getDate();
+
+            double  price      = (double) security.getSecurityPrice(date.toLocalDate()).getValue() / Values.Quote.divider();
+            double  amount     = (double) item.getAmount().getAmount() / Values.Amount.divider();
+            double  shareCount = amount / price;
+            long proposedShares = 0L;
+            long proposedFees = 0L;
+            if (security.getCurrencyCode().equals(item.getAmount().getCurrencyCode()))
+            {
+                PortfolioTransaction pTransaction = item.getEntry().getPortfolioTransaction();
+                if (pTransaction.getType().equals(PortfolioTransaction.Type.BUY))
+                    proposedShares = (long) Math.floor(shareCount);
+                else if (pTransaction.getType().equals(PortfolioTransaction.Type.SELL))
+                    proposedShares = (long) Math.ceil(shareCount);
+                pTransaction.setShares(proposedShares * Values.Share.factor());
+                item.setProposedShares(true);
+                if (pTransaction.getUnit(Transaction.Unit.Type.FEE).equals(Optional.empty()))
+                {
+                    double value = (double) proposedShares * price;
+                    proposedFees = Math.round(Math.abs(amount - value) * Values.Amount.factor());
+                    Transaction.Unit fee = new Transaction.Unit(Transaction.Unit.Type.FEE, Money.of(security.getCurrencyCode(), proposedFees));
+                    pTransaction.addUnit(fee);
+                    item.setProposedFees(true);
+                }
+                return true;
+            }
+            else
+            {
+            //     TODO: else-case w/ handling of convertion between currencies
+            }
+        }
+        return false;
     }
 }

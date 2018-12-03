@@ -126,11 +126,11 @@ import name.abuchen.portfolio.money.Money;
         String iban = getIBAN(Messages.CSVColumn_IBAN, rawValues, field2column);
         String partnerName = getText(Messages.CSVColumn_PartnerName, rawValues, field2column);
 
-        System.err.println(">> BaseCSVExtractor::getPeer");                                      // TODO: still needed for debug?
-        if (iban != null)                                                                        // TODO: still needed for debug?
-            System.err.println(">> BaseCSVExtractor::getPeer IBAN       : " + iban);             // TODO: still needed for debug?
-        if (partnerName != null)                                                                 // TODO: still needed for debug?
-            System.err.println(">> BaseCSVExtractor::getPeer partnerName: " + partnerName);      // TODO: still needed for debug?
+        // TODO: still needed for debug? System.err.println(">> BaseCSVExtractor::getPeer");
+        // TODO: still needed for debug? if (iban != null)
+        // TODO: still needed for debug?     System.err.println(">> BaseCSVExtractor::getPeer IBAN       : " + iban);
+        // TODO: still needed for debug? if (partnerName != null)
+        // TODO: still needed for debug?     System.err.println(">> BaseCSVExtractor::getPeer partnerName: " + partnerName);
 
         if (iban != null || partnerName != null)
         {
