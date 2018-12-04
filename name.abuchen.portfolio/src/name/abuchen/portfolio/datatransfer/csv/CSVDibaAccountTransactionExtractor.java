@@ -13,6 +13,7 @@ import name.abuchen.portfolio.model.Client;
     /* package */ CSVDibaAccountTransactionExtractor(Client client)
     {
         super(client, Messages.CSVDefDibaAccountTransactions);
+        sharesOptional = true;
     }
 
     @Override
@@ -39,6 +40,7 @@ import name.abuchen.portfolio.model.Client;
             enumMap.put((E) Type.SELL, "Wertpapiergutschrift");
             enumMap.put((E) Type.DEPOSIT, "Gutschrift|Lastschrifteinzug");
             enumMap.put((E) Type.INTEREST, "Abschluss");
+            enumMap.put((E) Type.FEES, "Gebühren");
             enumMap.put((E) Type.REMOVAL, "Überweisung");
             enumMap.put((E) Type.INTEREST_CHARGE, "Zinsen");
             return enumMap;

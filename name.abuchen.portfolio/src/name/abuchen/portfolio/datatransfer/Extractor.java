@@ -44,6 +44,8 @@ public interface Extractor
 
     public abstract static class Item
     {
+        private boolean proposedShares = false;
+
         public abstract Peer getPeer();
 
         public abstract Annotated getSubject();
@@ -72,6 +74,16 @@ public interface Extractor
         }
 
         public abstract Status apply(ImportAction action, Context context);
+
+        public void setProposedShares(boolean value)
+        {
+            proposedShares = value;
+        }
+
+        public boolean hasProposedShares()
+        {
+            return proposedShares;
+        }
     }
 
     /**
@@ -169,8 +181,6 @@ public interface Extractor
         @Override
         public Peer getPeer()
         {
-
-            System.err.println(">>>> Extractor::TransactionItem::getPeer: " + transaction.toString()); // TODO: still needed for debug? //$NON-NLS-1$
             if (transaction instanceof AccountTransaction)
                 return ((AccountTransaction) transaction).getPeer();
             return null;
@@ -238,15 +248,24 @@ public interface Extractor
             else
                 throw new UnsupportedOperationException();
         }
+
+        @Override
+        public String toString()
+        {
+            return transaction.toString();
+        }
     }
 
     static class BuySellEntryItem extends Item
     {
         private final BuySellEntry entry;
 
+        private boolean proposedFees;
+
         public BuySellEntryItem(BuySellEntry entry)
         {
             this.entry = entry;
+            proposedFees = false;
         }
 
         @Override
@@ -257,6 +276,11 @@ public interface Extractor
 
         @Override
         public Annotated getSubject()
+        {
+            return entry;
+        }
+
+        public BuySellEntry getEntry()
         {
             return entry;
         }
@@ -297,10 +321,26 @@ public interface Extractor
             return entry.getAccountTransaction().getNote();
         }
 
+        public void setProposedFees(boolean value)
+        {
+            proposedFees = value;
+        }
+
+        public boolean hasProposedFees()
+        {
+            return proposedFees;
+        }
+
         @Override
         public Status apply(ImportAction action, Context context)
         {
             return action.process(entry, context.getAccount(), context.getPortfolio());
+        }
+
+        @Override
+        public String toString()
+        {
+            return entry.getAccountTransaction().toString() + " / " + entry.getPortfolioTransaction().toString(); //$NON-NLS-1$
         }
     }
 
@@ -318,9 +358,6 @@ public interface Extractor
         @Override
         public Peer getPeer()
         {
-            System.err.println(">>>> Extractor::AccountTransferItem::getPeer entry.source: " + entry.getSourceTransaction().toString()); // TODO: still needed for debug? //$NON-NLS-1$
-            System.err.println(">>>> Extractor::AccountTransferItem::getPeer entry.target: " + entry.getTargetTransaction().toString()); // TODO: still needed for debug? //$NON-NLS-1$
-            System.err.println(">>>> Extractor::AccountTransferItem::getPeer outbound " + isOutbound + " entry: " + entry.toString()); // TODO: still needed for debug? //$NON-NLS-1$ //$NON-NLS-2$
             if (isOutbound)
                 return entry.getSourceTransaction().getPeer();
             else
@@ -367,8 +404,6 @@ public interface Extractor
         @Override
         public Status apply(ImportAction action, Context context)
         {
-            // TODO: still needed for debug?System.err.println(">>>> Extractor::apply entry.source: " + entry.getSourceTransaction().toString());
-            // TODO: still needed for debug?System.err.println(">>>> Extractor::apply entry.target: " + entry.getTargetTransaction().toString());
             Account source;
             Account target;
             if (isOutbound)
@@ -381,15 +416,17 @@ public interface Extractor
                 source = context.getSecondaryAccount();
                 target = context.getAccount();
             }
-            // TODO: still needed for debug?System.err.println(">>>> Extractor::apply intermediate source: " + source.toString());
-            // TODO: still needed for debug?System.err.println(">>>> Extractor::apply intermediate target: " + target.toString());
             if (entry.getSourceTransaction().getPeer() != null && entry.getSourceTransaction().getPeer().links2Account())
                 target = entry.getSourceTransaction().getPeer().getAccount();
             if (entry.getTargetTransaction().getPeer() != null && entry.getTargetTransaction().getPeer().links2Account())
                 source = entry.getTargetTransaction().getPeer().getAccount();
-            System.err.println(">>>> Extractor::apply source: " + source.toString()); // TODO: still needed for debug? //$NON-NLS-1$
-            System.err.println(">>>> Extractor::apply target: " + target.toString()); // TODO: still needed for debug? //$NON-NLS-1$
             return action.process(entry, source, target);
+        }
+
+        @Override
+        public String toString()
+        {
+            return entry.getSourceTransaction().toString() + " => " + entry.getTargetTransaction().toString(); //$NON-NLS-1$
         }
     }
 
@@ -521,14 +558,12 @@ public interface Extractor
         @Override
         public Peer getPeer()
         {
-            // TODO: still needed for debug? System.err.println(">>>> Extractor::PeerItem peer::getPeer " + peer.toString());
             return peer;
         }
 
         @Override
         public Annotated getSubject()
         {
-            // TODO: still needed for debug? System.err.println(">>>> Extractor::PeerItem peer::getSubject " + peer.toString());
             return peer;
         }
 
@@ -583,5 +618,4 @@ public interface Extractor
      * Returns a list of extracted items.
      */
     List<Item> extract(List<InputFile> files, List<Exception> errors);
-
 }

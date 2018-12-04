@@ -28,10 +28,13 @@ import name.abuchen.portfolio.money.Money;
 
 /* package */ class CSVAccountTransactionExtractor extends BaseCSVExtractor
 {
+    protected boolean sharesOptional;
+
     /* package */ CSVAccountTransactionExtractor(Client client)
     {
         super(client, Messages.CSVDefAccountTransactions);
-        addFields();        
+        addFields();
+        sharesOptional = false;
     }
 
     CSVAccountTransactionExtractor(Client client, String label)
@@ -90,6 +93,8 @@ import name.abuchen.portfolio.money.Money;
                 type = Type.TRANSFER_OUT;
         }
 
+        System.err.println("CSVAccountTransactionExtratctor:extract optional: " + sharesOptional);
+
         switch (type)
         {
             case TRANSFER_IN:
@@ -117,13 +122,15 @@ import name.abuchen.portfolio.money.Money;
                                                     .toString()),
                                     0);
                 if (shares == null)
-                    throw new ParseException(
-                                    MessageFormat.format(Messages.CSVImportMissingField, Messages.CSVColumn_Shares), 0);
+                    if (!sharesOptional)
+                        throw new ParseException(
+                                   MessageFormat.format(Messages.CSVImportMissingField, Messages.CSVColumn_Shares), 0);
 
                 BuySellEntry buySellEntry = new BuySellEntry();
                 buySellEntry.setType(PortfolioTransaction.Type.valueOf(type.name()));
                 buySellEntry.setAmount(Math.abs(amount.getAmount()));
-                buySellEntry.setShares(Math.abs(shares));
+                if (shares != null)
+                    buySellEntry.setShares(Math.abs(shares));
                 buySellEntry.setCurrencyCode(amount.getCurrencyCode());
                 buySellEntry.setSecurity(security);
                 buySellEntry.setDate(date);
@@ -168,10 +175,6 @@ import name.abuchen.portfolio.money.Money;
                 {
                     if (shares != null)
                         t.setShares(Math.abs(shares));
-                    else
-                    {
-                        System.err.println("CSVAccountTransactionExtratctor:extract shares!");
-                    }
                 }
                 if (dividendType && taxes != null && taxes.longValue() != 0)
                     t.addUnit(new Unit(Unit.Type.TAX, Money.of(t.getCurrencyCode(), Math.abs(taxes))));
@@ -183,6 +186,8 @@ import name.abuchen.portfolio.money.Money;
             default:
                 throw new IllegalArgumentException(type.toString());
         }
+        // TODO: still needed for debug? for (Item item : items)
+        // TODO: still needed for debug?     System.err.println("CSVAccountTransactionExtratctor:extract items: " + item.getClass().toString() + " = " + item.toString() );         //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     protected Type inferType(String[] rawValues, Map<String, Column> field2column, Security security, Money amount)

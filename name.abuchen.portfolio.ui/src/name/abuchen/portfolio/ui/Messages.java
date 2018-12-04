@@ -489,6 +489,7 @@ public class Messages extends NLS
     public static String LabelExport;
     public static String LabelFeedProvider;
     public static String LabelFullClassification;
+    public static String LabelImportWarning;
     public static String LabelIncludeSecuritiesInPieChart;
     public static String LabelIncludeUnassignedCategoryInCharts;
     public static String LabelInfo;

@@ -109,6 +109,12 @@ public class TransactionTypeEditingSupport extends ColumnEditingSupport
                     AccountTransaction.Type.DEPOSIT, AccountTransaction.Type.TAXES,
                     new Class[] { ConvertToTaxAction.class },
 
+                    AccountTransaction.Type.DIVIDENDS, AccountTransaction.Type.DIVIDEND_CHARGE,
+                    new Class[] { RevertAccountAction.class },
+
+                    AccountTransaction.Type.DIVIDEND_CHARGE, AccountTransaction.Type.DIVIDENDS,
+                    new Class[] { RevertAccountAction.class },
+
                     AccountTransaction.Type.FEES, AccountTransaction.Type.DEPOSIT,
                     new Class[] { ConvertToDepositRemovalAction.class, RevertAccountAction.class },
 

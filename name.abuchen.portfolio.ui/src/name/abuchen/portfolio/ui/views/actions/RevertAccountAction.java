@@ -18,6 +18,7 @@ public class RevertAccountAction extends Action
 
         if (transaction.getTransaction().getType() != AccountTransaction.Type.DEPOSIT
                         && transaction.getTransaction().getType() != AccountTransaction.Type.DIVIDENDS
+                        && transaction.getTransaction().getType() != AccountTransaction.Type.DIVIDEND_CHARGE
                         && transaction.getTransaction().getType() != AccountTransaction.Type.FEES
                         && transaction.getTransaction().getType() != AccountTransaction.Type.FEES_REFUND
                         && transaction.getTransaction().getType() != AccountTransaction.Type.INTEREST

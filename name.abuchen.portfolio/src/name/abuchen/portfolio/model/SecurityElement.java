@@ -54,7 +54,7 @@ public class SecurityElement extends Object
     @SuppressWarnings("nls")
     public String toString()
     {
-        return String.format("%tF: %,10.2f", date, value / Values.Quote.divider());
+        return String.format("%tF: %,10.4f", date, value / Values.Quote.divider());
     }
 
     public static <T extends Object> List<SecurityElement> cast2ElementList(List<T> oList)
