@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.money.CurrencyUnit;
 import name.abuchen.portfolio.util.Iban;
 
@@ -23,7 +24,7 @@ public class Account implements TransactionOwner<AccountTransaction>, Investment
     public Account()
     {
         this.uuid = UUID.randomUUID().toString();
-        this.note = "";
+        this.note = Messages.LabelNothing;
         setPeer();
     }
 

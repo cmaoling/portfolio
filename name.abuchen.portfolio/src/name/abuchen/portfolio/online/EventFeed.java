@@ -18,6 +18,7 @@ public abstract class EventFeed extends Feed
 
     public static String ID = "EVENT"; //$NON-NLS-1$    
 
+    @Override
     @SuppressWarnings("nls")
     protected void doLoad(String source, PrintWriter writer) throws IOException
     {

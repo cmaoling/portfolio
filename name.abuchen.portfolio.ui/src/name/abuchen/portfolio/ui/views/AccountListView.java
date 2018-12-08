@@ -42,7 +42,6 @@ import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransaction.Type;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.BuySellEntry;
-import name.abuchen.portfolio.model.CrossEntry;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Money;
@@ -558,7 +557,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         });
         transactionsColumns.addColumn(column);
 
-        column = new Column(Messages.ColumnOffsetAccount + "/" + Messages.ColumnPeer, SWT.None, 120);
+        column = new Column(MessageFormat.format(Messages.ColumnPeerOrSomething, Messages.ColumnOffsetAccount, Messages.ColumnPeer), SWT.None, 120);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -566,7 +565,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
             {
                 AccountTransaction t = (AccountTransaction) e;
                 if (t.getCrossEntry() != null)
-                    return "[" + t.getCrossEntry().getCrossOwner(t).toString() + "]";
+                    return MessageFormat.format(Messages.FormatAccount, t.getCrossEntry().getCrossOwner(t).toString());
                 else if (t.getPeer() != null)
                     return t.getPeer().getName();
                 else

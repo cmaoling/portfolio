@@ -37,7 +37,6 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.ui.Messages;
-import name.abuchen.portfolio.ui.dialogs.transactions.AbstractTransactionDialog.ComboInput;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransferModel.Properties;
 
 public class SecurityTransferDialog extends AbstractTransactionDialog
@@ -79,7 +78,7 @@ public class SecurityTransferDialog extends AbstractTransactionDialog
 
         public void remove(PortfolioTransferEntry.Suggestion suggestion)
         {
-            suggestionSet.remove(suggestion);
+            suggestionSet.remove(get(suggestion));
         }
 
         public QuoteSuggestion[] get()
@@ -100,6 +99,7 @@ public class SecurityTransferDialog extends AbstractTransactionDialog
             return null;
         }
 
+        @Override
         public String toString()
         {
             return Arrays.toString(this.get());
@@ -137,7 +137,7 @@ public class SecurityTransferDialog extends AbstractTransactionDialog
         @Override
         public String toString()
         {
-            return "x " + getLabel();
+            return "-> " + getLabel(); // TODO was "x " before //$NON-NLS-1$
         }
     }
 
@@ -188,9 +188,9 @@ public class SecurityTransferDialog extends AbstractTransactionDialog
 
         // quote suggestion selection
 
-        ComboInput quoteSuggestion = new ComboInput(editArea, "");
+        ComboInput quoteSuggestion = new ComboInput(editArea, Messages.LabelNothing);
         quoteSuggestion.value.setInput(quoteSuggestionSet.get());
-        IObservableValue quoteSuggestionObservable = quoteSuggestion.bindValue(Properties.quoteSuggestion.name(), Messages.MsgMissingSuggestion);
+        quoteSuggestion.bindValue(Properties.quoteSuggestion.name(), Messages.MsgMissingSuggestion);
         quoteSuggestion.value.setSelection(new StructuredSelection(quoteSuggestionSet.get(model().getQuoteSuggestion())));
 
         // target portfolio

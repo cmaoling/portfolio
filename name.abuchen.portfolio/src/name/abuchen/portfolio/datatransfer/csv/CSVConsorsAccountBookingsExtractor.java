@@ -20,24 +20,23 @@ import name.abuchen.portfolio.model.Client;
     @Override
     public String getDefaultEncoding()
     {
-        return "windows-1252";
+        return "windows-1252"; //$NON-NLS-1$
     }
     
     @Override   
     public String[] getDefaultHeader()
     {
-        String[] defaultHeader = {  "",  //0
+        String[] defaultHeader = {  "",  //0 //$NON-NLS-1$
                                     Messages.CSVColumn_Date, //1
                                     Messages.CSVColumn_PartnerName, //2
                                     Messages.CSVColumn_IBAN, //3
-                                    "", //4
+                                    "", //4 //$NON-NLS-1$
                                     Messages.CSVColumn_Type, //5
                                     Messages.CSVColumn_ISIN, //6
                                     Messages.CSVColumn_Value, //7
-                                    "", //8
-                                    "" //9
+                                    "", //8 //$NON-NLS-1$
+                                    "" //9 //$NON-NLS-1$
                                                                         };
-        //System.err.println(">>>> CSVDibaAccountTransactionExtratctor:DefaultHeader: " + Arrays.toString(defaultHeader));
         return defaultHeader;
     }
     

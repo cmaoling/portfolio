@@ -181,7 +181,7 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
             return this.bindValue(property, missingValueMessage, true);
         }
 
-        public IObservableValue bindValue(String property, String missingValueMessage, boolean isMandatory)
+        public IObservableValue<Object> bindValue(String property, String missingValueMessage, boolean isMandatory)
         {
             UpdateValueStrategy strategy = new UpdateValueStrategy();
             if (isMandatory)
@@ -274,15 +274,17 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
         {
             iban = new AutoCompleteInput(parent, Messages.ColumnIBAN, new PeerListContentProposalProvider(peerList)
             {
+              @Override
               public IContentProposal[] getProposals(String contents, int position)
               {
                   IContentProposal[] Atmp = super.getProposals(contents, position);
-                  List<IContentProposal> Ltmp = new ArrayList(Arrays.asList(Atmp));
+                  List<IContentProposal> Ltmp = new ArrayList<IContentProposal>(Arrays.asList(Atmp));
                   IContentProposal Ctmp = makeContentProposal(AccountTransactionModel.EMPTY_PEER);
                   Ltmp.add(0, Ctmp);
                   return Ltmp.toArray(new IContentProposal[Ltmp.size()]);
               }
 
+              @Override
               protected IContentProposal makeContentProposal(Peer peer)
               {
                   return (IContentProposal) new PeerListContentProposalProvider.IbanProposal(peer);
@@ -291,6 +293,7 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
 
             iban.value.addListener(SWT.FocusOut, new Listener()
             {
+                @Override
                 public void handleEvent(Event e)
                 {
                     String IBAN = iban.value.getText();
@@ -299,7 +302,7 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
                     if (!match)
                     {
                             Peer modelPeer = model.getPeer();
-                            Peer peer = (model.EMPTY_PEER.equals(modelPeer) ? new Peer() : modelPeer);
+                            Peer peer = (AccountTransactionModel.EMPTY_PEER.equals(modelPeer) ? new Peer() : modelPeer);
                             peer.setIban(IBAN);
                             model.setPeer(peer);
                     }
@@ -313,6 +316,7 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
             valuePartner = new Text(parent, SWT.BORDER);
             valuePartner.addListener(SWT.FocusOut, new Listener()
             {
+                @Override
                 public void handleEvent(Event e)
                 {
                     String Partner = valuePartner.getText();
@@ -321,7 +325,7 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
                     if (!match)
                     {
                             Peer modelPeer = model.getPeer();
-                            Peer peer = (model.EMPTY_PEER.equals(modelPeer) ? new Peer() : modelPeer);
+                            Peer peer = (AccountTransactionModel.EMPTY_PEER.equals(modelPeer) ? new Peer() : modelPeer);
                             peer.setName(Partner);
                             model.setPeer(peer);
                     }
@@ -333,6 +337,7 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
             lblPeer.setText(Messages.MsgMissingPeer);
         }
 
+        @SuppressWarnings("unchecked")
         public void bindPartner(String property)
         {
             context.bindValue(WidgetProperties.text(SWT.Modify).observe(valuePartner),
@@ -344,6 +349,7 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
             iban.bindValue(property, missingValueMessage);
         }
 
+        @SuppressWarnings("unchecked")
         public void bindPeer(String property)
         {
             IObservableValue<?> observable = BeanProperties.value(property).observe(model);

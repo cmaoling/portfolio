@@ -2,11 +2,7 @@ package name.abuchen.portfolio.ui.views;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
@@ -40,7 +36,6 @@ import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.DedicatedTransaction;
 import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.PeerList;
-import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.util.Iban;
@@ -79,17 +74,12 @@ public class PeerListView extends AbstractListView implements ModificationListen
      * applied. See {@link #updateBalance(Account)}. Do not store transient
      * balance in persistent AccountTransaction object.
      */
-    private Map<AccountTransaction, Money> transaction2balance = new HashMap<>();
-
     private PeerContextMenu peerMenu = new PeerContextMenu(this);
 
     private ShowHideColumnHelper peerColumns;
     private ShowHideColumnHelper transactionsColumns;
 
     private boolean isFiltered = false;
-
-    @Inject
-    private ExchangeRateProviderFactory factory;
 
     @Override
     protected String getDefaultTitle()
@@ -187,7 +177,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
     @Override
     public void notifyModelUpdated()
     {
-        System.err.println(">>>> PeerListView::notifyModelUpdated() ");
+        System.err.println(">>>> PeerListView::notifyModelUpdated() "); //$NON-NLS-1$
         resetInput();
 
         Peer peer = (Peer) ((IStructuredSelection) peers.getSelection()).getFirstElement();
@@ -211,7 +201,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
             else
             {
                 // TODO: No Link
-                System.err.println(">>>> PeerListView::onModified() ELSE " + element.toString() + " of " + element.getClass().toString());
+                System.err.println(">>>> PeerListView::onModified() ELSE " + element.toString() + " of " + element.getClass().toString()); //$NON-NLS-1$ //$NON-NLS-2$
             }
             peers.refresh(true);
         }
@@ -259,8 +249,10 @@ public class PeerListView extends AbstractListView implements ModificationListen
             @Override
             public String getText(Object e)
             {
+                if (e == null)
+                    return Messages.LabelNoAccount;
                 Account a = ((Peer) e).getAccount();
-                if (e == null || a == null)
+                if (a == null)
                     return Messages.LabelNoAccount;
                 return ((Peer) e).getAccount().toString();
             }
@@ -268,8 +260,10 @@ public class PeerListView extends AbstractListView implements ModificationListen
             @Override
             public Color getForeground(Object e)
             {
+                if (e == null)
+                    return null;
                 Account a = ((Peer) e).getAccount();
-                if (e == null || a == null)
+                if (a == null)
                     return null;
                 boolean isRetired = a.isRetired();
                 return isRetired ? Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY) : null;
@@ -280,7 +274,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
         dummyAccount = new Account(Messages.LabelNoAccount);
         accounts.add(0, dummyAccount);
         accounts = Collections.unmodifiableList(accounts);
-        new ListEditingSupport(Peer.class, "account", accounts)
+        new ListEditingSupport(Peer.class, "account", accounts) //$NON-NLS-1$
             .addListener(this).attachTo(column);
         peerColumns.addColumn(column);
         

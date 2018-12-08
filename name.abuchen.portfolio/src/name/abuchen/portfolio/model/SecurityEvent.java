@@ -184,7 +184,7 @@ public class SecurityEvent extends SecurityElement
           if (details != null)
               return details;
           else
-              return "";
+              return Messages.LabelNothing;
     }
     
     public String getExplaination()

@@ -239,9 +239,9 @@ public final class DataSeries
 
     public String getUUID()
     {
-        String prefix = "";
+        String prefix = Messages.LabelNothing;
         if (isNormalized)
-            prefix = "[n]";
+            prefix = "[n]";  //$NON-NLS-1$
         return prefix + this.type.buildUUID(instance);
     }
 

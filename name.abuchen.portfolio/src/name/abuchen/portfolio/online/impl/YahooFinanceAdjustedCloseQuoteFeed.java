@@ -14,7 +14,7 @@ public class YahooFinanceAdjustedCloseQuoteFeed extends YahooFinanceQuoteFeed
     @Override
     public String getId()
     {
-        return ID; //$NON-NLS-1$
+        return ID;
     }
 
     @Override

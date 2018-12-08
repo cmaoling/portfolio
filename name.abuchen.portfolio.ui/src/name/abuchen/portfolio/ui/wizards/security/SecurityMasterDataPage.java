@@ -70,7 +70,7 @@ public class SecurityMasterDataPage extends AbstractPage
         if (!isExchangeRate)
         {
             bindings.bindStringInput(container, Messages.ColumnWKN, "wkn", SWT.NONE, 12); //$NON-NLS-1$
-            bindings.bindSpinner(container, Messages.ColumnDelayedDividend, "delayedDividend", 0, 90, SWT.NONE, 2);
+            bindings.bindSpinner(container, Messages.ColumnDelayedDividend, "delayedDividend", 0, 90, SWT.NONE, 2); //$NON-NLS-1$
         }
 
         Control control = bindings.bindBooleanInput(container, Messages.ColumnRetired, "retired"); //$NON-NLS-1$

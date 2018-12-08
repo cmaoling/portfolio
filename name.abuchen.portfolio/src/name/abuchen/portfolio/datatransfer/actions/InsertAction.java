@@ -16,7 +16,6 @@ public class InsertAction implements ImportAction
 {
     private final Client client;
     private boolean convertBuySellToDelivery = false;
-    private boolean convertDepositRemovalToTransfer = true;
 
     public InsertAction(Client client)
     {
@@ -27,12 +26,6 @@ public class InsertAction implements ImportAction
     {
         this.convertBuySellToDelivery = flag;
     }
-
-    public void setConvertDepositRemovalToTransfer(boolean flag)
-    {
-        this.convertDepositRemovalToTransfer = flag;
-    }
-
 
     @Override
     public Status process(Peer peer)
@@ -114,7 +107,7 @@ public class InsertAction implements ImportAction
         entry.getSourceTransaction().voidPeer();
         entry.getTargetTransaction().voidPeer();
         entry.insert();
-        System.err.println(">>>> insertAction::process(AccountTransferEntry..)" + entry.toString()); // TODO: still needed for debug?
+        System.err.println(">>>> insertAction::process(AccountTransferEntry..)" + entry.toString()); // TODO: still needed for debug? //$NON-NLS-1$
         return Status.OK_STATUS;
     }
 

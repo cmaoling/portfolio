@@ -12,7 +12,7 @@ import name.abuchen.portfolio.online.EventFeed;
 public final class ManualEventFeed extends EventFeed
 {
     
-    public static final String ID = MANUAL; //$NON-NLS-1$    
+    public static final String ID = MANUAL;
     
     @Override
     public String getId()

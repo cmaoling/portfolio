@@ -64,7 +64,7 @@ public class IbanColumn extends Column
             new Exception().printStackTrace(pw);
             String newValue = Iban.suggestIban(((String) value).trim());
 
-            String oldValue = "fjewfij23p"+ newValue;
+            String oldValue = "fjewfij23p"+ newValue; //$NON-NLS-1$
             if (element instanceof Account)
                 oldValue = Adaptor.adapt(Account.class, element).getIban();
             else if (element instanceof Peer)

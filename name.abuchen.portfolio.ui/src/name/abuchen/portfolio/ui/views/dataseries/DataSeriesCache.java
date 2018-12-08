@@ -117,7 +117,7 @@ public class DataSeriesCache
 
                 case CLIENT_PRETAX:
                     return PerformanceIndex.forClient(new WithoutTaxesFilter().filter(client), converter,
-                                    reportingPeriod, warnings);
+                                    reportingPeriod, warnings, false);
 
                 case SECURITY:
                     return PerformanceIndex.forInvestment(client, converter, (Security) series.getInstance(),
@@ -167,7 +167,7 @@ public class DataSeriesCache
                     ClientFilterMenu.Item pretax = (ClientFilterMenu.Item) series.getInstance();
                     return PerformanceIndex.forClient(
                                     new WithoutTaxesFilter().filter(pretax.getFilter().filter(client)), converter,
-                                    reportingPeriod, warnings);
+                                    reportingPeriod, warnings, false);
 
                 default:
                     throw new IllegalArgumentException(series.getType().name());
@@ -188,7 +188,7 @@ public class DataSeriesCache
                         .filter(p -> ((ReadOnlyPortfolio) p).getSource().equals(series.getInstance())).findAny()
                         .orElseThrow(IllegalArgumentException::new);
 
-        return PerformanceIndex.forPortfolio(filteredClient, converter, portfolio, reportingPeriod, warnings);
+        return PerformanceIndex.forPortfolio(filteredClient, converter, portfolio, reportingPeriod, warnings, false);
     }
 
     private PerformanceIndex calculatePortfolioPlusAccountPretax(DataSeries series, ReportingPeriod reportingPeriod,
@@ -199,7 +199,7 @@ public class DataSeriesCache
                         .filter(p -> ((ReadOnlyPortfolio) p).getSource().equals(series.getInstance())).findAny()
                         .orElseThrow(IllegalArgumentException::new);
 
-        return PerformanceIndex.forPortfolioPlusAccount(client, converter, portfolio, reportingPeriod, warnings);
+        return PerformanceIndex.forPortfolioPlusAccount(client, converter, portfolio, reportingPeriod, warnings, false);
     }
 
     private PerformanceIndex calculateAccountPretax(DataSeries series, ReportingPeriod reportingPeriod,
@@ -210,6 +210,6 @@ public class DataSeriesCache
                         .filter(a -> ((ReadOnlyAccount) a).getSource().equals(series.getInstance())).findAny()
                         .orElseThrow(IllegalArgumentException::new);
 
-        return PerformanceIndex.forAccount(client, converter, account, reportingPeriod, warnings);
+        return PerformanceIndex.forAccount(client, converter, account, reportingPeriod, warnings, false);
     }
 }

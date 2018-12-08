@@ -26,6 +26,7 @@ import java.util.Map;
     {
         private static final long serialVersionUID = 1L;
 
+        @Override
         protected boolean removeEldestEntry(Map.Entry<String, PageEntry> eldest)
         {
             return size() >= CACHE_SIZE;

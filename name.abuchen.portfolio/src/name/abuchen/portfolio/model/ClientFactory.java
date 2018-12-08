@@ -1067,13 +1067,13 @@ public class ClientFactory
                 String details = event.getDetails();
                 if (details != null)
                 {
-                    String[] ratio = details.split(":"); 
+                    String[] ratio = details.split(":");  //$NON-NLS-1$
                     if (ratio.length == 2)
                     {
                         event.setRatio(Double.parseDouble(ratio[0]), Double.parseDouble(ratio[1]));
                         event.clearDetails();
                     }
-                    else if (details.matches("^[0-9,.]+$"))
+                    else if (details.matches("^[0-9,.]+$")) //$NON-NLS-1$
                     {
                         event.setRatio(Double.parseDouble(details));
                         event.clearDetails();

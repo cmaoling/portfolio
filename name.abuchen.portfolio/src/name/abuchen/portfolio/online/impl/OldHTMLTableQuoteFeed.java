@@ -16,7 +16,7 @@ import name.abuchen.portfolio.online.QuoteFeed;
 public class OldHTMLTableQuoteFeed extends QuoteFeed
 {
 
-    public static final String ID = OLD_HTML; //$NON-NLS-1$
+    public static final String ID = OLD_HTML;
 
     private final PageCache cache = new PageCache();
     private final HTMLTableQuoteParser Parser = new HTMLTableQuoteParser();

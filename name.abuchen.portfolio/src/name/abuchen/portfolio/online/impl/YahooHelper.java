@@ -25,14 +25,14 @@ public /* package */class YahooHelper
 
     static boolean isNotApplicable(String s)
     {
-        if ("\"N/A\"".equals(s) || "N/A".equals(s)) //$NON-NLS-1$
+        if ("\"N/A\"".equals(s) || "N/A".equals(s)) //$NON-NLS-1$ //$NON-NLS-2$
             return true;
         return false;
     }
 
     static long asPrice(String s) throws ParseException
     {
-        if (isNotApplicable(s)) //$NON-NLS-1$
+        if (isNotApplicable(s))
             return -1;
         BigDecimal v = (BigDecimal) FMT_PRICE.get().parse(s);
         return v.multiply(Values.Quote.getBigDecimalFactor()).setScale(0, BigDecimal.ROUND_HALF_UP).longValue();
@@ -40,28 +40,28 @@ public /* package */class YahooHelper
 
     static double asDouble(String s) throws ParseException
     {
-        if (isNotApplicable(s)) //$NON-NLS-1$
+        if (isNotApplicable(s))
             return -1;
         return (double) FMT_PRICE.get().parse(s).doubleValue();
     }
 
     static BigDecimal asBigDecimal(String s) throws ParseException
     {
-        if (isNotApplicable(s)) //$NON-NLS-1$
+        if (isNotApplicable(s))
             return BigDecimal.ONE.multiply(BigDecimal.valueOf((long) -1));
         return BigDecimal.valueOf(asDouble(s));
     }
 
     static int asNumber(String s) throws ParseException
     {
-        if (isNotApplicable(s)) //$NON-NLS-1$
+        if (isNotApplicable(s))
             return -1;
         return FMT_PRICE.get().parse(s).intValue();
     }
 
     static LocalDate asDate(String s) throws ParseException
     {
-        if (isNotApplicable(s)) //$NON-NLS-1$
+        if (isNotApplicable(s))
             return null;
         return LocalDate.parse(s, DateTimeFormatter.ofPattern("\"M/d/yyyy\"")); //$NON-NLS-1$
     }
@@ -70,11 +70,10 @@ public /* package */class YahooHelper
     {
         int firstIndex = 0;
         int lastIndex = s.length();
-        if (s.startsWith("\""))
+        if (s.startsWith("\"")) //$NON-NLS-1$
             firstIndex++;
-        if (s.endsWith("\""))
+        if (s.endsWith("\"")) //$NON-NLS-1$
             lastIndex--;
-        //System.err.println("YahooHelper.stripQuotes: " + s.toString() + " [" + firstIndex + "," + lastIndex + "]");
         return s.substring(firstIndex, lastIndex);
     }
 

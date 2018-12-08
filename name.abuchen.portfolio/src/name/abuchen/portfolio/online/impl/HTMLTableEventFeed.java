@@ -17,7 +17,7 @@ import name.abuchen.portfolio.online.EventFeed;
 public class HTMLTableEventFeed extends EventFeed
 {
 
-    public static final String ID = HTML; //$NON-NLS-1$
+    public static final String ID = HTML;
 
     private final HTMLTableEventParser Parser = new HTMLTableEventParser();
 

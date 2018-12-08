@@ -146,11 +146,7 @@ public class AccountTransactionModel extends AbstractModel
         t.setNote(note);
 
         if (supportsPeer())
-        {
-            // DEBUG: System.err.println(">> AccountTransactionModel::applyChanges: peer " + peer.toString() + " " + (EMPTY_PEER.equals(peer) ? null : peer) + "[" + iban != null + "] (" + Iban.isValid(iban) + ")");           // TODO: may need to map Peer to existing one
-            // TODO:  Change Type DEPOSIT/REMOVAL <> TRANSFER
             t.setPeer(EMPTY_PEER.equals(peer) ? null : peer);
-        }
 
         t.clearUnits();
 
@@ -291,8 +287,8 @@ public class AccountTransactionModel extends AbstractModel
             }
             else
             {
-                this.partner = "";
-                this.iban    = "";
+                this.partner = Messages.LabelNothing;
+                this.iban    = Messages.LabelNothing;
             }
         }
 
@@ -371,7 +367,6 @@ public class AccountTransactionModel extends AbstractModel
 
     public void setAccount(Account account)
     {
-        System.err.println(">>>> AccountTransactionModel::setAccount account: " + account.toString()); // TODO: still needed for debug?
         String oldCurrencyCode = getAccountCurrencyCode();
         String oldFxCurrencyCode = getFxCurrencyCode();
         String oldExchangeRateCurrencies = getExchangeRateCurrencies();
@@ -440,7 +435,6 @@ public class AccountTransactionModel extends AbstractModel
         }
     }
 
-    @SuppressWarnings("nls")
     private void updateShares()
     {
         // do not auto-suggest shares and quote when editing an existing
@@ -480,7 +474,7 @@ public class AccountTransactionModel extends AbstractModel
      // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::getPartner() partner   : " + (peer != null ? peer.toString() : "<null>") + "> Name: " + (peer != null ? peer.getName(): "=/="));
      // TODO: still needed for debug? new Exception().printStackTrace(System.err);
         if (peer == null || EMPTY_PEER.equals(peer))
-            return "";
+            return Messages.LabelNothing;
         else
             return peer.getName();
     }
@@ -497,7 +491,7 @@ public class AccountTransactionModel extends AbstractModel
         // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::getIban() peer : " + (peer != null ? peer.toString() : "<null>") + "> IBAN: " + (peer != null ? peer.getIban() : "=/="));
         // TODO: still needed for debug? new Exception().printStackTrace(System.err);
         if (peer == null || EMPTY_PEER.equals(peer))
-            return "";
+            return Messages.LabelNothing;
         else
             return peer.getIban();
     }
@@ -556,13 +550,13 @@ public class AccountTransactionModel extends AbstractModel
         if (peerList.size() == 1 && matchStr.length() >= 3)
         {
            this.peer = peerList.get(0);
-           firePropertyChange(Properties.peer.name(), "", this.peer);
-           firePropertyChange(Properties.iban.name(), "", this.peer.getIban());
-           firePropertyChange(Properties.partner.name(), "", this.peer.getName());
+           firePropertyChange(Properties.peer.name(), Messages.LabelNothing, this.peer);
+           firePropertyChange(Properties.iban.name(), Messages.LabelNothing, this.peer.getIban());
+           firePropertyChange(Properties.partner.name(), Messages.LabelNothing, this.peer.getName());
            return true;
         }
         else if (peerList.size() > 1)
-            System.err.println(">>>> AccountTransactionModel::matchPeer() peerList   : " + peerList.toString() + " peer : " + (peer != null ? peer.toString() : "<null>") ); // TODO: still needed for debug?
+            System.err.println(">>>> AccountTransactionModel::matchPeer() peerList   : " + peerList.toString() + " peer : " + (peer != null ? peer.toString() : Messages.LabelNullPointer) ); // TODO: still needed for debug?  //$NON-NLS-1$ //$NON-NLS-2$
         // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::matchPeer() peer : " + (peer != null ? peer.toString() : "<null>") ); // TODO: still needed for debug?
         return false;
     }
@@ -756,7 +750,6 @@ public class AccountTransactionModel extends AbstractModel
                         / (double) Values.Share.factor());
     }
 
-    @SuppressWarnings("nls")
     private long calculateTotal()
     {
         long totalTaxes = taxes + Math.round(exchangeRate.doubleValue() * fxTaxes);

@@ -66,7 +66,7 @@ public abstract class CSVExtractor implements Extractor
 
     public String getDefaultEncoding()
     {
-        return "UTF-8";
+        return "UTF-8"; //$NON-NLS-1$
     }
 
     public <E extends Enum<E>> EnumMap<E, String> getDefaultEnum(Class<E> enumType)
@@ -154,7 +154,7 @@ public abstract class CSVExtractor implements Extractor
         {
             if (e instanceof ParseException)
             {
-                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber());
+                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber()); //$NON-NLS-1$
             }
             else
                 throw e;
@@ -176,7 +176,7 @@ public abstract class CSVExtractor implements Extractor
         catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
         {
             if (e instanceof ParseException)
-                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(dateColumn).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber());
+                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(dateColumn).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber()); //$NON-NLS-1$
             else
                 throw e;
         }
@@ -223,7 +223,7 @@ public abstract class CSVExtractor implements Extractor
         catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
         {
             if (e instanceof ParseException)
-                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber());
+                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber()); //$NON-NLS-1$
             else
                 throw e;
         }
@@ -245,7 +245,7 @@ public abstract class CSVExtractor implements Extractor
         catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
         {
             if (e instanceof ParseException)
-                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber());
+                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber()); //$NON-NLS-1$
             else
                 throw e;
         }
@@ -271,7 +271,7 @@ public abstract class CSVExtractor implements Extractor
             catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
             {
                 if (e instanceof ParseException)
-                    throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber());
+                    throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber()); //$NON-NLS-1$
                 else
                     throw e;
             }

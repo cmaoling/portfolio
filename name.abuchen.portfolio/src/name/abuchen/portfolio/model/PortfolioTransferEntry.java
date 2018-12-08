@@ -2,6 +2,8 @@ package name.abuchen.portfolio.model;
 
 import java.time.LocalDateTime;
 
+import name.abuchen.portfolio.Messages;
+
 public class PortfolioTransferEntry implements CrossEntry, Annotated
 {
     private Portfolio portfolioFrom;
@@ -201,11 +203,12 @@ public class PortfolioTransferEntry implements CrossEntry, Annotated
             throw new UnsupportedOperationException();
     }
 
+    @Override
     public String toString()
     {
-        return String.format("FROM: %s \nTO: %s\n Suggestion: %s",
+        return String.format("FROM: %s \nTO: %s\n Suggestion: %s", //$NON-NLS-1$
                         transactionFrom.toString(),
                         transactionTo.toString(),
-                        (quoteSuggestion != null ? quoteSuggestion.toString() : "<null>"));
+                        (quoteSuggestion != null ? quoteSuggestion.toString() : Messages.LabelNullPointer));
     }
 }

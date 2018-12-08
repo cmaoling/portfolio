@@ -51,7 +51,8 @@ public class EventProviderPage extends AbstractEventProviderPage
         // validate that quote provider message is null -> no errors
         bindings.getBindingContext().addValidationStatusProvider(new MultiValidator()
         {
-            IObservableValue observable = BeanProperties.value("statusEventProvider").observe(model); //$NON-NLS-1$
+            @SuppressWarnings("unchecked")
+            IObservableValue<?> observable = BeanProperties.value("statusEventProvider").observe(model); //$NON-NLS-1$
 
             @Override
             protected IStatus validate()

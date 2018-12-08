@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.money.CurrencyUnit;
 
 public final class Security implements Attributable, InvestmentVehicle
@@ -177,12 +178,12 @@ public final class Security implements Attributable, InvestmentVehicle
     {
         if (isin != null)
         {
-            Pattern pattern = Pattern.compile("^[A-Z]{2}[A-Z0-9]{9}\\d$");
+            Pattern pattern = Pattern.compile("^[A-Z]{2}[A-Z0-9]{9}\\d$"); //$NON-NLS-1$
             Matcher matcher = pattern.matcher(isin);
             if (matcher.find())
                 return isin;
             else
-                return "";
+                return Messages.LabelNothing;
         }
         else
             return isin; // which is actually null

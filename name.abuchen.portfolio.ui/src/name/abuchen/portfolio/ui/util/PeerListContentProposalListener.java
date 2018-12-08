@@ -14,11 +14,11 @@ public class PeerListContentProposalListener implements IContentProposalListener
         this.model = model;
     }
 
+    @Override
     public void proposalAccepted(IContentProposal proposal)
     {
         if (proposal instanceof PeerListContentProposal)
         {
-            // TODO: still needed for debug? System.err.println(">>>> PeerListContentProposalListener::proposalAccepted proposal: " + proposal.toString() + " |  peer: " + ((PeerListContentProposal) proposal).getPeer().toString());
             this.model.setPeer(((PeerListContentProposal) proposal).getPeer());
         }
         else

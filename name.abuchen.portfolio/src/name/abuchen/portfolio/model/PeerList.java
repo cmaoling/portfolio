@@ -6,6 +6,8 @@ import java.util.List;
 
 public class PeerList extends ArrayList<Peer>
 {
+    private static final long serialVersionUID = -1L;
+
     public PeerList()
     {
         super();
@@ -33,8 +35,7 @@ public class PeerList extends ArrayList<Peer>
         if (o == null)
             return false;
         Peer peer = (Peer) o;
-        if (peer == null)
-            return false;
+        System.err.println(">>>> PeerList::contains(Object) peer   : " + peer.toString()); //$NON-NLS-1$
         return super.contains(peer);
     }
 
@@ -93,6 +94,6 @@ public class PeerList extends ArrayList<Peer>
     @Override
     public String toString()
     {
-        return "PeerList.toString: "+ Arrays.toString(this.toArray());
+        return Arrays.toString(this.toArray());
     }
 }

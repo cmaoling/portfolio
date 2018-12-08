@@ -2,8 +2,6 @@ package name.abuchen.portfolio.model;
 
 import java.time.LocalDateTime;
 
-import name.abuchen.portfolio.model.Transaction;
-
 public class AccountTransferEntry implements CrossEntry, Annotated
 {
     private Account accountFrom;
@@ -95,12 +93,14 @@ public class AccountTransferEntry implements CrossEntry, Annotated
 
     public TransactionOwner<Transaction> getPrimaryTransactionOwner()
     {
+        @SuppressWarnings("unchecked")
         TransactionOwner<Transaction> owner = (TransactionOwner<Transaction>) this.getOwner(transactionTo);
         return owner;
     }
 
     public TransactionOwner<Transaction> getSecondaryTransactionOwner()
     {
+        @SuppressWarnings("unchecked")
         TransactionOwner<Transaction> owner = (TransactionOwner<Transaction>) this.getOwner(transactionFrom);
         return owner;
     }

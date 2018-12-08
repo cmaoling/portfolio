@@ -25,9 +25,10 @@ import name.abuchen.portfolio.model.Client;
     @Override
     public String getDefaultEncoding()
     {
-        return "windows-1252";
+        return "windows-1252"; //$NON-NLS-1$
     }
 
+    @SuppressWarnings({ "unchecked", "nls" })
     @Override
     public <E extends Enum<E>> EnumMap<E, String> getDefaultEnum(Class<E> enumType)
     {
@@ -46,10 +47,7 @@ import name.abuchen.portfolio.model.Client;
             return enumMap;
         }
         else
-        {
-            //System.err.println(">>>> CSVDibaAccountTransactionExtratctor:getDefaultEnum enumType ELSE " + enumType.toString());
             return null;
-        }
     }
 
     @Override
@@ -62,19 +60,18 @@ import name.abuchen.portfolio.model.Client;
     @Override   
     public String[] getDefaultHeader()
     {
-        String[] defaultHeader = {  "",  //0
+        String[] defaultHeader = {  "",  //0 //$NON-NLS-1$
                                     Messages.CSVColumn_Date, //1
                                     Messages.CSVColumn_Note, //2
                                     Messages.CSVColumn_Type, //3
                                     Messages.CSVColumn_ISIN, //4
-                                    "", //5
+                                    "", //5 //$NON-NLS-1$
                                     Messages.CSVColumn_TransactionCurrency, //6
                                     Messages.CSVColumn_Value,  //7
-                                    "",  //8
-                                    "",  //9
-                                    ""  //10
+                                    "",  //8 //$NON-NLS-1$
+                                    "",  //9 //$NON-NLS-1$
+                                    ""  //10 //$NON-NLS-1$
                                     };
-        //System.err.println(">>>> CSVDibaAccountTransactionExtratctor:DefaultHeader: " + Arrays.toString(defaultHeader));
         return defaultHeader;
     }
     

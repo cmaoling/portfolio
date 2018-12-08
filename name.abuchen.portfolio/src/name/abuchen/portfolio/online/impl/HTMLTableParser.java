@@ -225,7 +225,7 @@ abstract class HTMLTableParser
             }
             catch (Exception e)
             {
-                errors.add(new IOException(MessageFormat.format(Messages.MsgParsingFailedWithHTML, spec.column.toString() + " [" + spec.index + "] : " + cells.toString())));
+                errors.add(new IOException(MessageFormat.format(Messages.MsgParsingFailedWithHTML, spec.column.toString(), spec.index,  cells.toString())));
             }
         }
 

@@ -34,16 +34,16 @@ import name.abuchen.portfolio.money.Money;
     @Override
     public String getDefaultEncoding()
     {
-        return "UTF-8";
+        return "UTF-8"; //$NON-NLS-1$
     }
 
+    @SuppressWarnings({ "unchecked", "nls" })
     @Override
     public <E extends Enum<E>> EnumMap<E, String> getDefaultEnum(Class<E> enumType)
     {
 
         if (enumType.equals(AccountTransaction.Type.class))
         {
-            //System.err.println(">>>> CSVDibaAccountTransactionExtratctor:getDefaultEnum enumType IF " + enumType.toString());
             final EnumMap<E, String> enumMap = new EnumMap<>(enumType);
             enumMap.put((E) Type.BUY, "Wertpapierkauf");
             enumMap.put((E) Type.SELL, "Wertpapiergutschrift|Wertpapierverkauf");
@@ -59,7 +59,6 @@ import name.abuchen.portfolio.money.Money;
     }
 
     @Override
-    
     public Header.Type getDefaultHeadering()
     {
         return Header.Type.DEFAULT;
@@ -68,19 +67,19 @@ import name.abuchen.portfolio.money.Money;
     @Override   
     public String[] getDefaultHeader()
     {
-        String[] defaultHeader = {  "",  //0
+        String[] defaultHeader = {  "",  //0 //$NON-NLS-1$
                                     Messages.CSVColumn_Date, //1
                                     Messages.CSVColumn_PartnerName, //2
                                     Messages.CSVColumn_IBAN, //3
-                                    "", //4
+                                    "", //4 //$NON-NLS-1$
                                     Messages.CSVColumn_Type, //5
                                     Messages.CSVColumn_Note, //6
-                                    "", //7
-                                    "", //8
-                                    "", //9
+                                    "", //7 //$NON-NLS-1$
+                                    "", //8 //$NON-NLS-1$
+                                    "", //9 //$NON-NLS-1$
                                     Messages.CSVColumn_Value, //10
-                                    "", //11
-                                    "" //12
+                                    "", //11 //$NON-NLS-1$
+                                    "" //12 //$NON-NLS-1$
                                 };
         return defaultHeader;
     }

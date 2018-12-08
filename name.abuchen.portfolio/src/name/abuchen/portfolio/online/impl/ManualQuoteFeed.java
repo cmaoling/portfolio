@@ -12,7 +12,7 @@ import name.abuchen.portfolio.online.QuoteFeed;
 public final class ManualQuoteFeed extends QuoteFeed
 {
 
-    public static final String ID = MANUAL; //$NON-NLS-1$
+    public static final String ID = MANUAL;
 
     @Override
     public String getId()

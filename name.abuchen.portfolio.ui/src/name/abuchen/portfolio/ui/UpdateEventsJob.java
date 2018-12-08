@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -184,58 +182,58 @@ public final class UpdateEventsJob extends AbstractClientJob
         }
     }
 
-    private void addLatestEventsJobs(Dirtyable dirtyable, List<Job> jobs)
-    {
-        Map<EventFeed, List<Security>> feed2securities = new HashMap<>();
+//    private void addLatestEventsJobs(Dirtyable dirtyable, List<Job> jobs)
+//    {
+//        Map<EventFeed, List<Security>> feed2securities = new HashMap<>();
+//
+//        for (Security s : securities)
+//        {
+//            // if configured, use feed for latest quotes
+//            // otherwise use the default feed used by historical quotes as well
+//            String feedId = s.getLatestFeed();
+//            if (feedId == null)
+//                feedId = s.getFeed();
+//
+//            EventFeed feed = Factory.getEventFeedProvider(feedId);
+//            if (feed == null)
+//                continue;
+//
+//            // the HTML download makes request per URL (per security) -> execute
+//            // as parallel jobs (although the scheduling rule ensures that only
+//            // one request is made per host at a given time)
+//            if (HTMLTableEventFeed.ID.equals(feedId) && s.getEventFeedURL() != null)
+//            {
+//                Job job = createLatestEventJob(dirtyable, feed, s);
+//                job.setRule(HostSchedulingRule
+//                                .createFor(s.getEventFeedURL()));
+//                jobs.add(job);
+//            }
+//            else
+//            {
+//                feed2securities.computeIfAbsent(feed, key -> new ArrayList<>()).add(s);
+//            }
+//        }
+//    }
 
-        for (Security s : securities)
-        {
-            // if configured, use feed for latest quotes
-            // otherwise use the default feed used by historical quotes as well
-            String feedId = s.getLatestFeed();
-            if (feedId == null)
-                feedId = s.getFeed();
-
-            EventFeed feed = Factory.getEventFeedProvider(feedId);
-            if (feed == null)
-                continue;
-
-            // the HTML download makes request per URL (per security) -> execute
-            // as parallel jobs (although the scheduling rule ensures that only
-            // one request is made per host at a given time)
-            if (HTMLTableEventFeed.ID.equals(feedId) && s.getEventFeedURL() != null)
-            {
-                Job job = createLatestEventJob(dirtyable, feed, s);
-                job.setRule(HostSchedulingRule
-                                .createFor(s.getEventFeedURL()));
-                jobs.add(job);
-            }
-            else
-            {
-                feed2securities.computeIfAbsent(feed, key -> new ArrayList<>()).add(s);
-            }
-        }
-    }
-
-    private Job createLatestEventJob(Dirtyable dirtyable, EventFeed feed, Security security)
-    {
-        return new Job(feed.getName())
-        {
-            @Override
-            protected IStatus run(IProgressMonitor monitor)
-            {
-                ArrayList<Exception> exceptions = new ArrayList<>();
-
-                if (feed.updateLatest(security, exceptions))
-                    dirtyable.markDirty();
-
-                if (!exceptions.isEmpty())
-                    PortfolioPlugin.log(createErrorStatus(feed.getName(), exceptions));
-
-                return Status.OK_STATUS;
-            }
-        };
-    }
+//    private Job createLatestEventJob(Dirtyable dirtyable, EventFeed feed, Security security)
+//    {
+//        return new Job(feed.getName())
+//        {
+//            @Override
+//            protected IStatus run(IProgressMonitor monitor)
+//            {
+//                ArrayList<Exception> exceptions = new ArrayList<>();
+//
+//                if (feed.updateLatest(security, exceptions))
+//                    dirtyable.markDirty();
+//
+//                if (!exceptions.isEmpty())
+//                    PortfolioPlugin.log(createErrorStatus(feed.getName(), exceptions));
+//
+//                return Status.OK_STATUS;
+//            }
+//        };
+//    }
 
     private void addHistoricalEventsJobs(Dirtyable dirtyable, List<Job> jobs)
     {

@@ -73,6 +73,7 @@ public abstract class PeerListContentProposalProvider implements IContentProposa
         this.peerList = peerList;
     }
 
+    @Override
     public IContentProposal[] getProposals(String contents, int position)
     {
         // TODO: still needed for debug? System.err.println(">>>> PeerListContentProvider::getProposals "  + contents);

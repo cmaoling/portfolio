@@ -1,6 +1,7 @@
 package name.abuchen.portfolio.ui.wizards.datatransfer;
 
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -71,7 +72,7 @@ public class CSVImportWizard extends Wizard
         this.client = client;
         this.preferences = preferences;
         this.importer = new CSVImporter(client, inputFile);
-        setWindowTitle(Messages.CSVImportWizardTitle + " - " + inputFile.toString());
+        setWindowTitle(MessageFormat.format(Messages.CSVImportWizardTitle, inputFile.toString()));
     }
 
     public void setTarget(Security target)

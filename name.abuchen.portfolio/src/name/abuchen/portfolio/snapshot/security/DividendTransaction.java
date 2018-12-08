@@ -2,8 +2,6 @@ package name.abuchen.portfolio.snapshot.security;
 
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
-import name.abuchen.portfolio.model.AccountTransaction.Type;
-import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.MoneyCollectors;
 import name.abuchen.portfolio.money.Values;
@@ -119,6 +117,7 @@ public class DividendTransaction extends AccountTransaction
                         * Values.Share.divider()) / (double) shares);
     }
 
+    @Override
     public long getGrossValueAmount()
     {
         long taxes = getUnits().filter(u -> u.getType() == Unit.Type.TAX)
@@ -127,6 +126,7 @@ public class DividendTransaction extends AccountTransaction
         return getAmount() + taxes;
     }
 
+    @Override
     public Money getGrossValue()
     {
         return Money.of(getCurrencyCode(), getGrossValueAmount());

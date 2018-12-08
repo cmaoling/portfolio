@@ -203,6 +203,7 @@ public abstract class AbstractEventProviderPage extends AbstractProviderPage
         });
     }
 
+    @Override
     protected void createProviderGroup(Composite container)
     {
         grpFeed = new Group(container, SWT.NONE);
@@ -320,7 +321,8 @@ public abstract class AbstractEventProviderPage extends AbstractProviderPage
         grpFeed.getParent().layout();
     }
 
-   final protected void setupInitialData()
+    @Override
+    final protected void setupInitialData()
     {
         Feed feed = getFeedProvider(getFeed());
 
@@ -345,7 +347,8 @@ public abstract class AbstractEventProviderPage extends AbstractProviderPage
         }
     }
 
-    protected void onFeedProviderChanged(SelectionChangedEvent event)
+   @Override
+   protected void onFeedProviderChanged(SelectionChangedEvent event)
     {
         String previousExchangeId = null;
         if (comboExchange != null)
@@ -414,6 +417,7 @@ public abstract class AbstractEventProviderPage extends AbstractProviderPage
         }
     }
     
+    @Override
     final protected void onFeedURLChanged()
     {
         setFeedURL(textFeedURL.getText());

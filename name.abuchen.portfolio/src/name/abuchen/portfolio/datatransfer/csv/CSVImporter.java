@@ -2,25 +2,16 @@ package name.abuchen.portfolio.datatransfer.csv;
 
 import java.io.File;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystems;
 import java.nio.charset.StandardCharsets;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.URI;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.FieldPosition;
@@ -733,6 +724,7 @@ public class CSVImporter
         }
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void mapToImportDefinition()
     {
         List<Field> list = new LinkedList<>(currentExtractor.getFields());
@@ -783,7 +775,7 @@ public class CSVImporter
             if (column.getField() != null)
                 field2column.put(column.getField().name, column);
 
-        int startingLineNo = skipLines + (header.equals(Header.Type.FIRST) ? 1 : 0);
+        int startingLineNo = skipLines + (header.getHeaderType().equals(Header.Type.FIRST) ? 1 : 0);
         return currentExtractor.extract(startingLineNo, values, field2column, errors);
     }
 

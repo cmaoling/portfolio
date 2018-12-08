@@ -21,10 +21,8 @@ public class Monetary
     public Monetary parse(String text, String  languageHint) throws ParseException
     {
         text.trim();
-        String Currency = "";
-        double Amount = 0;
-        Pattern pCurrency = Pattern.compile("[^0-9\\.,\\s]*");
-        Pattern pAmount   = Pattern.compile("[0-9\\.,]*");
+        Pattern pCurrency = Pattern.compile("[^0-9\\.,\\s]*"); //$NON-NLS-1$
+        Pattern pAmount   = Pattern.compile("[0-9\\.,]*"); //$NON-NLS-1$
         Matcher mCurrency = pCurrency.matcher(text);
         Matcher mAmount   = pAmount.matcher(text);
         while (mCurrency.find()) 
@@ -59,12 +57,13 @@ public class Monetary
         return currencyCode;
     }
 
+    @Override
     public String toString()
     {
         DecimalFormat valueFormat = new DecimalFormat("#,##0.00####"); //$NON-NLS-1$        
         String valueStr = Messages.LabelNoAmount;
         if (value != null)
             valueStr =  valueFormat.format(value);
-        return currencyCode + " " + valueStr;
+        return currencyCode + " " + valueStr; //$NON-NLS-1$
     }
 }

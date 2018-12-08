@@ -96,6 +96,8 @@ public class Messages extends NLS
     public static String FixReferenceAccountNameProposal;
     public static String FixSetSecurity;
     public static String FixSetSecurityDone;
+    public static String FormatAccountStr;
+    public static String FormatNoteStr;
     public static String IBXML_Label;
     public static String InvestmentPlanAutoNoteLabel;
     public static String IssueBuySellWithoutSecurity;
@@ -125,7 +127,10 @@ public class Messages extends NLS
     public static String LabelNoCurrency;
     public static String LabelNoCurrencyCode;
     public static String LabelNoCurrencyDescription;
+    public static String LabelNoIBAN;
     public static String LabelNoRatio;
+    public static String LabelNothing;
+    public static String LabelNullPointer;
     public static String LabelRemovals;
     public static String LabelReportingPeriodCurrentMonth;
     public static String LabelPeer;

@@ -1,12 +1,13 @@
 package name.abuchen.portfolio.model;
 
 import java.io.Serializable;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import name.abuchen.portfolio.util.Iban;
 import name.abuchen.portfolio.Messages;
+import name.abuchen.portfolio.util.Iban;
 
 public class Peer implements Named
 {
@@ -76,8 +77,7 @@ public class Peer implements Named
     {
         if (getAccount() == null)
             return false;
-        else
-            return true;
+        return true;
     }
 
     public Account getAccount()
@@ -115,7 +115,7 @@ public class Peer implements Named
         if (links2Account())
             return getAccount().getIban();
         else if (IBAN != null && IBAN.equals(Iban.IBANNUMBER_ANY))
-            return "";
+            return Messages.LabelNothing;
         else
             return IBAN;
     }
@@ -124,7 +124,7 @@ public class Peer implements Named
     public String getName()
     {
         if (links2Account())
-            return "[" + this.getAccount().getName() + "]";
+            return MessageFormat.format(Messages.FormatAccountStr, this.getAccount().getName());
         else if (IBAN != null && IBAN.equals(Iban.IBANNUMBER_ANY))
             return Messages.LabelAnyPeer;
         else
@@ -135,7 +135,7 @@ public class Peer implements Named
     public String getNote()
     {
         if (links2Account())
-            return "<" + this.getAccount().getNote() + ">";
+            return MessageFormat.format(Messages.FormatNoteStr, this.getAccount().getNote());
         else
         return this.note;
     }
@@ -179,7 +179,10 @@ public class Peer implements Named
     @Override
     public String toString()
     {
-
-        return (getName() != null?getName():"NULL") + " (" + (getIban() != null?getIban():"=/=") + ")" + (links2Account() ? " <Account: " + getAccount().getUUID() + ">" : "");
+        String formatStr = "{0} ({1}) <{2}>"; //$NON-NLS-1$
+        return MessageFormat.format(formatStr,
+                        (getName() != null?getName():Messages.LabelNullPointer),
+                        (getIban() != null?getIban():Messages.LabelNoIBAN),
+                        (links2Account() ? getAccount().getUUID() : Messages.LabelNothing));
     }
 }

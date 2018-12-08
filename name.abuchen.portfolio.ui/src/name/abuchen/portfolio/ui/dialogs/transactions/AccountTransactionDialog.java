@@ -47,7 +47,6 @@ import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.UIConstants;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionModel.Properties;
-import name.abuchen.portfolio.ui.dialogs.transactions.AbstractTransactionDialog.PeerPicker;
 import name.abuchen.portfolio.ui.util.DatePicker;
 import name.abuchen.portfolio.ui.util.FormDataFactory;
 import name.abuchen.portfolio.ui.util.LabelOnly;
@@ -305,11 +304,11 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         });
 
         model.addPropertyChangeListener(Properties.iban.name(), event -> { // NOSONAR
-            System.err.println(">>>> AccountTransactionDialog::addPropertyChangeListener iban: " + event.toString());
+            System.err.println(">>>> AccountTransactionDialog::addPropertyChangeListener iban: " + event.toString()); //TODO //$NON-NLS-1$
         });
 
         model.addPropertyChangeListener(Properties.peer.name(), event -> { // NOSONAR
-            System.err.println(">>>> AccountTransactionDialog::addPropertyChangeListener peer: " + event.toString());
+            System.err.println(">>>> AccountTransactionDialog::addPropertyChangeListener peer: " + event.toString()); //TODO //$NON-NLS-1$
             peers.setVisible(model().supportsPeer(), client.getPeers().contains(model().getPeer()));
             //peers.lblPeer.setText((String) event.getNewValue());
             // TODO:Update actual Partner field in Dialog?
@@ -451,7 +450,6 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
     @Override
     public void setAccount(Account account)
     {
-        System.err.println(">>>> AccountTransactionDialog::setAccount account: " + account.toString()); // TODO: still needed for debug?
         model().setAccount(account);
     }
 

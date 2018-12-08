@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.MoneyCollectors;
@@ -220,13 +221,13 @@ public class PortfolioTransaction extends Transaction
     @Override
     public String toString()
     {
-        return String.format("%s %-17s  Amount: %s %9s Shares: %4s Security: %s",
-                        (Values.DateTime.format(getDateTime()) != null ? Values.DateTime.format(getDateTime()) : "<null>"),
-                        (type.name() != null ? type.name() : "<null>"),
-                        (getCurrencyCode() != null ? getCurrencyCode() : "<null>"),
-                        (Values.Amount.format(getAmount()) != null ? Values.Amount.format(getAmount()) : "<null>"),
-                        (Values.Share.format(getShares()) != null ? Values.Share.format(getShares()) : "<null>"),
-                        (getSecurity() != null ? getSecurity().getName() : "<null>")
+        return String.format("%s %-17s  Amount: %s %9s Shares: %4s Security: %s", //$NON-NLS-1$
+                        (Values.DateTime.format(getDateTime()) != null ? Values.DateTime.format(getDateTime()) : Messages.LabelNullPointer),
+                        (type.name() != null ? type.name() : Messages.LabelNullPointer),
+                        (getCurrencyCode() != null ? getCurrencyCode() : Messages.LabelNullPointer),
+                        (Values.Amount.format(getAmount()) != null ? Values.Amount.format(getAmount()) : Messages.LabelNullPointer),
+                        (Values.Share.format(getShares()) != null ? Values.Share.format(getShares()) : Messages.LabelNullPointer),
+                        (getSecurity() != null ? getSecurity().getName() : Messages.LabelNullPointer)
                         );
     }
 }

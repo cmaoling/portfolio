@@ -24,11 +24,12 @@ public class HTMLTableEventParser extends HTMLTableParser
         COLUMNS = new Column[] { new DateColumn(), new TypeColumn() , new ValueColumn()  , new RatioColumn()};
     }
     
+    @SuppressWarnings("unchecked")
+    @Override
     public Object newRowObject()
     {
-        SecurityEvent event = new SecurityEvent(); 
+        SecurityEvent event = new SecurityEvent();
         return (SecurityEvent) event;
-        //return new SecurityEvent();
     }
 
     public List<SecurityElement> parseFromURL(String url, List<Exception> errors)
@@ -98,11 +99,11 @@ public class HTMLTableEventParser extends HTMLTableParser
             SecurityEvent event = (SecurityEvent) obj;
             String type = value.text().trim();
             
-            if (type.matches("Dividende") || type.matches("Ausschüttung"))
+            if (type.matches("Dividende") || type.matches("Ausschüttung")) //$NON-NLS-1$ //$NON-NLS-2$
                 event.setType(SecurityEvent.Type.STOCK_DIVIDEND);
-            else if (type.matches("Split") || type.matches("Reverse Split")) 
+            else if (type.matches("Split") || type.matches("Reverse Split"))  //$NON-NLS-1$ //$NON-NLS-2$
                 event.setType(SecurityEvent.Type.STOCK_SPLIT);                
-            else if (type.matches("Bezugsrecht"))
+            else if (type.matches("Bezugsrecht")) //$NON-NLS-1$
                 event.setType(SecurityEvent.Type.STOCK_RIGHT);
             else
             {
@@ -124,14 +125,14 @@ public class HTMLTableEventParser extends HTMLTableParser
         public void setValue(Element value, Object obj, String languageHint) throws ParseException
         {
             SecurityEvent event = (SecurityEvent) obj;
-            if (value.text().matches("^[0-9,.]+:[0-9,.]+$"))
+            if (value.text().matches("^[0-9,.]+:[0-9,.]+$")) //$NON-NLS-1$
             {
-                String[] elements = value.text().trim().split(":");
+                String[] elements = value.text().trim().split(":"); //$NON-NLS-1$
                 if (elements.length > 2)
                     throw new ParseException(value.toString(), 0);
                 event.setRatio(asDouble(elements[0], languageHint), asDouble(elements[1], languageHint));
             }
-            else if (value.text().matches("^[0-9,.]+$"))
+            else if (value.text().matches("^[0-9,.]+$")) //$NON-NLS-1$
                 event.setRatio(asDouble(value.text().trim(), languageHint));
             else
                 event.clearRatio();
@@ -159,6 +160,7 @@ public class HTMLTableEventParser extends HTMLTableParser
     }
 
     
+    @Override
     protected final boolean isSpecValid(List<Spec> specs)
     {
         if (specs == null || specs.isEmpty())

@@ -407,7 +407,7 @@ public final class SecurityPerformanceRecord implements Adaptable
     private void calculateTTWROR(Client client, CurrencyConverter converter, ReportingPeriod period)
     {
         PerformanceIndex index = PerformanceIndex.forInvestment(client, converter, security, period,
-                        new ArrayList<Exception>());
+                        new ArrayList<Exception>(), false);
         this.twror = index.getFinalAccumulatedPercentage();
         this.drawdown = index.getDrawdown();
         this.volatility = index.getVolatility();

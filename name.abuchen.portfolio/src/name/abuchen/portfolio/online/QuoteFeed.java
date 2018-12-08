@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import name.abuchen.portfolio.model.Exchange;
 import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.SecurityElement;
 import name.abuchen.portfolio.model.Security;
@@ -27,8 +26,6 @@ public abstract class QuoteFeed extends Feed
     abstract public List<LatestSecurityPrice> getHistoricalQuotes(Security security, LocalDate start, List<Exception> errors);
 
     abstract public List<LatestSecurityPrice> getHistoricalQuotes(String response, List<Exception> errors);
-
-    abstract public List<Exchange> getExchanges(Security subject, List<Exception> errors);
 
     @Override
     public boolean updateLatest(Security security, List<Exception> errors)
@@ -48,11 +45,13 @@ public abstract class QuoteFeed extends Feed
         return SecurityElement.cast2ElementList(getHistoricalQuotes(security, start, errors));
     }
 
+    @Override
     public final List<SecurityElement> get(String response, List<Exception> errors)
     {
         return SecurityElement.cast2ElementList(getHistoricalQuotes(response, errors));
     }
 
+    @Override
     @SuppressWarnings("nls")
     protected void doLoad(String source, PrintWriter writer) throws IOException
     {

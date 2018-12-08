@@ -189,7 +189,6 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
      * Used to pipe the status of a manually validated quote provider into the
      * binding context
      */
-    private String statusEventProvider;
     private String statusHistoricalQuotesProvider;
     private String statusLatestQuotesProvider;
 

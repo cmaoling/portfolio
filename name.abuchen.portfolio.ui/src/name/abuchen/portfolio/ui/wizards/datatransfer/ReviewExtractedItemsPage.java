@@ -1,10 +1,10 @@
 package name.abuchen.portfolio.ui.wizards.datatransfer;
 
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -48,7 +48,6 @@ import name.abuchen.portfolio.datatransfer.csv.CSVExtractor;
 import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.ImportAction;
 import name.abuchen.portfolio.datatransfer.ImportAction.Status.Code;
-import name.abuchen.portfolio.datatransfer.Extractor.BuySellEntryItem;
 import name.abuchen.portfolio.datatransfer.actions.CheckCurrenciesAction;
 import name.abuchen.portfolio.datatransfer.actions.CheckValidTypesAction;
 import name.abuchen.portfolio.datatransfer.actions.DetectDuplicatesAction;
@@ -65,14 +64,8 @@ import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
-import name.abuchen.portfolio.model.Transaction;
-import name.abuchen.portfolio.money.CurrencyConverter;
-import name.abuchen.portfolio.money.CurrencyConverterImpl;
-import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
-import name.abuchen.portfolio.snapshot.PortfolioSnapshot;
-import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.ui.AbstractClientJob;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
@@ -458,7 +451,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         layout.setColumnData(column.getColumn(), new ColumnPixelData(80, true));
 
         column = new TableViewerColumn(viewer, SWT.NONE);
-        column.getColumn().setText(Messages.ColumnSecurity + "/" + Messages.ColumnPeer);
+        column.getColumn().setText(MessageFormat.format(Messages.ColumnPeerOrSomething, Messages.ColumnSecurity, Messages.ColumnPeer));
         column.setLabelProvider(new FormattedLabelProvider() // NOSONAR
         {
             @Override
@@ -719,7 +712,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 entry.addStatus(item.apply(action, this));
             if (extractor instanceof CSVExtractor)
                 if (((CSVExtractor) extractor).proposeShares(client, getPortfolio(), item))
-                    item.getSubject().setNote("[" + Messages.LabelImportWarning + "]" + (item.getNote() != null?" " + item.getNote():"")); //$NON-NLS-1$ //$NON-NLS-2$
+                    item.getSubject().setNote(MessageFormat.format(Messages.LabelImportWarning, 
+                                    (item.getNote() != null?item.getNote():Messages.LabelNothing)));
         }
     }
 

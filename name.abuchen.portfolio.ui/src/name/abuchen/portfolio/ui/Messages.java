@@ -192,6 +192,7 @@ public class Messages extends NLS
     public static String ColumnOffsetAccount;
     public static String ColumnPartner;
     public static String ColumnPeer;
+    public static String ColumnPeerOrSomething;
     public static String ColumnPerShare;
     public static String ColumnPerShare_Description;
     public static String ColumnPersonalDividendYield;
@@ -335,6 +336,7 @@ public class Messages extends NLS
     public static String ExportWizardSelectDirectory;
     public static String ExportWizardTitle;
     public static String ExportWizardUnsupportedExport;
+    public static String FormatAccount;
     public static String GroupLabelAttributes;
     public static String GroupLabelDividends;
     public static String GroupLabelPerformance;
@@ -517,6 +519,8 @@ public class Messages extends NLS
     public static String LabelNo;
     public static String LabelNoName;
     public static String LabelNotAvailable;
+    public static String LabelNothing;
+    public static String LabelNullPointer;
     public static String LabelNumberDataSeries;
     public static String LabelOneOfX;
     public static String LabelOrderByTaxonomy;

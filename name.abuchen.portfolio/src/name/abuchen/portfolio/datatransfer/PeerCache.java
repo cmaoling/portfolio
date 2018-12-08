@@ -38,14 +38,11 @@ public class PeerCache
 
         this.localMaps.add(client.getPeers().addAccounts(client.getAccounts()).stream().filter(p -> p.getName() != null && !p.getName().isEmpty())
                         .collect(Collectors.toMap(Peer::getName, p -> p, (l, r) -> DUPLICATE_PEER_MARKER)));
-
-        // TODO: still needed for debug? System.err.println(">>>> PeerCache::PeerCache");
     }
 
     public Peer lookup(String iban, String name,
                     Supplier<Peer> creationFunction)
     {
-        System.err.println(">>>> PeerCache::lookup iban: " + iban + " name: " + name); // TODO: still needed for debug?
         List<String> attributes = Arrays.asList(iban, name);
 
         // first: check the identifying attributes (IBAN)
@@ -57,23 +54,16 @@ public class PeerCache
             if (peer == DUPLICATE_PEER_MARKER)
                 throw new IllegalArgumentException(MessageFormat.format(MESSAGES.get(ii), attribute));
             if (peer != null)
-            {
-                System.err.println(">>>> PeerCache::lookup peer: " + peer.toString()); // TODO: still needed for debug?
                 return peer;
-            }
         }
 
         // second: check the name. But: even if the name matches, we also must
         // check that the identifying attributes do not differ. Why? Investment
         // instruments could have the same name but different ISINs.
 
-        System.err.println(">>>> PeerCache::lookup byNAME"); // TODO: still needed for debug?
         Peer peer = lookupPeerByName(iban, name);
         if (peer != null)
-        {
-            System.err.println(">>>> PeerCache::lookup peer: " + peer.toString()); // TODO: still needed for debug?
             return peer;
-        }
 
         peer = creationFunction.get();
         peer.setIban(iban);
@@ -86,7 +76,6 @@ public class PeerCache
                 localMaps.get(ii).put(attribute, peer);
         }
 
-        System.err.println(">>>> PeerCache::lookup =END= peer: " + peer.toString()); // TODO: still needed for debug?
         return peer;
     }
 
@@ -117,8 +106,6 @@ public class PeerCache
     {
         List<Item> answer = new ArrayList<>();
 
-        // TODO: still needed for debug? System.err.println(">>>> PeerCache::createMissingPeerItems =BEGIN=");
-
         Set<Peer> available = new HashSet<>();
         available.addAll(client.getPeers().addAccounts(client.getAccounts()));
         items.stream().filter(i -> i instanceof PeerItem).map(Item::getPeer).forEach(available::add);
@@ -128,15 +115,12 @@ public class PeerCache
             if (item instanceof PeerItem || item.getPeer() == null)
                 continue;
 
-            // TODO: still needed for debug? System.err.println(">>>> PeerCache::createMissingPeerItems CHECK item.getPeer: " + item.getPeer() + " vs. " + available);
             if (!available.contains(item.getPeer()))
             {
                 answer.add(new PeerItem(item.getPeer()));
-                System.err.println(">>>> PeerCache::createMissingPeerItems ADD: " + item.getPeer() ); // TODO: still needed for debug?
                 available.add(item.getPeer());
             }
         }
-     // TODO: still needed for debug? System.err.println(">>>> PeerCache::createMissingPeerItems ==END==" + answer.toString());
         return answer;
     }
 }

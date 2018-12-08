@@ -93,8 +93,6 @@ import name.abuchen.portfolio.money.Money;
                 type = Type.TRANSFER_OUT;
         }
 
-        System.err.println("CSVAccountTransactionExtratctor:extract optional: " + sharesOptional);
-
         switch (type)
         {
             case TRANSFER_IN:
@@ -163,12 +161,12 @@ import name.abuchen.portfolio.money.Money;
                     t.setSecurity(security);
                 t.setDateTime(date.withHour(0).withMinute(0));
                 String extNote = getText(Messages.CSVColumn_ISIN, rawValues, field2column);
-                if (extNote != null && security.getIsin() == "")
+                if (extNote != null && security.getIsin().equals("")) //$NON-NLS-1$
                 {
                     if (note == null)
-                        note = "";
-                    else if (!note.equals(""))
-                        note += " - ";
+                        note = Messages.LabelNothing;
+                    else if (!note.equals("")) //$NON-NLS-1$
+                        note += " - "; //$NON-NLS-1$
                     note += extNote;
                 }
                 if (dividendType)
