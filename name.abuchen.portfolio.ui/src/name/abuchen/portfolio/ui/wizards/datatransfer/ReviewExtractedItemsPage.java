@@ -718,7 +718,10 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 entry.addStatus(item.apply(action, this));
             if (extractor.getSubject() instanceof CSVExtractor)
                 if (((CSVExtractor) extractor.getSubject()).proposeShares(client, getPortfolio(), item))
-                    item.getSubject().setNote("[" + Messages.LabelImportWarning + "]" + (item.getNote() != null?" " + item.getNote():"")); //$NON-NLS-1$ //$NON-NLS-2$
+                    if (item.getNote() == null)
+                        item.getSubject().setNote("[" + Messages.LabelImportWarning + "]");
+                    else if (!item.getNote().startsWith(Messages.LabelImportWarning.substring(0, Messages.LabelImportWarning.indexOf('{') - 1)))
+                        item.getSubject().setNote("[" + Messages.LabelImportWarning + "]" + item.getNote());
         }
     }
 

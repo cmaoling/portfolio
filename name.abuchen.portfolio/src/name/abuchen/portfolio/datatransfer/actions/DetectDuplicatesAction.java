@@ -19,6 +19,8 @@ import name.abuchen.portfolio.model.Transaction;
 public class DetectDuplicatesAction implements ImportAction
 {
 
+    private long range = 8;
+
     @Override
     public Status process(Peer peer)
     {
@@ -68,7 +70,9 @@ public class DetectDuplicatesAction implements ImportAction
     {
         for (AccountTransaction t : transactions)
         {
-            if (subject.getType() != t.getType())
+            if (subject.getType().isCredit() != t.getType().isCredit())
+                continue;
+            if (subject.getType().isDebit() != t.getType().isDebit())
                 continue;
 
             if (isPotentialDuplicate(subject, t))
@@ -82,7 +86,9 @@ public class DetectDuplicatesAction implements ImportAction
     {
         for (PortfolioTransaction t : transactions)
         {
-            if (subject.getType() != t.getType())
+            if (subject.getType().isPurchase() != t.getType().isPurchase())
+                continue;
+            if (subject.getType().isLiquidation() != t.getType().isLiquidation())
                 continue;
 
             if (isPotentialDuplicate(subject, t))
@@ -94,7 +100,9 @@ public class DetectDuplicatesAction implements ImportAction
 
     private boolean isPotentialDuplicate(Transaction subject, Transaction other)
     {
-        if (!other.getDateTime().equals(subject.getDateTime()))
+        if (other.getDateTime().minusDays(range).isAfter(subject.getDateTime()))
+            return false;
+        if (other.getDateTime().plusDays(range).isBefore(subject.getDateTime()))
             return false;
 
         if (!other.getCurrencyCode().equals(subject.getCurrencyCode()))
@@ -103,10 +111,10 @@ public class DetectDuplicatesAction implements ImportAction
         if (other.getAmount() != subject.getAmount())
             return false;
 
-        if (other.getShares() != subject.getShares())
+        if (other.getShares() != subject.getShares() && subject.getShares() != 0)
             return false;
 
-        if (!Objects.equals(other.getSecurity(), subject.getSecurity()))
+        if (!Objects.equals(other.getSecurity(), subject.getSecurity()) && (subject.getSecurity() != null))
             return false;
 
         return true;
