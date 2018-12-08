@@ -618,4 +618,9 @@ public interface Extractor
      * Returns a list of extracted items.
      */
     List<Item> extract(List<InputFile> files, List<Exception> errors);
+
+    default public <T extends Extractor> T getSubject()
+    {
+        return (T) this;
+    }
 }

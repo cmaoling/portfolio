@@ -710,8 +710,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
             Extractor.Item item = entry.getItem();
             for (ImportAction action : actions)
                 entry.addStatus(item.apply(action, this));
-            if (extractor instanceof CSVExtractor)
-                if (((CSVExtractor) extractor).proposeShares(client, getPortfolio(), item))
+            if (extractor.getSubject() instanceof CSVExtractor)
+                if (((CSVExtractor) extractor.getSubject()).proposeShares(client, getPortfolio(), item))
                     item.getSubject().setNote(MessageFormat.format(Messages.LabelImportWarning, 
                                     (item.getNote() != null?item.getNote():Messages.LabelNothing)));
         }

@@ -287,15 +287,10 @@ public abstract class CSVExtractor implements Extractor
             return false;
 
         if (item instanceof Extractor.BuySellEntryItem)
-        {
             return proposeShares((BuySellEntryItem) item);
-        }
         else if (item instanceof Extractor.TransactionItem)
-        {
             return proposeShares(client, portfolio, (TransactionItem) item);
-        }
-        else
-            return false;
+        return false;
     }
 
     public boolean proposeShares(Client client, Portfolio portfolio, TransactionItem item)
@@ -314,6 +309,8 @@ public abstract class CSVExtractor implements Extractor
                 {
                     PortfolioSnapshot snapshot = PortfolioSnapshot.create(portfolio, converter, date.toLocalDate());
                     SecurityPosition position = snapshot.getPositionsBySecurity().get(security);
+                    if (position == null)
+                        return false;
                     item.getTransaction().setShares(position.getShares());
                     item.setProposedShares(true);
                     return true;
@@ -330,6 +327,8 @@ public abstract class CSVExtractor implements Extractor
             LocalDateTime date = item.getDate();
 
             double  price      = (double) security.getSecurityPrice(date.toLocalDate()).getValue() / Values.Quote.divider();
+            if (price <= 0)
+                return false;
             double  amount     = (double) item.getAmount().getAmount() / Values.Amount.divider();
             double  shareCount = amount / price;
             long proposedShares = 0L;
