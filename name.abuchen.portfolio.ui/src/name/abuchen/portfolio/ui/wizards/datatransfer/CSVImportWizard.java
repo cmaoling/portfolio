@@ -48,6 +48,13 @@ public class CSVImportWizard extends Wizard
         {
             return this.importer.createItems(errors);
         }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T extends Extractor> T getSubject()
+        {
+            return (T) this.importer.getExtractor();
+        }
     }
 
     /* package */static final String REVIEW_PAGE_ID = "reviewitems"; //$NON-NLS-1$
