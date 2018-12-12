@@ -36,7 +36,11 @@ public class ImportCSVHandler
         if (client == null)
             return;
 
+        PortfolioPart object = (PortfolioPart) part.getObject();
+        String filterPath = (object.getClientFileName() == null?System.getProperty("user.dir"):object.getClientFileName().getParent().toString()); //$NON-NLS-1$
+
         FileDialog fileDialog = new FileDialog(shell, SWT.OPEN);
+        fileDialog.setFilterPath(filterPath);
         fileDialog.setFilterNames(new String[] { Messages.CSVImportLabelFileCSV, Messages.CSVImportLabelFileAll });
         fileDialog.setFilterExtensions(new String[] { "*.csv", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
         String fileName = fileDialog.open();
