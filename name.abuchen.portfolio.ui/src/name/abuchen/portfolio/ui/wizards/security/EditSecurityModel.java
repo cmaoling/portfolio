@@ -179,6 +179,8 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
     private String eventFeed;
     private String eventFeedURL;
     private int    delayedDividend;
+    private String calendar;
+    private String calendarProvince;
     private String feed;
     private String feedURL;
     private String latestFeed;
@@ -211,6 +213,8 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
         this.eventFeed = security.getEventFeed();
         this.eventFeedURL = security.getEventFeedURL();
         this.delayedDividend = security.getDelayedDividend();
+        this.calendar = security.getCalendar();
+        this.calendarProvince = security.getCalendarProvince();
         this.feed = security.getFeed();
         this.feedURL = security.getFeedURL();
         this.latestFeed = security.getLatestFeed();
@@ -309,6 +313,25 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
     public void setDelayedDividend(int delayedDividend)
     {
         firePropertyChange("delayedDividend", this.delayedDividend, this.delayedDividend = delayedDividend); //$NON-NLS-1$
+    }
+    public String getCalendar()
+    {
+        return calendar;
+    }
+
+    public void setCalendar(String calendar)
+    {
+        firePropertyChange("calendar", this.calendar, this.calendar = calendar); //$NON-NLS-1$
+    }
+
+    public String getCalendarProvince()
+    {
+        return calendarProvince;
+    }
+
+    public void setCalendarProvince(String calendarProvince)
+    {
+        firePropertyChange("calendarProvince", this.calendarProvince, this.calendarProvince = calendarProvince); //$NON-NLS-1$
     }
 
     public String getFeed()
@@ -447,6 +470,8 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
         security.setEventFeed(eventFeed);
         security.setEventFeedURL(eventFeedURL);
         security.setDelayedDividend(delayedDividend);
+        security.setCalendar(calendar);
+        security.setCalendarProvince(calendarProvince);
         security.setFeed(feed);
         security.setFeedURL(feedURL);
         security.setLatestFeed(latestFeed);

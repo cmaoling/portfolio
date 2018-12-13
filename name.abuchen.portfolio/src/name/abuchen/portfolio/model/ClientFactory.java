@@ -246,12 +246,12 @@ public class ClientFactory
                     read = decrypted.read(bytes); // major version number
                     if (read != bytes.length)
                         throw new IOException();
-                    
+
                     int majorVersion = ByteBuffer.wrap(bytes).getInt();
                     read = decrypted.read(bytes); // version number
                     if (read != bytes.length)
                         throw new IOException();
-                    
+
                     int version = ByteBuffer.wrap(bytes).getInt();
 
                     // sanity check if the file was properly decrypted
@@ -570,6 +570,7 @@ public class ClientFactory
                 // Portfoliotransfer has Quotesuggestion
                 introduceQuoteSuggestion4Transfer(client);
             case 38:
+                // added security exchange calendar
                 // added DIVIDEND_CHARGE transaction type
             case 39:
                 // Introducing Peers
@@ -592,7 +593,8 @@ public class ClientFactory
         {
             if ("STOCK".equals(security.getType())) //$NON-NLS-1$ // NOSONAR
                 security.setType("EQUITY"); //$NON-NLS-1$ // NOSONAR
-            else if ("BOND".equals(security.getType())) //$NON-NLS-1$ // NOSONAR
+            else if ("BOND".equals(security.getType())) //$NON-NLS-1$ //
+                                                        // NOSONAR
                 security.setType("DEBT"); //$NON-NLS-1$ // NOSONAR
         }
     }

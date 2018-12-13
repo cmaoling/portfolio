@@ -209,7 +209,7 @@ public class Client
 
         propertyChangeSupport.firePropertyChange("securities", security, null); //$NON-NLS-1$
     }
-    
+
     /**
      * Gets a list of used {@link CurrencyUnit}s.
      * 
