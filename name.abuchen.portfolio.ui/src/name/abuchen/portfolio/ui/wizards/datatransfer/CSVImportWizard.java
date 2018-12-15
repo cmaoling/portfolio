@@ -108,6 +108,7 @@ public class CSVImportWizard extends Wizard
     public void addPages()
     {
         definitionPage = new CSVImportDefinitionPage(client, importer, security != null);
+        definitionPage.setAccount(account);
         addPage(definitionPage);
 
         selectSecurityPage = new SelectSecurityPage(client);

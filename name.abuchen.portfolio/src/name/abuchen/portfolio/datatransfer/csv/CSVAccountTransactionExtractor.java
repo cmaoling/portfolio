@@ -26,7 +26,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Transaction.Unit;
 import name.abuchen.portfolio.money.Money;
 
-/* package */ class CSVAccountTransactionExtractor extends BaseCSVExtractor
+/* package */ public class CSVAccountTransactionExtractor extends BaseCSVExtractor
 {
     protected boolean sharesOptional;
 

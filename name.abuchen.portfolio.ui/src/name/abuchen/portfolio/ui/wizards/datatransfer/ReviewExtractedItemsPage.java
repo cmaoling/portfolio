@@ -45,6 +45,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Table;
 
 import name.abuchen.portfolio.datatransfer.csv.CSVExtractor;
+import name.abuchen.portfolio.datatransfer.csv.CSVAccountTransactionExtractor;
 import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.ImportAction;
 import name.abuchen.portfolio.datatransfer.ImportAction.Status.Code;
@@ -666,6 +667,9 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         Extractor e = (Extractor) comboExtractors.getStructuredSelection().getFirstElement();
         if (e != null)
             preferences.setValue(IMPORT_TARGET_EXTRACTOR, e.getClass().getName());
+
+        if (extractor.getSubject() instanceof CSVAccountTransactionExtractor)
+            account.setExtractor(extractor.getSubject().getClass().getName());
     }
 
     public void setAccount(Account account)

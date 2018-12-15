@@ -76,6 +76,7 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.FieldFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Header;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.HeaderSet;
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
@@ -119,9 +120,11 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
     private final Client client;
     private final CSVImporter importer;
     private final boolean onlySecurityPrices;
+    private Account account = null;
 
     private HeaderSet headerset = new HeaderSet();
 
+    private ComboViewer extractorComboViewer = null;
     private Spinner skipLinesSpinner = null;
     private ComboViewer encodingComboViewer = null;
     private ComboViewer headeringComboViewer = null;
@@ -175,9 +178,9 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         Label lblTarget = new Label(container, SWT.RIGHT);
         lblTarget.setText(Messages.CSVImportLabelTarget);
         Combo cmbTarget = new Combo(container, SWT.READ_ONLY);
-        ComboViewer target = new ComboViewer(cmbTarget);
-        target.setContentProvider(ArrayContentProvider.getInstance());
-        target.setLabelProvider(new LabelProvider()
+        extractorComboViewer = new ComboViewer(cmbTarget);
+        extractorComboViewer.setContentProvider(ArrayContentProvider.getInstance());
+        extractorComboViewer.setLabelProvider(new LabelProvider()
         {
             @Override
             public String getText(Object element)
@@ -185,8 +188,8 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
                 return ((Extractor) element).getLabel();
             }
         });
-        target.getCombo().setEnabled(!onlySecurityPrices);
-        target.addSelectionChangedListener(this);
+        extractorComboViewer.getCombo().setEnabled(!onlySecurityPrices);
+        extractorComboViewer.addSelectionChangedListener(this);
 
         Label lblDelimiter = new Label(container, SWT.NONE);
         lblDelimiter.setText(Messages.CSVImportLabelDelimiter);
@@ -309,8 +312,8 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         //
         // setup form elements
         //
-        target.setInput(importer.getExtractors());
-        target.getCombo().select(importer.getExtractors().indexOf(importer.getExtractor()));
+        extractorComboViewer.setInput(importer.getExtractors());
+        extractorComboViewer.getCombo().select(importer.getExtractors().indexOf(importer.getExtractor()));
         doProcessFile();
     }
 
@@ -346,6 +349,9 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
             importer.setEncoding(Charset.forName(def.getDefaultEncoding()));
             importer.setSkipLines(def.getDefaultSkipLines());
             importer.setHeader(headerset.get(def.getDefaultHeadering()));
+
+            if (extractorComboViewer != null)
+                extractorComboViewer.setSelection(new StructuredSelection(importer.getExtractor()));
 
             if (skipLinesSpinner != null)
                 skipLinesSpinner.setSelection(importer.getSkipLines());
@@ -823,5 +829,20 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         {
             // nothing to do
         }
+    }
+
+    public void setAccount(Account account)
+    {
+        this.account = account;
+    }
+
+    @Override
+    public void beforePage()
+    {
+        if (account == null)
+            return;
+        CSVExtractor e = importer.setExtractor(account.getExtractor());
+        if (e != null)
+            changeExtractor(e);
     }
 }
