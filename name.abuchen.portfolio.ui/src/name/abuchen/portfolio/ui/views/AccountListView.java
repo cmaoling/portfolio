@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.ui.views;
 
+import java.io.File;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -16,7 +17,9 @@ import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.layout.TableColumnLayout;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
@@ -24,6 +27,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.ToolTip;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -35,6 +39,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 
 import name.abuchen.portfolio.model.Account;
@@ -42,6 +48,7 @@ import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransaction.Type;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.BuySellEntry;
+import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Money;
@@ -76,6 +83,7 @@ import name.abuchen.portfolio.ui.views.columns.NameColumn;
 import name.abuchen.portfolio.ui.views.columns.NameColumn.NameColumnLabelProvider;
 import name.abuchen.portfolio.ui.views.columns.NoteColumn;
 import name.abuchen.portfolio.ui.views.columns.IbanColumn;
+import name.abuchen.portfolio.ui.wizards.datatransfer.CSVImportWizard;
 
 public class AccountListView extends AbstractListView implements ModificationListener
 {
@@ -102,6 +110,8 @@ public class AccountListView extends AbstractListView implements ModificationLis
 
     private boolean isFiltered = false;
 
+    private PortfolioPart part;
+
     @Override
     protected String getDefaultTitle()
     {
@@ -112,6 +122,8 @@ public class AccountListView extends AbstractListView implements ModificationLis
     public void init(PortfolioPart part, Object parameter)
     {
         super.init(part, parameter);
+
+        this.part = part;
 
         isFiltered = part.getPreferenceStore().getBoolean(FILTER_INACTIVE_ACCOUNTS);
     }
@@ -310,6 +322,37 @@ public class AccountListView extends AbstractListView implements ModificationLis
 
         accountMenu.menuAboutToShow(manager, account, null);
         manager.add(new Separator());
+
+        manager.add(new Action(Messages.AccountMenuImportCSV)
+        {
+            @Override
+            public void run()
+            {
+                Client client = getClient();
+                Shell shell  = Display.getDefault().getActiveShell();
+                String filterPath = (part.getClientFileName() == null?System.getProperty("user.dir"):part.getClientFileName().getParent().toString()); //$NON-NLS-1$
+
+                FileDialog fileDialog = new FileDialog(shell, SWT.OPEN);
+                fileDialog.setFilterPath(filterPath);
+                fileDialog.setFilterNames(new String[] { Messages.CSVImportLabelFileCSV, Messages.CSVImportLabelFileAll });
+                fileDialog.setFilterExtensions(new String[] { "*.csv", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+                String fileName = fileDialog.open();
+
+                if (fileName == null)
+                    return;
+
+                IPreferenceStore preferences = part.getPreferenceStore();
+                CSVImportWizard wizard = new CSVImportWizard(client, preferences, new File(fileName));
+                wizard.setTarget(account);
+                Dialog wizwardDialog = new WizardDialog(shell, wizard);
+                if (wizwardDialog.open() != Dialog.OK)
+                    return;
+
+                markDirty();
+                resetInput();
+            }
+
+        });
 
         manager.add(new Action(account.isRetired() ? Messages.AccountMenuActivate : Messages.AccountMenuDeactivate)
         {

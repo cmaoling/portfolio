@@ -18,6 +18,7 @@ public class Account implements TransactionOwner<AccountTransaction>, Investment
     private String  iban;
     private boolean isRetired = false;
     private Peer    peer;
+    private String  csvExtractor;
 
     private List<AccountTransaction> transactions = new ArrayList<>();
 
@@ -44,6 +45,16 @@ public class Account implements TransactionOwner<AccountTransaction>, Investment
     {
         // needed to assign UUIDs when loading older versions from XML
         uuid = UUID.randomUUID().toString();
+    }
+
+    public String getExtractor()
+    {
+        return (csvExtractor != null? csvExtractor: ""); //$NON-NLS-1$
+    }
+
+    public void setExtractor(String csvExtractor)
+    {
+        this.csvExtractor = csvExtractor;
     }
 
     @Override

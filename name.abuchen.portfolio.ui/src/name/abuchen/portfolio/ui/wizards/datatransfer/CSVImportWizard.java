@@ -13,6 +13,7 @@ import org.eclipse.swt.graphics.Image;
 import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.actions.InsertAction;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter;
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
@@ -68,7 +69,12 @@ public class CSVImportWizard extends Wizard
      * If a target security is given, then only security prices are imported
      * directly into that security.
      */
-    private Security target;
+    private Security security;
+
+    /**
+     * If a target account is given, then account is preselected to be imported
+     */
+    private Account account;
 
     private CSVImportDefinitionPage definitionPage;
     private ReviewExtractedItemsPage reviewPage;
@@ -84,7 +90,12 @@ public class CSVImportWizard extends Wizard
 
     public void setTarget(Security target)
     {
-        this.target = target;
+        this.security = target;
+    }
+
+    public void setTarget(Account target)
+    {
+        this.account = target;
     }
 
     @Override
@@ -96,7 +107,8 @@ public class CSVImportWizard extends Wizard
     @Override
     public void addPages()
     {
-        definitionPage = new CSVImportDefinitionPage(client, importer, target != null);
+        definitionPage = new CSVImportDefinitionPage(client, importer, security != null);
+        definitionPage.setAccount(account);
         addPage(definitionPage);
 
         selectSecurityPage = new SelectSecurityPage(client);
@@ -104,6 +116,7 @@ public class CSVImportWizard extends Wizard
         
         reviewPage = new ReviewExtractedItemsPage(client, new ExtractorProxy(importer), preferences,
                         Arrays.asList(new Extractor.InputFile(importer.getInputFile())), REVIEW_PAGE_ID);
+        reviewPage.setAccount(account);
         reviewPage.setDoExtractBeforeEveryPageDisplay(true);
         addPage(reviewPage);
 
@@ -114,7 +127,7 @@ public class CSVImportWizard extends Wizard
     @Override
     public boolean canFinish()
     {
-        return super.canFinish() && (target != null || getContainer().getCurrentPage() != definitionPage);
+        return super.canFinish() && (security != null || getContainer().getCurrentPage() != definitionPage);
     }
 
     @Override
@@ -140,14 +153,14 @@ public class CSVImportWizard extends Wizard
 
     private boolean importSecurityPrices()
     {
-        Security security = target != null ? target : selectSecurityPage.getSelectedSecurity();
+        Security s = security != null ? security : selectSecurityPage.getSelectedSecurity();
 
         List<SecurityPrice> prices = importer.createItems(new ArrayList<>()).get(0).getSecurity().getPrices();
 
         boolean isDirty = false;
         for (SecurityPrice p : prices)
         {
-            if (security.addPrice(p))
+            if (s.addPrice(p))
                 isDirty = true;
         }
         return isDirty;

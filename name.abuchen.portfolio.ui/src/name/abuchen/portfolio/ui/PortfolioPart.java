@@ -490,6 +490,11 @@ public class PortfolioPart implements LoadClientThread.Callback
         dirty.setDirty(true);
     }
 
+    public File getClientFileName()
+    {
+        return clientFile;
+    }
+
     @Inject
     @Optional
     public void onExchangeRatesLoaded(@UIEventTopic(UIConstants.Event.ExchangeRates.LOADED) Object obj)

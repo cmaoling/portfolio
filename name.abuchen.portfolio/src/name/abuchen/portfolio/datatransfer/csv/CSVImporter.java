@@ -599,6 +599,19 @@ public class CSVImporter
         this.setEncoding(Charset.forName(extractor.getDefaultEncoding()));
     }
 
+    public CSVExtractor setExtractor(String className)
+    {
+        for (CSVExtractor e : extractors)
+        {
+            if (e.getClass().getName().equals(className))
+            {
+                setExtractor(e);
+                return e;
+            }
+        }
+        return null;
+    }
+
     public CSVExtractor getExtractor()
     {
         return currentExtractor;
