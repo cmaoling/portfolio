@@ -36,9 +36,9 @@ public class DetectDuplicatesActionTest
     {
         DetectDuplicatesAction action = new DetectDuplicatesAction();
 
-        new PropertyChecker<AccountTransaction>(AccountTransaction.class, "note", "forex", "monetaryAmount", "peer")
-                        .before((name, o, c) -> assertThat(name, action.process(o, account(c)).getCode(),
-                                        is(Code.WARNING)))
+        new PropertyChecker<AccountTransaction>(AccountTransaction.class, "note", "peer", "forex", "monetaryAmount")
+                        .before((name, o, c) -> assertThat(name, action.process(o, account(c)).getCode(), is(Code.WARNING)))
+                        .intermediate((name, o, c) -> assertThat(name, action.process(o, account(c)).getCode(), is(Code.WARNING)))
                         .after((name, o, c) -> assertThat(name, action.process(o, account(c)).getCode(), is(Code.OK)))
                         .run();
     }
@@ -87,6 +87,7 @@ public class DetectDuplicatesActionTest
         private List<PropertyDescriptor> properties = new ArrayList<PropertyDescriptor>();
 
         private Consumer<T> before;
+        private Consumer<T> intermediate;
         private Consumer<T> after;
 
         public PropertyChecker(Class<T> type, String... excludes) throws IntrospectionException
@@ -113,6 +114,12 @@ public class DetectDuplicatesActionTest
             return this;
         }
 
+        public PropertyChecker<T> intermediate(Consumer<T> intermediate)
+        {
+            this.intermediate = intermediate;
+            return this;
+        }
+
         public PropertyChecker<T> after(Consumer<T> after)
         {
             this.after = after;
@@ -128,29 +135,43 @@ public class DetectDuplicatesActionTest
         private void check(PropertyDescriptor change) throws Exception
         {
             T instance = type.newInstance();
-            T other = type.newInstance();
+            T other    = type.newInstance();
+            T similar  = type.newInstance();
 
             for (PropertyDescriptor p : properties)
             {
                 Object argument = arg(p.getPropertyType());
                 p.getWriteMethod().invoke(instance, argument);
                 p.getWriteMethod().invoke(other, argument);
+                p.getWriteMethod().invoke(similar, argument);
             }
 
             before.accept(change.getName(), instance, other);
 
-            if (other instanceof AccountTransaction)
+            if (other instanceof AccountTransaction && change.getName().equals("type")) //$NON-NLS-1$
             {
-                AccountTransaction transaction = (AccountTransaction) other;
-                System.err.println(">>>> DetectDuplicates::check BEFORE transaction:" + transaction.getType().toString());
+                AccountTransaction beforeTransaction = (AccountTransaction) instance;
+                AccountTransaction afterTransaction;
+                do
+                {
+                    change.getWriteMethod().invoke(similar,
+                                    alternative(change.getPropertyType(), change.getReadMethod().invoke(similar)));
+                    afterTransaction = (AccountTransaction) similar;
+                } while ((beforeTransaction.getType().isCredit() != afterTransaction.getType().isCredit()) || (afterTransaction.getType().toString().equals(beforeTransaction.getType().toString())));
+                intermediate.accept(change.getName(), instance, similar);
+                do
+                {
+                    change.getWriteMethod().invoke(other,
+                                    alternative(change.getPropertyType(), change.getReadMethod().invoke(other)));
+                    afterTransaction = (AccountTransaction) other;
+                } while (beforeTransaction.getType().isCredit() == afterTransaction.getType().isCredit());
             }
-            change.getWriteMethod().invoke(other,
-                            alternative(change.getPropertyType(), change.getReadMethod().invoke(other)));
-
-            if (other instanceof AccountTransaction)
+            else
             {
-                AccountTransaction transaction = (AccountTransaction) other;
-                System.err.println(">>>> DetectDuplicates::check AFTER transaction:" + transaction.getType().toString());
+                if (other instanceof AccountTransaction)
+                    intermediate.accept(change.getName(), instance, similar);
+                change.getWriteMethod().invoke(other,
+                                alternative(change.getPropertyType(), change.getReadMethod().invoke(other)));
             }
 
             after.accept(change.getName(), instance, other);
