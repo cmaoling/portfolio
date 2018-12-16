@@ -619,6 +619,7 @@ public interface Extractor
      */
     List<Item> extract(List<InputFile> files, List<Exception> errors);
 
+    @SuppressWarnings("unchecked")
     default public <T extends Extractor> T getSubject()
     {
         return (T) this;
