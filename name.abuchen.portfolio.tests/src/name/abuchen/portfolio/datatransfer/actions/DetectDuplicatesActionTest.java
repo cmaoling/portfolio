@@ -139,8 +139,19 @@ public class DetectDuplicatesActionTest
 
             before.accept(change.getName(), instance, other);
 
+            if (other instanceof AccountTransaction)
+            {
+                AccountTransaction transaction = (AccountTransaction) other;
+                System.err.println(">>>> DetectDuplicates::check BEFORE transaction:" + transaction.getType().toString());
+            }
             change.getWriteMethod().invoke(other,
                             alternative(change.getPropertyType(), change.getReadMethod().invoke(other)));
+
+            if (other instanceof AccountTransaction)
+            {
+                AccountTransaction transaction = (AccountTransaction) other;
+                System.err.println(">>>> DetectDuplicates::check AFTER transaction:" + transaction.getType().toString());
+            }
 
             after.accept(change.getName(), instance, other);
         }
