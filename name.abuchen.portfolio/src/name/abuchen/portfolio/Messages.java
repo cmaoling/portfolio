@@ -124,7 +124,7 @@ public class Messages extends NLS
     public static String LabelJointPortfolio;
     public static String LabelNameReferenceAccountRecovered;
     public static String LabelNoAmount;
-    public static String LabelNoCalendarProvince;
+    public static String LabelApplyClientCalendar;
     public static String LabelNoCurrency;
     public static String LabelNoCurrencyCode;
     public static String LabelNoCurrencyDescription;

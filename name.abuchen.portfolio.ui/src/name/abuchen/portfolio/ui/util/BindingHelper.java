@@ -105,8 +105,8 @@ public class BindingHelper
         @Override
         public Object convert(Object fromObject)
         {
-            return fromObject == null ? TradeCalendarCode.getInstance("GERMANY") //$NON-NLS-1$
-                            : TradeCalendarCode.getInstance((String) fromObject);
+            return fromObject == null ? TradeCalendarCode.EMPTY : TradeCalendarCode.getInstance((String) fromObject);
+
         }
     }
 
@@ -127,7 +127,9 @@ public class BindingHelper
         @Override
         public Object convert(Object fromObject)
         {
-            return ((TradeCalendarCode) fromObject).getCalendarCode();
+            return (TradeCalendarCode.EMPTY.equals(fromObject) || fromObject == null) ? null
+                            : ((TradeCalendarCode) fromObject).getCalendarCode();
+
         }
     }
 
@@ -148,8 +150,7 @@ public class BindingHelper
         @Override
         public Object convert(Object fromObject)
         {
-            return fromObject == null ? TradeCalendarProvinceCode.EMPTY
-                            : TradeCalendarProvinceCode.getInstance((String) fromObject);
+            return fromObject;
         }
     }
 
@@ -170,8 +171,7 @@ public class BindingHelper
         @Override
         public Object convert(Object fromObject)
         {
-            return (TradeCalendarProvinceCode.EMPTY.equals(fromObject) || fromObject == null) ? null
-                            : ((TradeCalendarProvinceCode) fromObject).getCalendarProvinceCode();
+            return ((TradeCalendarProvinceCode) fromObject).getCalendarProvinceCode();
         }
     }
 
@@ -385,6 +385,7 @@ public class BindingHelper
         combo.setLabelProvider(new LabelProvider());
 
         List<TradeCalendarCode> calendar = new ArrayList<>();
+        calendar.add(TradeCalendarCode.EMPTY);
         calendar.addAll(TradeCalendarCode.getAvailableCalendar().stream().sorted().collect(Collectors.toList()));
         combo.setInput(calendar);
         GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.FILL).applyTo(combo.getControl());
@@ -411,7 +412,6 @@ public class BindingHelper
         combo.setLabelProvider(new LabelProvider());
 
         List<TradeCalendarProvinceCode> calendarProvince = new ArrayList<>();
-        calendarProvince.add(TradeCalendarProvinceCode.EMPTY);
         calendarProvince.addAll(TradeCalendarProvinceCode
                         .getAvailableCalendarProvinces(HolidayCalendar.valueOf(initialCalendar)).stream().sorted()
                         .collect(Collectors.toList()));
@@ -428,7 +428,7 @@ public class BindingHelper
         IObservableValue<?> observable = BeanProperties.value(property).observe(model);
         context.bindValue(ViewersObservables.observeSingleSelection(combo), observable, targetToModel, modelToTarget);
 
-        if (calendarProvince.size() == 1)
+        if (calendarProvince.isEmpty())
         {
             combo.setInput(null);
             combo.getControl().setEnabled(false);
