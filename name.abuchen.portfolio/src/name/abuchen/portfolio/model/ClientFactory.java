@@ -571,6 +571,7 @@ public class ClientFactory
                 introduceQuoteSuggestion4Transfer(client);
             case 38:
                 // added security exchange calendar
+                // added onlineId to security
                 // added DIVIDEND_CHARGE transaction type
             case 39:
                 // Introducing Peers
