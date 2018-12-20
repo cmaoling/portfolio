@@ -145,6 +145,9 @@ public class Messages extends NLS
     public static String LabelSecurity;
     public static String LabelStockRightReference;
     public static String LabelSuffixEntryCorrected;
+    public static String LabelTradeCalendarDefault;
+    public static String LabelTradeCalendarGermany;
+    public static String LabelTradeCalendarUseDefault;
     public static String LabelTransferAccount;
     public static String LabelTransferPortfolio;
     public static String LabelWithoutClassification;

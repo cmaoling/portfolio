@@ -14,6 +14,7 @@ import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.util.Dates;
 import name.abuchen.portfolio.util.TradeCalendar;
+import name.abuchen.portfolio.util.TradeCalendarManager;
 
 public class InvestmentPlan implements Named, Adaptable
 {
@@ -268,7 +269,8 @@ public class InvestmentPlan implements Named, Adaptable
         }
 
         // do not generate a investment plan transaction on a public holiday
-        TradeCalendar tradeCalendar = new TradeCalendar();
+        TradeCalendar tradeCalendar = security != null ? TradeCalendarManager.getInstance(security)
+                        : TradeCalendarManager.getDefaultInstance();
         while (tradeCalendar.isHoliday(next))
             next = next.plusDays(1);
 
@@ -282,7 +284,8 @@ public class InvestmentPlan implements Named, Adaptable
         if (lastDate == null)
         {
             // do not generate a investment plan transaction on a public holiday
-            TradeCalendar tradeCalendar = new TradeCalendar();
+            TradeCalendar tradeCalendar = security != null ? TradeCalendarManager.getInstance(security)
+                            : TradeCalendarManager.getDefaultInstance();
             while (tradeCalendar.isHoliday(startDate))
                 startDate = startDate.plusDays(1);
         }
