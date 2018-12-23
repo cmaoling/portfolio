@@ -5,6 +5,7 @@ import java.text.MessageFormat;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -33,10 +34,20 @@ public class TradeCalendarManager
     
             for (HolidayCalendar calendar : calendars)
             {
-                HolidayManager tradingDayManager = HolidayManager.getInstance(ManagerParameters.create(calendar));
-                String calendarCode = calendar.toString();
-                CACHE.put(calendarCode, new TradeCalendar(calendar.toString(),
-                                tradingDayManager.getCalendarHierarchy().getDescription(), tradingDayManager));
+                try
+                {
+                    HolidayManager tradingDayManager = HolidayManager.getInstance(ManagerParameters.create(calendar));
+                    String calendarCode = calendar.toString();
+                    CACHE.put(calendarCode, new TradeCalendar(calendar.toString(),
+                                    tradingDayManager.getCalendarHierarchy().getDescription(), tradingDayManager));
+                }
+                catch (MissingResourceException e)
+                {
+                    // for one reason or another, when running Surefire Tycho tests,
+                    // the resource bundles cannot be loaded by JollyDay
+
+                    PortfolioLog.error(e);
+                }
             }
     
             // load custom calendars
@@ -86,7 +97,8 @@ public class TradeCalendarManager
 
     public static TradeCalendar createEmpty()
     {
-        String description = MessageFormat.format(Messages.LabelTradeCalendarUseDefault, getDefaultInstance().getDescription());
+        String description = MessageFormat.format(Messages.LabelTradeCalendarUseDefault,
+                        getDefaultInstance().getDescription());
         return new TradeCalendar("", description, null); //$NON-NLS-1$
     }
 
