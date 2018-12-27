@@ -1,4 +1,4 @@
-package name.abuchen.portfolio.ui;
+package name.abuchen.portfolio.ui.jobs;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,6 +23,8 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.online.Factory;
 import name.abuchen.portfolio.online.EventFeed;
 import name.abuchen.portfolio.online.impl.HTMLTableEventFeed;
+import name.abuchen.portfolio.ui.Messages;
+import name.abuchen.portfolio.ui.PortfolioPlugin;
 
 public final class UpdateEventsJob extends AbstractClientJob
 {
