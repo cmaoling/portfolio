@@ -237,8 +237,6 @@ import name.abuchen.portfolio.ui.util.SimpleAction;
                         }
 
                         editor.markDirty();
-                        editor.notifyModelUpdated();
-
                     }
                 }
             }
