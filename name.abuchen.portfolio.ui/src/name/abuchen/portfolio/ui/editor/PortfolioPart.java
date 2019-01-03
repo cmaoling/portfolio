@@ -78,6 +78,9 @@ public class PortfolioPart implements ClientInputListener
     private Control focus;
 
     @Inject
+    MPart part;
+
+    @Inject
     MDirtyable dirty;
 
     @Inject
@@ -93,7 +96,7 @@ public class PortfolioPart implements ClientInputListener
     ClientInputFactory clientInputFactory;
 
     @PostConstruct
-    public void createComposite(Composite parent, MPart part)
+    public void createComposite(Composite parent)
     {
         // is client available? (e.g. via new file wizard)
         clientInput = (ClientInput) part.getTransientData().get(ClientInput.class.getName());
@@ -118,6 +121,7 @@ public class PortfolioPart implements ClientInputListener
             part.getPersistedState().put(UIConstants.File.PERSISTED_STATE_KEY, clientInput.getFile().getAbsolutePath());
 
         clientInput.addListener(this);
+        dirty.setDirty(clientInput.isDirty());
 
         if (clientInput.getClient() != null)
         {
@@ -315,7 +319,9 @@ public class PortfolioPart implements ClientInputListener
     @Override
     public void onSaved()
     {
-
+        part.getPersistedState().put(UIConstants.File.PERSISTED_STATE_KEY, clientInput.getFile().getAbsolutePath());
+        part.setLabel(clientInput.getLabel());
+        part.setTooltip(clientInput.getFile().getAbsolutePath());
     }
 
     @Override
@@ -323,7 +329,7 @@ public class PortfolioPart implements ClientInputListener
     {
         dirty.setDirty(isDirty);
 
-        if (view != null && view.getControl() != null && !view.getControl().isDisposed())
+        if (isDirty && view != null && view.getControl() != null && !view.getControl().isDisposed())
             view.notifyModelUpdated();
     }
 
@@ -341,15 +347,14 @@ public class PortfolioPart implements ClientInputListener
     }
 
     @Persist
-    public void save(MPart part, @Named(IServiceConstants.ACTIVE_SHELL) Shell shell)
+    public void save(@Named(IServiceConstants.ACTIVE_SHELL) Shell shell)
     {
-        this.clientInput.save();
-        // FIXME
+        this.clientInput.save(shell);
     }
 
-    public void doSaveAs(MPart part, Shell shell, String extension, String encryptionMethod) // NOSONAR
+    public void doSaveAs(Shell shell, String extension, String encryptionMethod)
     {
-        // FIXME
+        this.clientInput.doSaveAs(shell, extension, encryptionMethod);
     }
 
     public ClientInput getClientInput()
