@@ -3,9 +3,12 @@ package name.abuchen.portfolio.datatransfer.csv;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import name.abuchen.portfolio.Messages;
@@ -16,6 +19,7 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.money.CurrencyUnit;
 import name.abuchen.portfolio.money.Money;
 
@@ -168,5 +172,19 @@ import name.abuchen.portfolio.money.Money;
             throw new ParseException(MessageFormat.format(Messages.CSVImportMissingField, Messages.CSVColumn_Value), 0);
         String currencyCode = getCurrencyCode(Messages.CSVColumn_TransactionCurrency, rawValues, field2column);
         return Money.of(currencyCode, amount);
+    }
+
+    protected Optional<SecurityPrice> getSecurityPrice(String dateField, String[] rawValues,
+                    Map<String, Column> field2column) throws ParseException
+    {
+        Long amount = getQuote(Messages.CSVColumn_Quote, rawValues, field2column);
+        if (amount == null)
+            return Optional.empty();
+
+        LocalDateTime date = getDate(dateField, null, rawValues, field2column);
+        if (date == null)
+            date = LocalDate.now().atStartOfDay();
+
+        return Optional.of(new SecurityPrice(date.toLocalDate(), Math.abs(amount)));
     }
 }

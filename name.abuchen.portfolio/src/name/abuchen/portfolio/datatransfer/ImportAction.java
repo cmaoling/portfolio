@@ -10,6 +10,7 @@ import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.model.SecurityPrice;
 
 public interface ImportAction
 {
@@ -64,6 +65,11 @@ public interface ImportAction
     }
 
     default Status process(Security security)
+    {
+        return Status.OK_STATUS;
+    }
+
+    default Status process(Security security, SecurityPrice price)
     {
         return Status.OK_STATUS;
     }
