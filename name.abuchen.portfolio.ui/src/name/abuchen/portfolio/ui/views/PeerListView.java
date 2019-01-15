@@ -9,6 +9,7 @@ import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -46,7 +47,7 @@ import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransferDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.OpenDialogAction;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransactionDialog;
 import name.abuchen.portfolio.ui.editor.PortfolioPart;
-import name.abuchen.portfolio.ui.util.AbstractDropDown;
+import name.abuchen.portfolio.ui.util.DropDown;
 import name.abuchen.portfolio.ui.util.SimpleAction;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnEditingSupport;
@@ -110,14 +111,14 @@ public class PeerListView extends AbstractListView implements ModificationListen
     }
 
     @Override
-    protected void addButtons(ToolBar toolBar)
+    protected void addButtons(ToolBarManager manager)
     {
-        addNewButton(toolBar);
-        addFilterButton(toolBar);
-        addConfigButton(toolBar);
+        addNewButton(manager);
+        addFilterButton(manager);
+        addConfigButton(manager);
     }
 
-    private void addNewButton(ToolBar toolBar)
+    private void addNewButton(ToolBarManager manager)
     {
         SimpleAction.Runnable newPeerAction = a -> {
             Peer peer = new Peer();
@@ -130,15 +131,15 @@ public class PeerListView extends AbstractListView implements ModificationListen
             peers.editElement(peer, 0);
         };
 
-        AbstractDropDown.create(toolBar, Messages.MenuPeerAdd, Images.PLUS.image(), SWT.NONE,
-                        (dd, manager) -> {
+        manager.add(new DropDown(Messages.MenuPeerAdd, Images.PLUS, SWT.NONE,
+                        menuListener -> {
                             if (getClient().getPeers().findPeer(Iban.IBANNUMBER_DUMMY, true) == null)
-                                manager.add(new SimpleAction(Messages.MenuPeerAdd, newPeerAction));
-                        });
+                                menuListener.add(new SimpleAction(Messages.MenuPeerAdd, newPeerAction));
+                        }));
 
     }
 
-    private void addFilterButton(ToolBar toolBar)
+    private void addFilterButton(ToolBarManager manager)
     {
         Action filter = new Action()
         {
@@ -153,25 +154,20 @@ public class PeerListView extends AbstractListView implements ModificationListen
         };
         filter.setImageDescriptor(isFiltered ? Images.FILTER_ON.descriptor() : Images.FILTER_OFF.descriptor());
         filter.setToolTipText(Messages.PeerFilterAccounts);
-        new ActionContributionItem(filter).fill(toolBar, -1);
+        manager.add(filter);
     }
 
-    private void addConfigButton(final ToolBar toolBar)
+    private void addConfigButton(final ToolBarManager manager)
     {
-        new AbstractDropDown(toolBar, Messages.MenuShowHideColumns, Images.CONFIG.image(), SWT.NONE) // NOSONAR
-        {
-            @Override
-            public void menuAboutToShow(IMenuManager manager)
-            {
-                MenuManager m = new MenuManager(Messages.LabelPeers);
-                peerColumns.menuAboutToShow(m);
-                manager.add(m);
+        manager.add(new DropDown( Messages.MenuShowHideColumns, Images.CONFIG, SWT.NONE, mm -> {
+            MenuManager m = new MenuManager(Messages.LabelPeers);
+            peerColumns.menuAboutToShow(m);
+            mm.add(m);
 
-                m = new MenuManager(Messages.LabelTransactions);
-                transactionsColumns.menuAboutToShow(m);
-                manager.add(m);
-            }
-        };
+            m = new MenuManager(Messages.LabelTransactions);
+            transactionsColumns.menuAboutToShow(m);
+            mm.add(m);
+        }));
     }
 
     @Override

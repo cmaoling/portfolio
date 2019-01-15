@@ -12,9 +12,11 @@ import javax.inject.Inject;
 
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.ActionContributionItem;
+import org.eclipse.jface.action.ControlContribution;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -35,9 +37,9 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
 
 import com.ibm.icu.text.MessageFormat;
 
@@ -69,10 +71,10 @@ import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransactionDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransferDialog;
 import name.abuchen.portfolio.ui.editor.PortfolioPart;
 import name.abuchen.portfolio.ui.selection.SecuritySelection;
-import name.abuchen.portfolio.ui.util.AbstractDropDown;
 import name.abuchen.portfolio.ui.util.Colors;
 import name.abuchen.portfolio.ui.util.LabelOnly;
 import name.abuchen.portfolio.ui.util.ConfirmAction;
+import name.abuchen.portfolio.ui.util.DropDown;
 import name.abuchen.portfolio.ui.util.SWTHelper;
 import name.abuchen.portfolio.ui.util.SimpleAction;
 import name.abuchen.portfolio.ui.util.TableViewerCSVExporter;
@@ -99,11 +101,12 @@ import name.abuchen.portfolio.util.Dates;
 
 public class SecurityListView extends AbstractListView implements ModificationListener
 {
-    private class CreateSecurityDropDown extends AbstractDropDown
+    private class CreateSecurityDropDown extends DropDown implements IMenuListener
     {
-        public CreateSecurityDropDown(ToolBar toolBar)
+        public CreateSecurityDropDown()
         {
-            super(toolBar, Messages.SecurityMenuAddNewSecurity, Images.PLUS.image(), SWT.NONE);
+            super(Messages.SecurityMenuAddNewSecurity, Images.PLUS, SWT.NONE);
+            setMenuListener(this);
         }
 
         @Override
@@ -127,7 +130,8 @@ public class SecurityListView extends AbstractListView implements ModificationLi
             manager.add(new Separator());
 
             manager.add(new SimpleAction(Messages.SecurityMenuSearch4Securities, a -> {
-                SearchSecurityWizardDialog dialog = new SearchSecurityWizardDialog(getToolBar().getShell(), getClient());
+                SearchSecurityWizardDialog dialog = new SearchSecurityWizardDialog(
+                                Display.getDefault().getActiveShell(), getClient());
                 if (dialog.open() == Dialog.OK)
                     openEditDialog(dialog.getSecurity());
             }));
@@ -151,7 +155,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         }
     }
 
-    private class FilterDropDown extends AbstractDropDown
+    private class FilterDropDown extends DropDown implements IMenuListener
     {
         private final Predicate<Security> securityIsNotInactive = record -> !record.isRetired();
         private final Predicate<Security> onlySecurities = record -> !record.isExchangeRate();
@@ -159,9 +163,10 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         private final Predicate<Security> sharesGreaterZero = record -> getSharesHeld(getClient(), record) > 0;
         private final Predicate<Security> sharesEqualZero = record -> getSharesHeld(getClient(), record) == 0;
 
-        public FilterDropDown(ToolBar toolBar, IPreferenceStore preferenceStore)
+        public FilterDropDown(IPreferenceStore preferenceStore)
         {
-            super(toolBar, Messages.SecurityListFilter, Images.FILTER_OFF.image(), SWT.NONE);
+            super(Messages.SecurityListFilter, Images.FILTER_OFF, SWT.NONE);
+            setMenuListener(this);
 
             int savedFilters = preferenceStore.getInt(this.getClass().getSimpleName() + "-filterSettings"); //$NON-NLS-1$
 
@@ -177,9 +182,9 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 filter.add(sharesEqualZero);
 
             if (!filter.isEmpty())
-                getToolItem().setImage(Images.FILTER_ON.image());
+                setImage(Images.FILTER_ON);
 
-            toolBar.addDisposeListener(e -> {
+            addDisposeListener(e -> {
 
                 int savedFilter = 0;
                 if (filter.contains(securityIsNotInactive))
@@ -264,7 +269,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                             filter.remove(sharesEqualZero);
                     }
 
-                    getToolItem().setImage(filter.isEmpty() ? Images.FILTER_OFF.image() : Images.FILTER_ON.image());
+                    setImage(filter.isEmpty() ? Images.FILTER_OFF : Images.FILTER_ON);
                     securities.refresh();
                 }
             };
@@ -365,45 +370,56 @@ public class SecurityListView extends AbstractListView implements ModificationLi
     }
 
     @Override
-    protected void addButtons(ToolBar toolBar)
+    protected void addButtons(ToolBarManager toolBar)
     {
         addSearchButton(toolBar);
 
-        new ToolItem(toolBar, SWT.SEPARATOR | SWT.VERTICAL).setWidth(20);
+        toolBar.add(new Separator());
 
-        new CreateSecurityDropDown(toolBar);
-        new FilterDropDown(toolBar, getPreferenceStore());
+        toolBar.add(new CreateSecurityDropDown());
+        toolBar.add(new FilterDropDown(getPreferenceStore()));
         addExportButton(toolBar);
         addSaveButton(toolBar);
         addConfigButton(toolBar);
     }
 
-    private void addSearchButton(ToolBar toolBar)
+    private void addSearchButton(ToolBarManager toolBar)
     {
-        final Text search = new Text(toolBar, SWT.SEARCH | SWT.ICON_CANCEL);
-        search.setSize(100, SWT.DEFAULT);
-        search.setMessage(Messages.LabelSearch);
-
-        ToolItem toolItem = new ToolItem(toolBar, SWT.SEPARATOR);
-        toolItem.setWidth(search.getSize().x);
-        toolItem.setControl(search);
-
-        search.addModifyListener(e -> {
-            String filterText = search.getText().trim();
-            if (filterText.length() == 0)
+        toolBar.add(new ControlContribution("searchbox") //$NON-NLS-1$
+        {
+            @Override
+            protected Control createControl(Composite parent)
             {
-                filterPattern = null;
-                securities.refresh();
+                final Text search = new Text(parent, SWT.SEARCH | SWT.ICON_CANCEL);
+                search.setMessage(Messages.LabelSearch);
+                search.setSize(300, SWT.DEFAULT);
+
+                search.addModifyListener(e -> {
+                    String filterText = search.getText().trim();
+                    if (filterText.length() == 0)
+                    {
+                        filterPattern = null;
+                        securities.refresh();
+                    }
+                    else
+                    {
+                        filterPattern = Pattern.compile(".*" + filterText + ".*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$ //$NON-NLS-2$
+                        securities.refresh();
+                    }
+                });
+
+                return search;
             }
-            else
+
+            @Override
+            protected int computeWidth(Control control)
             {
-                filterPattern = Pattern.compile(".*" + filterText + ".*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$ //$NON-NLS-2$
-                securities.refresh();
+                return control.computeSize(100, SWT.DEFAULT, true).x;
             }
         });
     }
 
-    private void addExportButton(ToolBar toolBar)
+    private void addExportButton(ToolBarManager toolBar)
     {
         Action export = new Action()
         {
@@ -417,10 +433,10 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         export.setImageDescriptor(Images.EXPORT.descriptor());
         export.setToolTipText(Messages.MenuExportData);
 
-        new ActionContributionItem(export).fill(toolBar, -1);
+        toolBar.add(export);
     }
 
-    private void addSaveButton(ToolBar toolBar)
+    private void addSaveButton(ToolBarManager toolBar)
     {
         Action save = new Action()
         {
@@ -432,10 +448,11 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         };
         save.setImageDescriptor(Images.SAVE.descriptor());
         save.setToolTipText(Messages.MenuConfigureChart);
-        new ActionContributionItem(save).fill(toolBar, -1);
+
+        toolBar.add(save);
     }
 
-    private void addConfigButton(ToolBar toolBar)
+    private void addConfigButton(ToolBarManager toolBar)
     {
         Action config = new Action()
         {
@@ -448,7 +465,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         config.setImageDescriptor(Images.CONFIG.descriptor());
         config.setToolTipText(Messages.MenuShowHideColumns);
 
-        new ActionContributionItem(config).fill(toolBar, -1);
+        toolBar.add(config);
     }
 
     // //////////////////////////////////////////////////////////////
