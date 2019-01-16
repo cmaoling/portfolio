@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.eclipse.jface.action.Action;
@@ -118,14 +119,10 @@ public class AccountListView extends AbstractListView implements ModificationLis
         return Messages.LabelAccounts;
     }
 
-    @Override
-    public void init(PortfolioPart part, Object parameter)
+    @PostConstruct
+    public void setup()
     {
-        super.init(part, parameter);
-
-        this.part = part;
-
-        isFiltered = part.getPreferenceStore().getBoolean(FILTER_INACTIVE_ACCOUNTS);
+        isFiltered = getPreferenceStore().getBoolean(FILTER_INACTIVE_ACCOUNTS);
     }
 
     @Override

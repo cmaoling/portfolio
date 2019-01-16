@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IMenuManager;
@@ -88,12 +90,10 @@ public class PeerListView extends AbstractListView implements ModificationListen
         return Messages.LabelPeers;
     }
 
-    @Override
-    public void init(PortfolioPart part, Object parameter)
+    @PostConstruct
+    public void setup()
     {
-        super.init(part, parameter);
-
-        isFiltered = part.getPreferenceStore().getBoolean(FILTER_ACCOUNTS);
+        isFiltered = getPreferenceStore().getBoolean(FILTER_ACCOUNTS);
     }
     
     @Override
