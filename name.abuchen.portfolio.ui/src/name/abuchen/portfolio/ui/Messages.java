@@ -673,6 +673,7 @@ public class Messages extends NLS
     public static String MenuExportDiagram;
     public static String MenuGenerateTransaction;
     public static String MenuLabelSetAsStartPage;
+    public static String MenuNewDashboard;
     public static String MenuNewDashboardColumn;
     public static String MenuNewReportingPeriod;
     public static String MenuNewWidget;
