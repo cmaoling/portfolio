@@ -468,6 +468,7 @@ public class Messages extends NLS
     public static String LabelChartDetailSettingsShowMarkerLines;
     public static String LabelChartDetailSettingsShowDataLabel;
     public static String LabelChartDetailSettingsShowMissingTradingDays;
+    public static String LabelChartShowLabels;
     public static String LabelClientClearCustomItems;
     public static String LabelClientFilterDialogMessage;
     public static String LabelClientFilterDialogTitle;
@@ -534,9 +535,11 @@ public class Messages extends NLS
     public static String LabelPassword;
     public static String LabelPasswordRepeat;
     public static String LabelPeers;
-    public static String LabelPeformanceTTWROR;
+    public static String LabelPerformanceTTWROR;
     public static String LabelPerformanceCalculation;
     public static String LabelPerformanceChart;
+    public static String LabelPerformanceIRR;
+    public static String LabelPerformanceMetric;
     public static String LabelPortfolioPerformance;
     public static String LabelPortfolioPerformanceFile;
     public static String LabelPortfolios;

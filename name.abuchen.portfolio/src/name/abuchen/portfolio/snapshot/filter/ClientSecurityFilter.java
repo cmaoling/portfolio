@@ -15,6 +15,10 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Transaction.Unit;
 import name.abuchen.portfolio.model.TransactionPair;
 
+/**
+ * Creates a Client that does only contain the specified securities and their
+ * related transactions (buy, sell, deliveries, dividends, taxes, fees).
+ */
 public class ClientSecurityFilter implements ClientFilter
 {
     private final List<Security> securities;
