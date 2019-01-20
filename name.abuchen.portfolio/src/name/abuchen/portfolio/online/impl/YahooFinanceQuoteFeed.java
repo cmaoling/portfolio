@@ -19,9 +19,12 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-//import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -38,6 +41,7 @@ import name.abuchen.portfolio.model.Exchange;
 import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
+import name.abuchen.portfolio.model.SecurityProperty;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
 import name.abuchen.portfolio.util.Dates;
@@ -367,6 +371,24 @@ public class YahooFinanceQuoteFeed extends QuoteFeed
     {
         List<Exchange> answer = new ArrayList<>();
 
+        // This is not the best place to include the market information from
+        // portfolio-report.net, but for now the list of exchanges is only
+        // available for Yahoo search provider.
+
+        List<SecurityProperty> markets = subject.getProperties()
+                        .filter(p -> p.getType() == SecurityProperty.Type.MARKET).collect(Collectors.toList());
+
+        markets.stream().map(p -> {
+            Exchange exchange = new Exchange(p.getValue(), ExchangeLabels.getString("portfolio-report." + p.getName())); //$NON-NLS-1$
+            if ("XFRA".equals(p.getName())) //$NON-NLS-1$
+                exchange.setId(exchange.getId() + ".F"); //$NON-NLS-1$
+            return exchange;
+        }).forEach(answer::add);
+
+        Set<String> candidates = new HashSet<>();
+        answer.forEach(e -> candidates.add(e.getId()));
+
+        // add existing ticker symbol as well
         String symbol = subject.getTickerSymbol();
 
         // if symbol is null, return empty list
