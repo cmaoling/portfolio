@@ -335,7 +335,7 @@ public class SecuritiesChart
 
     private final void readChartConfig(Client client)
     {
-        String pref = client.getProperty(PREF_KEY);
+        String pref = ReadOnlyClient.unwrap(client).getProperty(PREF_KEY);
         if (pref == null)
             return;
 
