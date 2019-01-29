@@ -12,7 +12,7 @@ import org.jsoup.nodes.Element;
 
 import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.SecurityElement;
-import name.abuchen.portfolio.util.Strings;
+import name.abuchen.portfolio.util.TextUtil;
 
 public class HTMLTableQuoteParser extends HTMLTableParser
 {
@@ -77,7 +77,7 @@ public class HTMLTableQuoteParser extends HTMLTableParser
         public void setValue(Element value, Object obj, String languageHint) throws ParseException
         {
             LatestSecurityPrice price = (LatestSecurityPrice) obj;
-            String text = Strings.strip(value.text());
+            String text = TextUtil.strip(value.text());
             for (int ii = 0; ii < formatters.length; ii++)
             {
                 try

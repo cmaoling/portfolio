@@ -6,12 +6,14 @@ import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 import name.abuchen.portfolio.Messages;
+import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.PeerCache;
 import name.abuchen.portfolio.datatransfer.SecurityCache;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
@@ -70,13 +72,13 @@ import name.abuchen.portfolio.money.Money;
         peerCache     = new PeerCache(client);
         securityCache = new SecurityCache(client);
 
-        List<Item> results = new ArrayList<>();
+        List<Item> result = new ArrayList<>();
         int lineNo = 1 + skipLines; // +1 because of end user
         for (String[] strings : rawValues)
         {
             try
             {
-                extract(results, strings, field2column);
+                extract(result, strings, field2column);
             }
             catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
             {
@@ -85,13 +87,18 @@ import name.abuchen.portfolio.money.Money;
             lineNo++;
         }
 
-        results.addAll(peerCache.createMissingPeerItems(results));
-        results.addAll(securityCache.createMissingSecurityItems(results));
+        Map<Extractor, List<Item>> PeerItemsByExtractor = new HashMap<>();
+        PeerItemsByExtractor.put(this, result);
+        peerCache.addMissingPeerItems(PeerItemsByExtractor);
+
+        Map<Extractor, List<Item>> SecurityItemsByExtractor = new HashMap<>();
+        SecurityItemsByExtractor.put(this, result);
+        securityCache.addMissingSecurityItems(SecurityItemsByExtractor);
 
         peerCache = null;
         securityCache = null;
 
-        return results;
+        return result;
     }
 
     /* package */ abstract void extract(List<Item> items, String[] rawValues, Map<String, Column> field2column)

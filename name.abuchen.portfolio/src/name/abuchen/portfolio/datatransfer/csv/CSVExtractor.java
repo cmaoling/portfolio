@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.Extractor;
+import name.abuchen.portfolio.datatransfer.SecurityCache;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.FieldFormat;
@@ -43,13 +44,7 @@ public abstract class CSVExtractor implements Extractor
                     List<Exception> errors);
 
     @Override
-    public String getFilterExtension()
-    {
-        return "*.csv"; //$NON-NLS-1$
-    }
-
-    @Override
-    public List<Item> extract(List<Extractor.InputFile> files, List<Exception> errors)
+    public List<Item> extract(SecurityCache securityCache, Extractor.InputFile file, List<Exception> errors)
     {
         throw new UnsupportedOperationException();
     }

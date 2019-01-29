@@ -11,6 +11,7 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.graphics.Image;
 
 import name.abuchen.portfolio.datatransfer.Extractor;
+import name.abuchen.portfolio.datatransfer.SecurityCache;
 import name.abuchen.portfolio.datatransfer.actions.InsertAction;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter;
 import name.abuchen.portfolio.model.Account;
@@ -40,13 +41,13 @@ public class CSVImportWizard extends Wizard
         }
 
         @Override
-        public String getFilterExtension()
+        public List<Item> extract(SecurityCache securityCache, Extractor.InputFile file, List<Exception> errors)
         {
-            return this.importer.getExtractor().getFilterExtension();
+            return this.importer.createItems(errors);
         }
 
         @Override
-        public List<Item> extract(List<Extractor.InputFile> files, List<Exception> errors)
+        public List<Item> extract(List<InputFile> file, List<Exception> errors)
         {
             return this.importer.createItems(errors);
         }

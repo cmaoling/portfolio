@@ -30,13 +30,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
-<<<<<<< HEAD
-import name.abuchen.portfolio.util.Strings;
-=======
-import name.abuchen.portfolio.online.impl.variableurl.Factory;
-import name.abuchen.portfolio.online.impl.variableurl.urls.VariableURL;
 import name.abuchen.portfolio.util.TextUtil;
->>>>>>> 097aee45... Refactored two text/string related utility classes into one
 
 public class HTMLTableQuoteFeed extends QuoteFeed
 {
