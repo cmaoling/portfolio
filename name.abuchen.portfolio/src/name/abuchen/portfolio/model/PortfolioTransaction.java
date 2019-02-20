@@ -1,6 +1,7 @@
 package name.abuchen.portfolio.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -118,10 +119,8 @@ public class PortfolioTransaction extends Transaction
             BigDecimal exchangeRate = grossValue.isPresent() ? grossValue.get().getExchangeRate()
                             : converter.getRate(getDateTime(), getCurrencyCode()).getValue();
 
-            return Money.of(converter.getTermCurrency(),
-                            BigDecimal.ONE.divide(exchangeRate, 10, BigDecimal.ROUND_HALF_DOWN)
-                                            .multiply(BigDecimal.valueOf(getAmount()))
-                                            .setScale(0, BigDecimal.ROUND_HALF_DOWN).longValue());
+            return Money.of(converter.getTermCurrency(), BigDecimal.ONE.divide(exchangeRate, 10, RoundingMode.HALF_DOWN)
+                            .multiply(BigDecimal.valueOf(getAmount())).setScale(0, RoundingMode.HALF_DOWN).longValue());
         }
         else
         {

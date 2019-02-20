@@ -1,6 +1,7 @@
 package name.abuchen.portfolio.online.impl;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
@@ -35,7 +36,7 @@ public /* package */class YahooHelper
         if (isNotApplicable(s))
             return -1;
         BigDecimal v = (BigDecimal) FMT_PRICE.get().parse(s);
-        return v.multiply(Values.Quote.getBigDecimalFactor()).setScale(0, BigDecimal.ROUND_HALF_UP).longValue();
+        return v.multiply(Values.Quote.getBigDecimalFactor()).setScale(0, RoundingMode.HALF_UP).longValue();
     }
 
     static double asDouble(String s) throws ParseException
