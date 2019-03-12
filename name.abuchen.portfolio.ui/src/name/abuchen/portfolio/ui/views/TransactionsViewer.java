@@ -37,7 +37,6 @@ import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.model.TransactionPair;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
-import name.abuchen.portfolio.ui.AbstractFinanceView;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionDialog;
@@ -45,6 +44,7 @@ import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransferDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.OpenDialogAction;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransactionDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransferDialog;
+import name.abuchen.portfolio.ui.editor.AbstractFinanceView;
 import name.abuchen.portfolio.ui.util.BookmarkMenu;
 import name.abuchen.portfolio.ui.util.Colors;
 import name.abuchen.portfolio.ui.util.viewers.Column;
@@ -60,6 +60,7 @@ import name.abuchen.portfolio.ui.util.viewers.TransactionTypeEditingSupport;
 import name.abuchen.portfolio.ui.util.viewers.ValueEditingSupport;
 import name.abuchen.portfolio.ui.views.actions.ConvertBuySellToDeliveryAction;
 import name.abuchen.portfolio.ui.views.actions.ConvertDeliveryToBuySellAction;
+import name.abuchen.portfolio.util.TextUtil;
 
 public final class TransactionsViewer implements ModificationListener
 {
@@ -335,6 +336,12 @@ public final class TransactionsViewer implements ModificationListener
             {
                 String note = ((Transaction) e).getNote();
                 return note != null && note.length() > 0 ? Images.NOTE.image() : null;
+            }
+
+            @Override
+            public String getToolTipText(Object e)
+            {
+                return TextUtil.wordwrap(getText(e));
             }
         });
         ColumnViewerSorter.create(Transaction.class, "note").attachTo(column); //$NON-NLS-1$

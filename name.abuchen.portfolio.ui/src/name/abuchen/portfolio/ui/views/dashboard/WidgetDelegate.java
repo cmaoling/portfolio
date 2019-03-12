@@ -58,7 +58,7 @@ public abstract class WidgetDelegate<D>
 
     public <C extends WidgetConfig> Optional<C> optionallyGet(Class<C> type)
     {
-        return config.stream().filter(c -> type.equals(c.getClass())).findAny().map(e -> type.cast(e));
+        return config.stream().filter(c -> type.equals(c.getClass())).findAny().map(type::cast);
     }
 
     public Stream<WidgetConfig> getWidgetConfigs()
@@ -67,14 +67,6 @@ public abstract class WidgetDelegate<D>
     }
 
     public abstract Composite createControl(Composite parent, DashboardResources resources);
-
-    /**
-     * Marks the file as dirty <b>without</b> triggering an update.
-     */
-    public final void markDirty()
-    {
-        getDashboardData().markDirty();
-    }
 
     /**
      * Immediately updates the widget with the data of the update task. Calls

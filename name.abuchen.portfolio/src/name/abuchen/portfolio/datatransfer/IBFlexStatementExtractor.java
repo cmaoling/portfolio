@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -47,12 +49,14 @@ import name.abuchen.portfolio.online.impl.YahooFinanceQuoteFeed;
 @SuppressWarnings("nls")
 public class IBFlexStatementExtractor implements Extractor
 {
+    private final Client client;
     private List<Security> allSecurities;
 
     private Map<String, String> exchanges;
 
     public IBFlexStatementExtractor(Client client)
     {
+        this.client = client;
         allSecurities = new ArrayList<>(client.getSecurities());
 
         // Maps Interactive Broker Exchange to Yahoo Exchanges, to be completed
@@ -67,6 +71,11 @@ public class IBFlexStatementExtractor implements Extractor
         this.exchanges.put("TGATE", "DE");
         this.exchanges.put("SWB", "SG");
         this.exchanges.put("FWB", "F");
+    }
+
+    public Client getClient()
+    {
+        return client;
     }
 
     private LocalDateTime convertDate(String date) throws DateTimeParseException
@@ -98,6 +107,7 @@ public class IBFlexStatementExtractor implements Extractor
         try
         {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            dbFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(f);
 
@@ -132,29 +142,19 @@ public class IBFlexStatementExtractor implements Extractor
     }
 
     @Override
-    public String getFilterExtension()
+    public List<Item> extract(SecurityCache securityCache, Extractor.InputFile inputFile, List<Exception> errors)
     {
-        return "*.xml"; //$NON-NLS-1$
-    }
-
-    @Override
-    public List<Item> extract(List<Extractor.InputFile> files, List<Exception> errors)
-    {
-        List<Item> results = new ArrayList<>();
-        for (Extractor.InputFile f : files)
+        try (FileInputStream in = new FileInputStream(inputFile.getFile()))
         {
-            try (FileInputStream in = new FileInputStream(f.getFile()))
-            {
-                IBFlexStatementExtractorResult result = importActivityStatement(in);
-                errors.addAll(result.getErrors());
-                results.addAll(result.getResults());
-            }
-            catch (IOException e)
-            {
-                errors.add(e);
-            }
+            IBFlexStatementExtractorResult result = importActivityStatement(in);
+            errors.addAll(result.getErrors());
+            return result.getResults();
         }
-        return results;
+        catch (IOException e)
+        {
+            errors.add(e);
+            return Collections.emptyList();
+        }
     }
 
     private class IBFlexStatementExtractorResult
@@ -430,7 +430,7 @@ public class IBFlexStatementExtractor implements Extractor
                 {
                     fxRateToBase = new BigDecimal(1);
                 }
-                BigDecimal inverseRate = BigDecimal.ONE.divide(fxRateToBase, 10, BigDecimal.ROUND_HALF_DOWN);
+                BigDecimal inverseRate = BigDecimal.ONE.divide(fxRateToBase, 10, RoundingMode.HALF_DOWN);
 
                 BigDecimal baseCurrencyMoney = BigDecimal.valueOf(amount.doubleValue() * Values.Amount.factor())
                                 .divide(inverseRate, RoundingMode.HALF_DOWN);

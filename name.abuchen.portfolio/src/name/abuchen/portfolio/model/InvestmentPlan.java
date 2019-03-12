@@ -13,6 +13,7 @@ import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.util.Dates;
 import name.abuchen.portfolio.util.TradeCalendar;
+import name.abuchen.portfolio.util.TradeCalendarManager;
 
 public class InvestmentPlan implements Named, Adaptable
 {
@@ -225,7 +226,7 @@ public class InvestmentPlan implements Named, Adaptable
         // the transaction date might be edited (or moved to the next months b/c
         // of public holidays) -> determine the "normalized" date by comparing
         // the three months around the current transactionDate
-        
+
         if (transactionDate.getDayOfMonth() != start.getDayOfMonth())
         {
             int daysBetween = Integer.MAX_VALUE;
@@ -253,13 +254,15 @@ public class InvestmentPlan implements Named, Adaptable
         // 31st, but the month has only 30 days)
         next = next.withDayOfMonth(Math.min(next.lengthOfMonth(), start.getDayOfMonth()));
 
-        if (next.isBefore(start.toLocalDate())) {
+        if (next.isBefore(start.toLocalDate()))
+        {
             // start date was recently changed, use this value instead
             next = start.toLocalDate();
         }
-        
+
         // do not generate a investment plan transaction on a public holiday
-        TradeCalendar tradeCalendar = new TradeCalendar();
+        TradeCalendar tradeCalendar = security != null ? TradeCalendarManager.getInstance(security)
+                        : TradeCalendarManager.getDefaultInstance();
         while (tradeCalendar.isHoliday(next))
             next = next.plusDays(1);
 
@@ -269,7 +272,17 @@ public class InvestmentPlan implements Named, Adaptable
     public LocalDate getDateOfNextTransactionToBeGenerated()
     {
         LocalDate lastDate = getLastDate();
-        return lastDate != null ? next(lastDate) : start.toLocalDate();
+        LocalDate startDate = start.toLocalDate();
+        if (lastDate == null)
+        {
+            // do not generate a investment plan transaction on a public holiday
+            TradeCalendar tradeCalendar = security != null ? TradeCalendarManager.getInstance(security)
+                            : TradeCalendarManager.getDefaultInstance();
+            while (tradeCalendar.isHoliday(startDate))
+                startDate = startDate.plusDays(1);
+        }
+
+        return lastDate != null ? next(lastDate) : startDate;
     }
 
     public List<Transaction> generateTransactions(CurrencyConverter converter)
@@ -295,7 +308,7 @@ public class InvestmentPlan implements Named, Adaptable
     private Transaction createTransaction(CurrencyConverter converter, LocalDate tDate)
     {
         Class<? extends Transaction> planType = getPlanType();
-        
+
         if (planType == PortfolioTransaction.class)
             return createSecurityTx(converter, tDate);
         else if (planType == AccountTransaction.class)

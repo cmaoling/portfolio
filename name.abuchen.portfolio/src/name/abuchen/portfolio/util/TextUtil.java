@@ -7,6 +7,8 @@ import java.util.regex.Pattern;
 
 public final class TextUtil
 {
+    public static final String PARAGRAPH_BREAK = "\n\n"; //$NON-NLS-1$
+
     private TextUtil()
     {}
 
@@ -26,8 +28,13 @@ public final class TextUtil
             if (wrapped.length() > 0)
                 wrapped.append("\n"); //$NON-NLS-1$
 
-            String substring = raw.substring(m.start(), m.end());
-            wrapped.append(substring.replaceAll("&", "&&")); //$NON-NLS-1$ //$NON-NLS-2$
+            String fragment = raw.substring(m.start(), m.end());
+
+            // if fragment includes a line-break, do not add another one
+            if (fragment.length() > 0 && fragment.charAt(fragment.length() - 1) == '\n')
+                fragment = fragment.substring(0, fragment.length() - 1);
+
+            wrapped.append(fragment.replaceAll("&", "&&")); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         // remove added character needed to create a word boundary
@@ -58,5 +65,29 @@ public final class TextUtil
         filename = filename.replaceAll("[\\?\\\\/:|<>\\*]", " "); //$NON-NLS-1$ //$NON-NLS-2$
         filename = filename.replaceAll("\\s+", "_"); //$NON-NLS-1$ //$NON-NLS-2$
         return filename;
+    }
+
+    /**
+     * Since {@see String#trim} does not trim all whitespace and space
+     * characters, this is an alternative implementation. Inspired by the blog
+     * post at http://closingbraces.net/2008/11/11/javastringtrim/
+     */
+    public static String strip(String value)
+    {
+        int len = value.length();
+        int st = 0;
+
+        while ((st < len) && (Character.isWhitespace(value.charAt(st)) || Character.isSpaceChar(value.charAt(st))))
+        {
+            st++;
+        }
+
+        while ((st < len) && (Character.isWhitespace(value.charAt(len - 1))
+                        || Character.isSpaceChar(value.charAt(len - 1))))
+        {
+            len--;
+        }
+        return ((st > 0) || (len < value.length())) ? value.substring(st, len) : value;
+
     }
 }

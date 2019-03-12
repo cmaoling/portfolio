@@ -1,6 +1,5 @@
 package name.abuchen.portfolio.datatransfer.pdf;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,11 +18,12 @@ import name.abuchen.portfolio.money.Money;
 public class OnvistaPDFExtractor extends AbstractPDFExtractor
 {
 
-    public OnvistaPDFExtractor(Client client) throws IOException
+    public OnvistaPDFExtractor(Client client)
     {
         super(client);
 
         addBankIdentifier(""); //$NON-NLS-1$
+        addBankIdentifier("onvista bank"); //$NON-NLS-1$
 
         addBuyTransaction();
         addSellTransaction();
@@ -38,9 +38,11 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
         addRemoveDididendRightsTransaction();
         addExchangeTransaction();
         addCompensationTransaction();
+        addFusionTransaction();
         addDepositTransaction();
         addAccountStatementTransaction();
         addAccountStatementTransaction2017();
+        addRegistrationFeeTransaction();
     }
 
     private void addBuyTransaction()
@@ -81,8 +83,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                         })
 
                         .section("date", "time", "amount", "currency") //
-                        .match("Handelstag (?<date>\\d+.\\d+.\\d{4}+) (.*)")
-                        .match("Handelszeit (?<time>\\d+:\\d+)(.*)")
+                        .match("Handelstag (?<date>\\d+.\\d+.\\d{4}+) (.*)").match("Handelszeit (?<time>\\d+:\\d+)(.*)")
                         .find("Wert(\\s+)Konto-Nr. Betrag zu Ihren Lasten(\\s*)$")
                         // 14.01.2015 172306238 EUR 59,55
                         // Wert Konto-Nr. Betrag zu Ihren Lasten
@@ -95,7 +96,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                         })
 
                         .wrap(BuySellEntryItem::new);
-        
+
         addFeesSectionsTransaction(pdfTransaction);
     }
 
@@ -136,7 +137,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                         })
 
                         .section("date", "time", "amount", "currency") //
-                        .match("Handelstag (?<date>\\d+.\\d+.\\d{4}+) (.*)")
+                        .match("Handelstag (?<date>\\d+.\\d+.\\d{4}+) (.*)") //
                         .match("Handelszeit (?<time>\\d+:\\d+)(.*)")
                         .find("Wert(\\s+)Konto-Nr. Betrag zu Ihren Gunsten(\\s*)$")
                         .match("(\\d+.\\d+.\\d{4}+) (\\d{6,12}) (?<currency>\\w{3}+) (?<amount>\\d{1,3}(\\.\\d{3})*(,\\d{2})?)")
@@ -264,8 +265,10 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
         this.addDocumentTyp(type);
 
         // Erträgnisgutschrift allein ist nicht gut hier, da es schon in der
-        // Kopfzeile steht..
-        Block block = new Block("Dividendengutschrift.*|Kupongutschrift.*|Erträgnisgutschrift.*(\\d+.\\d+.\\d{4})");
+        // Kopfzeile steht. In neuen Dokumenten steht "Erträgnisgutschrift"
+        // alleine auf einer Zeile
+        Block block = new Block(
+                        "Dividendengutschrift.*|Kupongutschrift.*|Erträgnisgutschrift.*(\\d+.\\d+.\\d{4})|Erträgnisgutschrift");
         type.addBlock(block);
 
         Transaction<AccountTransaction> pdfTransaction = new Transaction<>();
@@ -774,11 +777,149 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
 
         addFeesSectionsTransaction(pdfTransaction);
     }
+    
+    private void addFusionTransaction()
+    {
+        DocumentType type = new DocumentType("Fusion");
+        this.addDocumentTyp(type);
+
+        Block block = new Block("(Aus|Ein)buchung:(.*)");
+        type.addBlock(block);
+
+        Transaction<PortfolioTransaction> pdfTransaction = new Transaction<>();
+        pdfTransaction.subject(() -> {
+            PortfolioTransaction entry = new PortfolioTransaction();
+            entry.setType(PortfolioTransaction.Type.DELIVERY_OUTBOUND);
+            return entry;
+        });
+
+        block.set(pdfTransaction);
+
+        pdfTransaction.section("name", "isin") //
+                        .find("Gattungsbezeichnung ISIN") //
+                        .match("(?<name>.*) (?<isin>[^ ]\\S*)$") //
+                        .assign((t, v) -> {
+                            t.setSecurity(getOrCreateSecurity(v));
+                        })
+
+                        .section("transactiontype") //
+                        .match("^(?<transactiontype>.*buchung:)(.*)") //
+                        .assign((t, v) -> {
+                            String transactiontype = v.get("transactiontype");
+                            if ("Einbuchung:".equalsIgnoreCase(transactiontype))
+                            {
+                                t.setType(PortfolioTransaction.Type.DELIVERY_INBOUND);
+                            }
+                            else if ("Ausbuchung:".equalsIgnoreCase(transactiontype))
+                            {
+                                t.setType(PortfolioTransaction.Type.DELIVERY_OUTBOUND);
+                            }
+                            else
+                            {
+                                // TODO: evtl. Warnung/Hinweis ausgeben?
+                            }
+                        })
+                        
+                        .section("date").optional()
+                        .find("(.*)(Schlusstag|Ex-Tag)")
+                        .match("(.*)(?<date>\\d+.\\d+.\\d{4}+)") //
+                        .assign((t, v) -> {
+                            t.setDateTime(asDate(v.get("date")));
+                            type.getCurrentContext().put("date", v.get("date"));
+                        })
+                        
+                        // Nominal Ex-Tag
+                        // STK 12,000 04.07.2017
+                        .section("notation", "shares") //
+                        .find("Nominal(.*)")
+                        .match("(?<notation>^\\w{3}+) (?<shares>\\d{1,3}(\\.\\d{3})*(,\\d{3,})?)(.*)") //
+                        .assign((t, v) -> {
+                            String notation = v.get("notation");
+                            if (notation != null && !notation.equalsIgnoreCase("STK"))
+                            {
+                                // Prozent-Notierung, Workaround..
+                                t.setShares((asShares(v.get("shares")) / 100));
+                            }
+                            else
+                            {
+                                t.setShares(asShares(v.get("shares")));
+                            }
+                            t.setCurrencyCode(asCurrencyCode(t.getSecurity().getCurrencyCode()));
+                            if (t.getDateTime() == null) 
+                            {
+                                t.setDateTime(asDate(type.getCurrentContext().get("date")));
+                            }
+                        })
+
+                        .wrap(TransactionItem::new);
+
+        addTaxesSectionsTransaction(pdfTransaction);
+        addTaxBlock(type);
+    }
+    
+    private void addRegistrationFeeTransaction()
+    {
+        DocumentType type = new DocumentType("Registrierung");
+        this.addDocumentTyp(type);
+
+        Block block = new Block("Registrierungsgeb.*(\\d+.\\d+.\\d{4})");
+        type.addBlock(block);
+
+        Transaction<AccountTransaction> pdfTransaction = new Transaction<>();
+        pdfTransaction.subject(() -> {
+            AccountTransaction transaction = new AccountTransaction();
+            transaction.setType(AccountTransaction.Type.FEES);
+            return transaction;
+        });
+
+        block.set(pdfTransaction);
+        pdfTransaction
+
+                        .section("name", "isin") //
+                        .find("Gattungsbezeichnung(.*) ISIN")
+                        // Vonovia SE Namens-Aktien o.N. DE000A1ML7J1
+                        .match("(?<name>.*?) (?<isin>[^ ]\\S*)$") //
+                        .assign((t, v) -> t.setSecurity(getOrCreateSecurity(v)))
+
+                        // Nominal Schlusstag
+                        //STK 6,000 22.07.2017
+                        .section("notation", "shares")
+                        .find("Nominal(.*)")
+                        .match("(?<notation>^\\w{3}+) (?<shares>[\\d.]+(,\\d{3,})?)(.*)")
+                        .assign((t, v) -> {
+                            String notation = v.get("notation");
+                            if (notation != null && !"STK".equalsIgnoreCase(notation))
+                            {
+                                // Prozent-Notierung, Workaround..
+                                t.setShares(asShares(v.get("shares")) / 100);
+                            }
+                            else
+                            {
+                                t.setShares(asShares(v.get("shares")));
+                            }
+                        })
+                        
+                        //Registrierungsgebühr EUR 0,75-
+                        //Dt. Umsatzsteuer EUR 0,14-
+                        //Wert Konto-Nr. Betrag zu Ihren Lasten
+                        //24.07.2017 172406048 EUR 0,89
+                        .section("date", "currency", "amount")
+                        .find("Wert(\\s*)Konto-Nr. Betrag zu Ihren Lasten(\\s*)$")
+                        .match("(?<date>\\d+.\\d+.\\d{4}+) (\\d{6,12}) (?<currency>\\w{3}+) (?<amount>\\d{1,3}(\\.\\d{3})*(,\\d{2})?)")
+                        .assign((t, v) -> {
+                            t.setDateTime(asDate(v.get("date")));
+                            t.setAmount(asAmount(v.get("amount")));
+                            t.setCurrencyCode(asCurrencyCode(v.get("currency")));
+                            //t.setNote(note);
+                        })
+
+                        .wrap(TransactionItem::new);
+    }
 
     private void addDepositTransaction()
     {
         final DocumentType type = new DocumentType("Depotauszug", (context, lines) -> {
-            Pattern pDate = Pattern.compile("Depotauszug per (\\d+.\\d+.\\d{4}+)?(.*)");
+            Pattern pDate = Pattern.compile(".*epotauszug per (\\d+.\\d+.\\d{4}+)?(.*)");
             Pattern pCurrency = Pattern.compile("(.*)Bewertung in[ ]+(\\w{3}+)");
             // read the current context here
             for (String line : lines)
@@ -833,15 +974,39 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                         .section("nameP3").optional() //
                         .find("(^\\w{3}+) (\\d{1,3}(\\.\\d{3})*(,\\d{3})?) (.*)")
                         // Inhaber-Vorzugsakti
-                        .match("^(?<nameP3>^.*?)(\\s*)")
+                        .match("(?<nameP3>^[A-Za-z-]*)(\\s*)")
                         .assign((t, v) -> type.getCurrentContext().put("nameP3", v.get("nameP3")))
 
-                        .section("nameP2", "isin").optional()
-                        // Holding SE DE000PAH0038 Girosammelverwahrung 59,3400
-                        .match("(?<nameP2>.* )(?<isin>\\w{12}+) (.*)").assign((t, v) -> {
-                            type.getCurrentContext().put("nameP2", v.get("nameP2"));
-                            type.getCurrentContext().put("isin", v.get("isin"));
-                        })
+                        .oneOf(
+                                        section -> section.attributes("nameP2", "isin")
+                                        // Holding SE DE000PAH0038 Girosammelverwahrung 59,3400
+                                        .match("(?<nameP2>.* )(?<isin>\\w{12}+) (.*)")
+                                        .assign((t, v) -> {
+                                            type.getCurrentContext().put("nameP2", v.get("nameP2"));
+                                            type.getCurrentContext().put("isin", v.get("isin"));
+                                        })
+                        ,
+                                        //Format für neuere Depotauszuege...
+                                        section -> section.attributes("notation", "shares", "nameP1", "isin")
+                                        // STK 6,000 Vonovia SE Namens-Aktien o.N.                          D   E  000A1ML7J1 Girosammelverwahrung 39,5600 EUR 237,36 0,00 
+                                        .match("(?<notation>^\\w{3}+) (?<shares>\\d{1,3}(\\.\\d{3})*(,\\d{3,})?)(?<nameP1>((?:\\S|\\s(?!\\s))*))(\\s)(?<isin>.*)(\\s)(Girosammelverwahrung|Wertpapierrechnung)(.*)")
+                                        .assign((t, v) -> {
+                                            type.getCurrentContext().put("nameP1", v.get("nameP1"));
+                                            type.getCurrentContext().put("isin",  v.get("isin").replaceAll("\\s", ""));
+                                            
+                                            String notation = v.get("notation");
+                                            if (notation != null && !notation.equalsIgnoreCase("STK"))
+                                            {
+                                                // Prozent-Notierung, Workaround..
+                                                t.setShares((asShares(v.get("shares")) / 100));
+                                            }
+                                            else
+                                            {
+                                                t.setShares(asShares(v.get("shares")));
+                                            }
+                                            v.put("isin", v.get("isin").replaceAll("\\s", ""));
+                                        })
+                        )
 
                         .section("nameP4").optional().find("^(.*) (\\w{12}+) (.*)")
                         // en o.St.o.N
@@ -851,11 +1016,17 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                         .section("combine") //
                         .match("(?<combine>.*)") //
                         .assign((t, v) -> {
-                            String name = type.getCurrentContext().get("nameP1")
-                                            + type.getCurrentContext().get("nameP2")
-                                            + type.getCurrentContext().get("nameP3")
-                                            + type.getCurrentContext().get("nameP4");
                             v.put("isin", type.getCurrentContext().get("isin"));
+                            
+                            StringBuilder sbName = new StringBuilder(type.getCurrentContext().get("nameP1"));
+                            for (int i=2; i<=4;i++)  
+                            {
+                                if (type.getCurrentContext().get("nameP" + i) != null) 
+                                {
+                                    sbName.append(type.getCurrentContext().get("nameP" + i));
+                                }   
+                            }
+                            String name = sbName.toString();
                             if (name.indexOf(v.get("isin")) > -1)
                             {
                                 name = name.substring(0, name.indexOf(v.get("isin")));
@@ -909,7 +1080,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
             }
         });
         this.addDocumentTyp(type);
-        
+
         // 31.10. 31.10. REF: 000017304356 37,66
         Block block = new Block("^\\d+\\.\\d+\\.\\s+\\d+\\.\\d+\\.\\s+REF:\\s+\\d+\\s+[\\d.-]+,\\d+[+-]?(.*)");
         type.addBlock(block);
@@ -985,14 +1156,15 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                                             && t.getType() != AccountTransaction.Type.BUY
                                             && t.getType() != AccountTransaction.Type.SELL
                                             && t.getType() != AccountTransaction.Type.TAX_REFUND)
-                                                return new TransactionItem(t);
+                                return new TransactionItem(t);
                             return null;
                         });
     }
 
     private void addAccountStatementTransaction2017()
     {
-        // this seems to be the new format of account statements from the year 2017
+        // this seems to be the new format of account statements from the year
+        // 2017
         final DocumentType type = new DocumentType("Kontoauszug Nr.", (context, lines) -> {
             Pattern pYear = Pattern.compile("^Kontoauszug Nr. (\\d{4}) / .*\\.(\\d{4})$");
             Pattern pCurrency = Pattern.compile("^(\\w{3}+) - Verrechnungskonto: .*$");
@@ -1092,7 +1264,7 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                             return null;
                         });
     }
-    
+
     private <T extends Transaction<?>> void addTaxesSectionsTransaction(T pdfTransaction)
     {
         pdfTransaction.section("tax", "withheld", "sign").optional() //
@@ -1234,7 +1406,8 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
 
                         .section("date", "currency").optional()
                         .find("Wert(\\s+)Konto-Nr.(\\s+)Abrechnungs-Nr.(\\s+)Betrag zu Ihren Gunsten(\\s*)$")
-                        // Wert Konto-Nr. Abrechnungs-Nr. Betrag zu Ihren Gunsten
+                        // Wert Konto-Nr. Abrechnungs-Nr. Betrag zu Ihren
+                        // Gunsten
                         // 06.05.2013 172306238 56072633 EUR 3,05
                         .match("(^|\\s+)(?<date>\\d+\\.\\d+\\.\\d{4}+)(\\s)(\\d+)?(\\s)?(\\d+)?(\\s)(?<currency>\\w{3}+) (\\d{1,3}(\\.\\d{3})*(,\\d{2})?)")
                         .assign((t, v) -> {

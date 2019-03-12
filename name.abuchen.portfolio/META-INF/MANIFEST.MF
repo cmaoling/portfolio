@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: name.abuchen.portfolio
-Bundle-Version: 0.35.1.qualifier
+Bundle-Version: 0.39.1.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: name.abuchen.portfolio.checks,
  name.abuchen.portfolio.datatransfer,
@@ -18,14 +18,18 @@ Export-Package: name.abuchen.portfolio.checks,
  name.abuchen.portfolio.snapshot,
  name.abuchen.portfolio.snapshot.filter,
  name.abuchen.portfolio.snapshot.security,
+ name.abuchen.portfolio.snapshot.trades,
  name.abuchen.portfolio.util
 Import-Package: com.google.common.util.concurrent;version="23.5.0",
  com.thoughtworks.xstream;version="1.4.7",
+ com.thoughtworks.xstream.annotations;version="1.4.8",
  com.thoughtworks.xstream.converters;version="1.4.7",
  com.thoughtworks.xstream.converters.basic;version="1.4.7",
+ com.thoughtworks.xstream.converters.extended;version="1.4.8",
  com.thoughtworks.xstream.converters.reflection;version="1.4.7",
  com.thoughtworks.xstream.io;version="1.4.7",
  com.thoughtworks.xstream.mapper;version="1.4.7",
+ javax.annotation;version="1.2.0",
  org.apache.commons.csv;version="1.0.0.BUILD-20080106",
  org.apache.commons.lang3;version="3.4.0",
  org.apache.pdfbox.pdmodel;version="1.8.7",
@@ -38,6 +42,7 @@ Import-Package: com.google.common.util.concurrent;version="23.5.0",
  org.htmlparser.lexer,
  org.htmlparser.util,
  org.json.simple;version="1.1.1",
+ org.json.simple.parser;version="1.1.1",
  org.jsoup;version="1.7.2",
  org.jsoup.nodes;version="1.7.2",
  org.jsoup.select;version="1.7.2"

@@ -38,7 +38,7 @@ import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
 import name.abuchen.portfolio.online.impl.variableurl.Factory;
 import name.abuchen.portfolio.online.impl.variableurl.urls.VariableURL;
-import name.abuchen.portfolio.util.Strings;
+import name.abuchen.portfolio.util.TextUtil;
 
 public class HTMLTableQuoteFeed implements QuoteFeed
 {
@@ -84,7 +84,7 @@ public class HTMLTableQuoteFeed implements QuoteFeed
 
         protected boolean matches(Element header)
         {
-            String text = header.text();
+            String text = TextUtil.strip(header.text());
             for (Pattern pattern : patterns)
             {
                 if (pattern.matcher(text).matches())
@@ -155,7 +155,7 @@ public class HTMLTableQuoteFeed implements QuoteFeed
         @Override
         void setValue(Element value, LatestSecurityPrice price, String languageHint) throws ParseException
         {
-            String text = Strings.strip(value.text());
+            String text = TextUtil.strip(value.text());
             for (int ii = 0; ii < formatters.length; ii++)
             {
                 try

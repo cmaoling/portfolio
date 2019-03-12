@@ -3,7 +3,9 @@ package name.abuchen.portfolio.ui.views;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -45,19 +47,21 @@ import name.abuchen.portfolio.model.Watchlist;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.Factory;
 import name.abuchen.portfolio.online.QuoteFeed;
+import name.abuchen.portfolio.snapshot.QuoteQualityMetrics;
 import name.abuchen.portfolio.snapshot.ReportingPeriod;
-import name.abuchen.portfolio.ui.AbstractFinanceView;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
-import name.abuchen.portfolio.ui.UpdateQuotesJob;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.OpenDialogAction;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransactionDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransferDialog;
 import name.abuchen.portfolio.ui.dnd.SecurityDragListener;
 import name.abuchen.portfolio.ui.dnd.SecurityTransfer;
+import name.abuchen.portfolio.ui.editor.AbstractFinanceView;
+import name.abuchen.portfolio.ui.jobs.UpdateQuotesJob;
 import name.abuchen.portfolio.ui.util.BookmarkMenu;
 import name.abuchen.portfolio.ui.util.Colors;
+import name.abuchen.portfolio.ui.util.ConfirmActionWithSelection;
 import name.abuchen.portfolio.ui.util.viewers.BooleanEditingSupport;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnEditingSupport;
@@ -74,6 +78,7 @@ import name.abuchen.portfolio.ui.views.columns.NoteColumn;
 import name.abuchen.portfolio.ui.views.columns.TaxonomyColumn;
 import name.abuchen.portfolio.ui.wizards.security.EditSecurityDialog;
 import name.abuchen.portfolio.ui.wizards.splits.StockSplitWizard;
+import name.abuchen.portfolio.util.Interval;
 
 public final class SecuritiesTable implements ModificationListener
 {
@@ -82,6 +87,17 @@ public final class SecuritiesTable implements ModificationListener
     private Watchlist watchlist;
 
     private TableViewer securities;
+
+    private Map<Security, QuoteQualityMetrics> metricsCache = new HashMap<Security, QuoteQualityMetrics>()
+    {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public QuoteQualityMetrics get(Object key)
+        {
+            return super.computeIfAbsent((Security) key, QuoteQualityMetrics::new);
+        }
+    };
 
     private ShowHideColumnHelper support;
 
@@ -116,6 +132,7 @@ public final class SecuritiesTable implements ModificationListener
 
         addAttributeColumns();
         addQuoteFeedColumns();
+        addDataQualityColumns();
 
         support.createColumns();
 
@@ -188,7 +205,8 @@ public final class SecuritiesTable implements ModificationListener
             }
         });
         column.setSorter(ColumnViewerSorter.create(Security.class, "wkn")); //$NON-NLS-1$
-        new StringEditingSupport(Security.class, "wkn").setCanEditCheck(e -> !((Security) e).isExchangeRate()) //$NON-NLS-1$
+        new StringEditingSupport(Security.class, "wkn") //$NON-NLS-1$
+                        .setCanEditCheck(e -> !((Security) e).isExchangeRate() && ((Security) e).getOnlineId() == null)
                         .addListener(this).attachTo(column);
         column.setVisible(false);
         support.addColumn(column);
@@ -364,6 +382,7 @@ public final class SecuritiesTable implements ModificationListener
     {
         Column column = new Column("10", Messages.ColumnLatestHistoricalDate, SWT.LEFT, 80); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnLatestHistoricalDate_MenuLabel);
+        column.setGroupLabel(Messages.GroupLabelDataQuality);
         column.setLabelProvider(new ColumnLabelProvider() // NOSONAR
         {
             @Override
@@ -415,13 +434,16 @@ public final class SecuritiesTable implements ModificationListener
     {
         // create a modifiable copy as all menus share the same list of
         // reporting periods
-        List<ReportingPeriod> options = new ArrayList<>(view.getPart().loadReportingPeriods());
+        List<ReportingPeriod> options = new ArrayList<>(view.getPart().getReportingPeriods());
 
         BiFunction<Object, ReportingPeriod, Double> valueProvider = (element, option) -> {
+
+            Interval interval = option.toInterval(LocalDate.now());
+
             Security security = (Security) element;
 
-            SecurityPrice latest = security.getSecurityPrice(option.getEndDate());
-            SecurityPrice previous = security.getSecurityPrice(option.getStartDate());
+            SecurityPrice latest = security.getSecurityPrice(interval.getEnd());
+            SecurityPrice previous = security.getSecurityPrice(interval.getStart());
 
             if (latest == null || previous == null)
                 return null;
@@ -429,7 +451,7 @@ public final class SecuritiesTable implements ModificationListener
             if (previous.getValue() == 0)
                 return null;
 
-            if (previous.getDate().isAfter(option.getStartDate()))
+            if (previous.getDate().isAfter(interval.getStart()))
                 return null;
 
             return Double.valueOf((latest.getValue() - previous.getValue()) / (double) previous.getValue());
@@ -551,6 +573,89 @@ public final class SecuritiesTable implements ModificationListener
         support.addColumn(column);
     }
 
+    private void addDataQualityColumns()
+    {
+        // ColumnLatestHistoricalDate
+        Column column = new Column("q-date-first-historic", Messages.ColumnDateFirstHistoricalQuote, SWT.LEFT, 80); //$NON-NLS-1$
+        column.setMenuLabel(Messages.ColumnDateFirstHistoricalQuote_MenuLabel);
+        column.setGroupLabel(Messages.GroupLabelDataQuality);
+        column.setLabelProvider(new ColumnLabelProvider() // NOSONAR
+        {
+            @Override
+            public String getText(Object element)
+            {
+                List<SecurityPrice> prices = ((Security) element).getPrices();
+                return prices.isEmpty() ? null : Values.Date.format(prices.get(0).getDate());
+            }
+        });
+        column.setSorter(ColumnViewerSorter.create(element -> {
+            List<SecurityPrice> prices = ((Security) element).getPrices();
+            return prices.isEmpty() ? null : Values.Date.format(prices.get(0).getDate());
+        }));
+        support.addColumn(column);
+
+        column = new Column("qqm-completeness", Messages.ColumnMetricCompleteness, SWT.RIGHT, 80); //$NON-NLS-1$
+        column.setGroupLabel(Messages.GroupLabelDataQuality);
+        column.setDescription(Messages.ColumnMetricCompleteness_Description);
+        column.setVisible(false);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object e)
+            {
+                return Values.Percent2.format(metricsCache.get((Security) e).getCompleteness());
+            }
+        });
+        column.setSorter(ColumnViewerSorter.create(o -> metricsCache.get((Security) o).getCompleteness()));
+        support.addColumn(column);
+
+        column = new Column("qqm-expected", Messages.ColumnMetricExpectedNumberOfQuotes, SWT.RIGHT, 80); //$NON-NLS-1$
+        column.setGroupLabel(Messages.GroupLabelDataQuality);
+        column.setVisible(false);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object e)
+            {
+                return Integer.toString(metricsCache.get((Security) e).getExpectedNumberOfQuotes());
+            }
+        });
+        column.setSorter(ColumnViewerSorter.create(o -> metricsCache.get((Security) o).getExpectedNumberOfQuotes()));
+        support.addColumn(column);
+
+        column = new Column("qqm-actual", Messages.ColumnMetricActualNumberOfQuotes, SWT.RIGHT, 80); //$NON-NLS-1$
+        column.setGroupLabel(Messages.GroupLabelDataQuality);
+        column.setVisible(false);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object e)
+            {
+                return Integer.toString(metricsCache.get((Security) e).getActualNumberOfQuotes());
+            }
+        });
+        column.setSorter(ColumnViewerSorter.create(o -> metricsCache.get((Security) o).getActualNumberOfQuotes()));
+        support.addColumn(column);
+
+        column = new Column("qqm-missing", Messages.ColumnMetricNumberOfMissingQuotes, SWT.RIGHT, 80); //$NON-NLS-1$
+        column.setGroupLabel(Messages.GroupLabelDataQuality);
+        column.setVisible(false);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object e)
+            {
+                QuoteQualityMetrics metrics = metricsCache.get((Security) e);
+                return Integer.toString(metrics.getExpectedNumberOfQuotes() - metrics.getActualNumberOfQuotes());
+            }
+        });
+        column.setSorter(ColumnViewerSorter.create(e -> {
+            QuoteQualityMetrics metrics = metricsCache.get((Security) e);
+            return metrics.getExpectedNumberOfQuotes() - metrics.getActualNumberOfQuotes();
+        }));
+        support.addColumn(column);
+    }
+
     public void addSelectionChangedListener(ISelectionChangedListener listener)
     {
         this.securities.addSelectionChangedListener(listener);
@@ -575,15 +680,21 @@ public final class SecuritiesTable implements ModificationListener
 
     public void refresh(Security security)
     {
+        this.metricsCache.remove(security);
         this.securities.refresh(security, true);
     }
 
-    public void refresh()
+    public void refresh(boolean updateLabels)
     {
         try
         {
             securities.getControl().setRedraw(false);
-            securities.refresh();
+
+            if (updateLabels)
+                metricsCache.clear();
+            securities.refresh(updateLabels);
+            securities.setSelection(securities.getSelection());
+
         }
         finally
         {
@@ -686,7 +797,11 @@ public final class SecuritiesTable implements ModificationListener
         manager.add(new Separator());
         if (watchlist == null)
         {
-            manager.add(new DeleteSecurityAction(selection));
+            manager.add(new ConfirmActionWithSelection(Messages.SecurityMenuDeleteSecurity,
+                            MessageFormat.format(Messages.SecurityMenuDeleteSingleSecurityConfirm,
+                                            selection.getFirstElement()),
+                            Messages.SecurityMenuDeleteMultipleSecurityConfirm, selection,
+                            (s, a) -> deleteSecurity(selection, a)));
         }
         else
         {
@@ -767,53 +882,39 @@ public final class SecuritiesTable implements ModificationListener
         manager.add(new Separator());
     }
 
-    private final class DeleteSecurityAction extends Action
+    private void deleteSecurity(IStructuredSelection selection, Action action)
     {
-        private IStructuredSelection selection;
+        boolean isDirty = false;
+        List<Security> withTransactions = new ArrayList<>();
 
-        private DeleteSecurityAction(IStructuredSelection selection)
+        for (Object obj : selection.toArray())
         {
-            super(Messages.SecurityMenuDeleteSecurity);
+            Security security = (Security) obj;
 
-            this.selection = selection;
+            if (!security.getTransactions(getClient()).isEmpty())
+            {
+                withTransactions.add(security);
+            }
+            else
+            {
+                getClient().removeSecurity(security);
+                isDirty = true;
+            }
         }
 
-        @Override
-        public void run()
+        if (!withTransactions.isEmpty())
         {
-            boolean isDirty = false;
-            List<Security> withTransactions = new ArrayList<>();
+            String label = String.join(", ", //$NON-NLS-1$
+                            withTransactions.stream().map(Security::getName).collect(Collectors.toList()));
 
-            for (Object obj : selection.toArray())
-            {
-                Security security = (Security) obj;
+            MessageDialog.openError(getShell(), Messages.MsgDeletionNotPossible,
+                            MessageFormat.format(Messages.MsgDeletionNotPossibleDetail, label));
+        }
 
-                if (!security.getTransactions(getClient()).isEmpty())
-                {
-                    withTransactions.add(security);
-                }
-                else
-                {
-                    getClient().removeSecurity(security);
-                    isDirty = true;
-                }
-            }
-
-            if (!withTransactions.isEmpty())
-            {
-                String label = String.join(", ", //$NON-NLS-1$
-                                withTransactions.stream().map(Security::getName).collect(Collectors.toList()));
-
-                MessageDialog.openError(getShell(), Messages.MsgDeletionNotPossible,
-                                MessageFormat.format(Messages.MsgDeletionNotPossibleDetail, label));
-            }
-
-            if (isDirty)
-            {
-                markDirty();
-                securities.setInput(getClient().getSecurities());
-            }
-
+        if (isDirty)
+        {
+            markDirty();
+            securities.setInput(getClient().getSecurities());
         }
     }
 

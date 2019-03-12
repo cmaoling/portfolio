@@ -16,11 +16,11 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.eclipse.e4.core.di.extensions.Preference;
-import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.FontDescriptor;
@@ -71,13 +71,14 @@ import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.snapshot.filter.ClientFilter;
 import name.abuchen.portfolio.snapshot.security.SecurityPerformanceRecord;
 import name.abuchen.portfolio.snapshot.security.SecurityPerformanceSnapshot;
-import name.abuchen.portfolio.ui.AbstractFinanceView;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.UIConstants;
 import name.abuchen.portfolio.ui.dnd.SecurityDragListener;
 import name.abuchen.portfolio.ui.dnd.SecurityTransfer;
+import name.abuchen.portfolio.ui.editor.AbstractFinanceView;
 import name.abuchen.portfolio.ui.selection.SecuritySelection;
+import name.abuchen.portfolio.ui.selection.SelectionService;
 import name.abuchen.portfolio.ui.util.AttributeComparator;
 import name.abuchen.portfolio.ui.util.LabelOnly;
 import name.abuchen.portfolio.ui.util.viewers.Column;
@@ -95,6 +96,7 @@ import name.abuchen.portfolio.ui.views.columns.NameColumn;
 import name.abuchen.portfolio.ui.views.columns.NameColumn.NameColumnLabelProvider;
 import name.abuchen.portfolio.ui.views.columns.NoteColumn;
 import name.abuchen.portfolio.ui.views.columns.TaxonomyColumn;
+import name.abuchen.portfolio.util.Interval;
 
 @SuppressWarnings("restriction")
 public class StatementOfAssetsViewer
@@ -103,7 +105,7 @@ public class StatementOfAssetsViewer
     private IPreferenceStore preference;
 
     @Inject
-    private ESelectionService selectionService;
+    private SelectionService selectionService;
 
     private boolean useIndirectQuotation = false;
 
@@ -492,7 +494,7 @@ public class StatementOfAssetsViewer
 
         // create a modifiable copy as all menus share the same list of
         // reporting periods
-        List<ReportingPeriod> options = new ArrayList<>(owner.getPart().loadReportingPeriods());
+        List<ReportingPeriod> options = new ArrayList<>(owner.getPart().getReportingPeriods());
 
         addPerformanceColumns(options);
         addDividendColumns(options);
@@ -802,6 +804,14 @@ public class StatementOfAssetsViewer
         support.addColumn(column);
     }
 
+    public void setToolBarManager(ToolBarManager toolBar)
+    {
+        if (support == null)
+            throw new NullPointerException("support"); //$NON-NLS-1$
+
+        support.setToolBarManager(toolBar);
+    }
+
     public void hookMenuListener(IMenuManager manager, final AbstractFinanceView view)
     {
         Element element = (Element) ((IStructuredSelection) assets.getSelection()).getFirstElement();
@@ -838,7 +848,7 @@ public class StatementOfAssetsViewer
         contextMenu.setVisible(true);
     }
 
-    private void menuAboutToShow(IMenuManager manager) // NOSONAR
+    public void menuAboutToShow(IMenuManager manager)
     {
         manager.add(new LabelOnly(Messages.LabelTaxonomies));
         for (final Taxonomy t : client.getTaxonomies())
@@ -864,11 +874,6 @@ public class StatementOfAssetsViewer
 
         manager.add(new LabelOnly(Messages.LabelColumns));
         support.menuAboutToShow(manager);
-    }
-
-    public void showSaveMenu(Shell shell)
-    {
-        support.showSaveMenu(shell);
     }
 
     public void setInput(ClientSnapshot snapshot, ClientFilter filter)
@@ -951,16 +956,18 @@ public class StatementOfAssetsViewer
 
         private List<Element> children = new ArrayList<>();
 
-        private Map<ReportingPeriod, SecurityPerformanceRecord> performance = new HashMap<>();
+        private Map<Interval, SecurityPerformanceRecord> performance = new HashMap<>();
 
-        private Element(AssetCategory category, int sortOrder)
+        private Element(GroupByTaxonomy groupByTaxonomy, AssetCategory category, int sortOrder)
         {
+            this.groupByTaxonomy = groupByTaxonomy;
             this.category = category;
             this.sortOrder = sortOrder;
         }
 
-        private Element(AssetPosition position, int sortOrder)
+        private Element(GroupByTaxonomy groupByTaxonomy, AssetPosition position, int sortOrder)
         {
+            this.groupByTaxonomy = groupByTaxonomy;
             this.position = position;
             this.sortOrder = sortOrder;
         }
@@ -969,6 +976,11 @@ public class StatementOfAssetsViewer
         {
             this.groupByTaxonomy = groupByTaxonomy;
             this.sortOrder = sortOrder;
+        }
+
+        public GroupByTaxonomy getGroupByTaxonomy()
+        {
+            return groupByTaxonomy;
         }
 
         public void addChild(Element child)
@@ -986,24 +998,24 @@ public class StatementOfAssetsViewer
             return sortOrder;
         }
 
-        public void setPerformance(ReportingPeriod period, SecurityPerformanceRecord record)
+        public void setPerformance(Interval period, SecurityPerformanceRecord record)
         {
             performance.put(period, record);
         }
 
-        public SecurityPerformanceRecord getPerformance(ReportingPeriod period)
+        public SecurityPerformanceRecord getPerformance(Interval period)
         {
             return performance.get(period);
         }
 
-        public boolean isPerformanceCalculated(ReportingPeriod period)
+        public boolean isPerformanceCalculated(Interval period)
         {
             return performance.containsKey(period);
         }
 
         public boolean isGroupByTaxonomy()
         {
-            return groupByTaxonomy != null;
+            return groupByTaxonomy != null && category == null && position == null;
         }
 
         public boolean isCategory()
@@ -1171,7 +1183,7 @@ public class StatementOfAssetsViewer
             }
         }
 
-        private Element[] flatten(GroupByTaxonomy categories)
+        private Element[] flatten(GroupByTaxonomy groupByTaxonomy)
         {
             // when flattening, assign sortOrder to keep the tree structure for
             // sorting (only positions within a category are sorted)
@@ -1180,23 +1192,23 @@ public class StatementOfAssetsViewer
             List<Element> answer = new ArrayList<>();
             List<Element> catElements = new ArrayList<>();
 
-            for (AssetCategory cat : categories.asList())
+            for (AssetCategory cat : groupByTaxonomy.asList())
             {
-                Element catElement = new Element(cat, sortOrder);
+                Element catElement = new Element(groupByTaxonomy, cat, sortOrder);
                 answer.add(catElement);
                 catElements.add(catElement);
                 sortOrder++;
 
                 for (AssetPosition p : cat.getPositions())
                 {
-                    Element child = new Element(p, sortOrder);
+                    Element child = new Element(groupByTaxonomy, p, sortOrder);
                     answer.add(child);
                     catElement.addChild(child);
                 }
                 sortOrder++;
             }
 
-            Element root = new Element(categories, ++sortOrder);
+            Element root = new Element(groupByTaxonomy, ++sortOrder);
             catElements.forEach(root::addChild);
             answer.add(root);
             return answer.toArray(new Element[0]);
@@ -1227,7 +1239,7 @@ public class StatementOfAssetsViewer
             this.collector = collector;
         }
 
-        public Object getValue(Element element, ReportingPeriod option)
+        public Object getValue(Element element, Interval option)
         {
             if (element.isSecurity())
             {
@@ -1247,14 +1259,25 @@ public class StatementOfAssetsViewer
 
                 // check if asset has been split across multiple categories
 
-                long positionShares = element.getPosition().getPosition().getShares();
-                long recordShares = record.getSharesHeld();
+                // problem: we cannot use the "shares held" of the current
+                // record, because the record can have a different reporting
+                // period than the point in time of this particular snapshot
+                // (for example the snapshot is from today, but the reporting
+                // period is is for the year 2000). Therefore the "shares held"
+                // given in the record can be different due to other
+                // transactions.
 
-                if (positionShares != recordShares)
+                long positionShares = element.getPosition().getPosition().getShares();
+
+                long totalShares = element.getGroupByTaxonomy().getCategories().flatMap(c -> c.getPositions().stream())
+                                .filter(p -> element.getSecurity().equals(p.getSecurity()))
+                                .mapToLong(p -> p.getPosition().getShares()).sum();
+
+                if (positionShares != totalShares)
                 {
                     Money moneyValue = (Money) value;
                     return Money.of(moneyValue.getCurrencyCode(),
-                                    Math.round(moneyValue.getAmount() * positionShares / (double) recordShares));
+                                    Math.round(moneyValue.getAmount() * positionShares / (double) totalShares));
                 }
                 else
                 {
@@ -1281,7 +1304,7 @@ public class StatementOfAssetsViewer
             }
         }
 
-        private Object collectValue(Stream<Element> elements, ReportingPeriod option)
+        private Object collectValue(Stream<Element> elements, Interval option)
         {
             return collector.apply(elements.filter(Element::isSecurity) //
                             .map(child -> getValue(child, option)) //
@@ -1316,10 +1339,13 @@ public class StatementOfAssetsViewer
         {
             Element element = (Element) e;
 
-            if (element.isSecurity())
-                calculatePerformance(element, option);
+            // the period is calculated relative to the date of the snapshot
+            Interval interval = option.toInterval(getDate());
 
-            return valueProvider.getValue(element, option);
+            if (element.isSecurity())
+                calculatePerformance(element, interval);
+
+            return valueProvider.getValue(element, interval);
         }
 
         @Override
@@ -1409,7 +1435,7 @@ public class StatementOfAssetsViewer
             return v1.compareTo(v2);
         }
 
-        private void calculatePerformance(Element element, ReportingPeriod period)
+        private void calculatePerformance(Element element, Interval period)
         {
             // already calculated?
             if (element.isPerformanceCalculated(period))

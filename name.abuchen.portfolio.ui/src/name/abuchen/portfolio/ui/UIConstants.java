@@ -39,7 +39,13 @@ public interface UIConstants
     interface File // NOSONAR
     {
         String ENCRYPTED_EXTENSION = "portfolio"; //$NON-NLS-1$
-        String PERSISTED_STATE_KEY = "file"; //$NON-NLS-1$
+    }
+
+    interface PersistedState // NOSONAR
+    {
+        String FILENAME = "file"; //$NON-NLS-1$
+        String REPORTING_PERIOD = "reporting-period"; //$NON-NLS-1$
+        String VIEW = "view"; //$NON-NLS-1$
     }
 
     /**
@@ -48,6 +54,7 @@ public interface UIConstants
     interface Command // NOSONAR
     {
         String OPEN_RECENT_FILE = "name.abuchen.portfolio.ui.command.openRecentFile"; //$NON-NLS-1$
+        String IMPORT_CSV = "name.abuchen.portfolio.ui.command.import"; //$NON-NLS-1$
     }
 
     /**
@@ -60,6 +67,9 @@ public interface UIConstants
         String EXTENSION = "name.abuchen.portfolio.ui.param.extension"; //$NON-NLS-1$
         String ENCRYPTION_METHOD = "name.abuchen.portfolio.ui.param.encryptionmethod"; //$NON-NLS-1$
         String SAMPLE_FILE = "name.abuchen.portfolio.ui.param.samplefile"; //$NON-NLS-1$
+        String NAME = "name.abuchen.portfolio.ui.param.name"; //$NON-NLS-1$
+        String VIEW_PARAMETER = "name.abuchen.portfolio.ui.param.viewparameter"; //$NON-NLS-1$
+        String URL = "name.abuchen.portfolio.ui.param.url"; //$NON-NLS-1$
     }
 
     interface Preferences // NOSONAR
@@ -102,5 +112,10 @@ public interface UIConstants
 
         String ALPHAVANTAGE_API_KEY = "ALPHAVANTAGE_API_KEY"; //$NON-NLS-1$
         String ALPHAVANTAGE_CALL_FREQUENCY_LIMIT = "ALPHAVANTAGE_CALL_FREQUENCY_LIMIT"; //$NON-NLS-1$
+
+        /**
+         * Preference key whether to store settings (standard calendar)
+         */
+        String CALENDAR = "CALENDAR"; //$NON-NLS-1$
     }
 }

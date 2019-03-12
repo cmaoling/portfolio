@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.ui.views.dashboard;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,7 +10,6 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 
-import org.eclipse.e4.ui.model.application.ui.MDirtyable;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import name.abuchen.portfolio.model.Client;
@@ -24,6 +24,7 @@ import name.abuchen.portfolio.snapshot.ReportingPeriod;
 import name.abuchen.portfolio.ui.views.dataseries.DataSeries;
 import name.abuchen.portfolio.ui.views.dataseries.DataSeriesCache;
 import name.abuchen.portfolio.ui.views.dataseries.DataSeriesSet;
+import name.abuchen.portfolio.util.Interval;
 
 public class DashboardData
 {
@@ -75,9 +76,6 @@ public class DashboardData
     private Map<Widget, Object> resultCache = Collections.synchronizedMap(new HashMap<>());
 
     private Dashboard dashboard;
-
-    @Inject
-    private MDirtyable dirtyable;
 
     @Inject
     public DashboardData(Client client, IPreferenceStore preferences, ExchangeRateProviderFactory factory)
@@ -157,13 +155,14 @@ public class DashboardData
 
     private Object doCalculate(Class<?> type, ReportingPeriod period)
     {
+        Interval interval = period.toInterval(LocalDate.now());
         if (type.equals(ClientPerformanceSnapshot.class))
         {
-            return new ClientPerformanceSnapshot(client, converter, period);
+            return new ClientPerformanceSnapshot(client, converter, interval);
         }
         else if (type.equals(PerformanceIndex.class))
         {
-            return PerformanceIndex.forClient(client, converter, period, new ArrayList<Exception>());
+            return PerformanceIndex.forClient(client, converter, interval, new ArrayList<Exception>());
         }
         else
         {
@@ -181,7 +180,7 @@ public class DashboardData
         return converter;
     }
 
-    public PerformanceIndex calculate(DataSeries dataSeries, ReportingPeriod reportingPeriod)
+    public PerformanceIndex calculate(DataSeries dataSeries, Interval reportingPeriod)
     {
         return dataSeriesCache.lookup(dataSeries, reportingPeriod);
     }
@@ -196,13 +195,5 @@ public class DashboardData
         // create a new cache map in order to make sure that old (possibly
         // still running) tasks do not write into the new cache
         resultCache = Collections.synchronizedMap(new HashMap<>());
-    }
-
-    /**
-     * Marks the file as dirty <b>without</b> triggering an update.
-     */
-    public void markDirty()
-    {
-        dirtyable.setDirty(true);
     }
 }

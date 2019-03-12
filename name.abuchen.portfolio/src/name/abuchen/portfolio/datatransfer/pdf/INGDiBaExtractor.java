@@ -1,6 +1,5 @@
 package name.abuchen.portfolio.datatransfer.pdf;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
@@ -39,7 +38,7 @@ public class INGDiBaExtractor extends AbstractPDFExtractor
 
     };
 
-    public INGDiBaExtractor(Client client) throws IOException
+    public INGDiBaExtractor(Client client)
     {
         super(client);
 
@@ -272,7 +271,7 @@ public class INGDiBaExtractor extends AbstractPDFExtractor
         final DocumentType type = new DocumentType("Dividendengutschrift", isJointAccount);
         this.addDocumentTyp(type);
 
-        Block block = new Block("Dividendengutschrift");
+        Block block = new Block("Dividendengutschrift.*");
         type.addBlock(block);
         Transaction<AccountTransaction> transaction = new Transaction<AccountTransaction>()
 
@@ -291,10 +290,6 @@ public class INGDiBaExtractor extends AbstractPDFExtractor
                         .match("^Nominale (?<shares>[\\d.]+(,\\d+)?) .*")
                         .assign((t, v) -> t.setShares(asShares(v.get("shares"))))
 
-                        .section("date") //
-                        .match("Ex-Tag (?<date>\\d+.\\d+.\\d{4}+)") //
-                        .assign((t, v) -> t.setDateTime(asDate(v.get("date"))))
-
                         .section("amount", "currency") //
                         .match("Gesamtbetrag zu Ihren Gunsten (?<currency>\\w{3}+) (?<amount>[\\d.]+,\\d+)") //
                         .assign((t, v) -> {
@@ -302,6 +297,10 @@ public class INGDiBaExtractor extends AbstractPDFExtractor
                             t.setCurrencyCode(asCurrencyCode(v.get("currency")));
                             t.setAmount(asAmount(v.get("amount")));
                         })
+                        
+                        .section("date") //
+                        .match("Valuta (?<date>\\d+.\\d+.\\d{4}+)") //
+                        .assign((t, v) -> t.setDateTime(asDate(v.get("date"))))
                                                 
                         .wrap(TransactionItem::new);
         

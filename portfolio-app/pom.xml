@@ -1,21 +1,19 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>name.abuchen.portfolio</groupId>
 	<artifactId>portfolio-app</artifactId>
-	<version>0.35.1-SNAPSHOT</version>
+	<version>0.39.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Portfolio Performance</name>
 
 	<properties>
-		<tycho-version>1.2.0</tycho-version>
-		<!-- jarsigner 1.4 does not support the certchain attribute (needed b/c 
-			the hardware token does not contain the whole certificate chain). Using the 
-			1.5-SNAPSHOT build which supports the argument since Aug 2017 -->
-		<jarsigner.plugin.version>1.5-SNAPSHOT</jarsigner.plugin.version>
+		<tycho-version>1.3.0</tycho-version>
 		<jarsigner.skip>true</jarsigner.skip>
+		<gpgsigner.skip>true</gpgsigner.skip>
 		<sonar.skippedModules>name.abuchen.portfolio.feature</sonar.skippedModules>
 		<sonar.exclusions>**/Messages.java</sonar.exclusions>
 		<sonar.organization>buchen-github</sonar.organization>
@@ -23,7 +21,13 @@
 		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
 		<sonar.jacoco.reportPaths>../portfolio-app/target/jacoco.exec</sonar.jacoco.reportPaths>
 		<argLine>-ea</argLine>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
+
+	<prerequisites>
+		<maven>3.0</maven>
+	</prerequisites>
 
 	<modules>
 		<module>../name.abuchen.portfolio</module>
@@ -34,14 +38,6 @@
 		<module>../name.abuchen.portfolio.bootstrap</module>
 		<module>../portfolio-product</module>
 	</modules>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>portfolio-non-maven-dependencies</id>
-			<url>http://buchen.github.io/maven-repo</url>
-			<layout>default</layout>
-		</pluginRepository>
-	</pluginRepositories>
 
 	<repositories>
 		<repository>
@@ -59,14 +55,14 @@
 			<url>http://download.eclipse.org/tools/orbit/downloads/drops/R20180606145124/repository</url>
 		</repository>
 		<repository>
-			<id>eclipse-photon</id>
+			<id>eclipse-2018-09</id>
 			<layout>p2</layout>
-			<url>http://download.eclipse.org/eclipse/updates/4.8/R-4.8-201806110500/</url>
+			<url>http://download.eclipse.org/eclipse/updates/4.9/R-4.9-201809060745/</url>
 		</repository>
 		<repository>
 			<id>eclipse-babel</id>
 			<layout>p2</layout>
-			<url>http://download.eclipse.org/technology/babel/update-site/R0.15.1/oxygen</url>
+			<url>http://download.eclipse.org/technology/babel/update-site/R0.16.0/photon</url>
 		</repository>
 		<repository>
 			<id>eclipse-nebula</id>
@@ -188,6 +184,15 @@
 				<configuration>
 					<resolver>p2</resolver>
 					<pomDependencies>consider</pomDependencies>
+					<dependency-resolution>
+						<extraRequirements>
+							<requirement>
+								<type>eclipse-plugin</type>
+								<id>javax.annotation</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+						</extraRequirements>
+					</dependency-resolution>
 					<environments>
 						<environment>
 							<os>linux</os>
@@ -247,7 +252,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.7.6.201602180812</version>
+				<version>0.8.2</version>
 				<executions>
 					<execution>
 						<goals>
@@ -292,6 +297,9 @@
 					<groupId>org.eclipse.tycho</groupId>
 					<artifactId>tycho-surefire-plugin</artifactId>
 					<version>${tycho-version}</version>
+					<configuration>
+						<trimStackTrace>false</trimStackTrace>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.eclipse.tycho</groupId>
@@ -307,9 +315,24 @@
 					</configuration>
 				</plugin>
 				<plugin>
+					<groupId>org.eclipse.tycho</groupId>
+					<artifactId>tycho-p2-plugin</artifactId>
+					<version>${tycho-version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.eclipse.tycho</groupId>
+					<artifactId>tycho-packaging-plugin</artifactId>
+					<version>${tycho-version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.eclipse.tycho</groupId>
+					<artifactId>tycho-p2-publisher-plugin</artifactId>
+					<version>${tycho-version}</version>
+				</plugin>
+				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jarsigner-plugin</artifactId>
-					<version>${jarsigner.plugin.version}</version>
+					<version>3.0.0</version>
 					<executions>
 						<execution>
 							<id>sign</id>
@@ -337,6 +360,11 @@
 						<certchain>${project.basedir}/../portfolio-app/certchain.txt</certchain>
 						<tsa>http://time.certum.pl/</tsa>
 					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-gpg-plugin</artifactId>
+					<version>1.6</version>
 				</plugin>
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
@@ -377,7 +405,7 @@
 				<plugin>
 					<groupId>name.abuchen</groupId>
 					<artifactId>fix-info-plist-maven-plugin</artifactId>
-					<version>1.3</version>
+					<version>1.5</version>
 				</plugin>
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>

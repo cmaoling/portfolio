@@ -3,27 +3,29 @@ package name.abuchen.portfolio.ui.views.dividends;
 import java.time.LocalDate;
 
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.ToolBar;
 
 import com.ibm.icu.text.MessageFormat;
 
 import name.abuchen.portfolio.ui.Messages;
-import name.abuchen.portfolio.ui.util.AbstractDropDown;
+import name.abuchen.portfolio.ui.util.DropDown;
 import name.abuchen.portfolio.ui.util.SimpleAction;
 
-/* package */ class StartYearSelectionDropDown extends AbstractDropDown
+/* package */ class StartYearSelectionDropDown extends DropDown implements IMenuListener
 {
     private DividendsViewModel model;
 
-    public StartYearSelectionDropDown(ToolBar toolBar, DividendsViewModel model)
+    public StartYearSelectionDropDown(DividendsViewModel model)
     {
-        super(toolBar, createLabelTextForYear(model.getStartYear()));
+        super(createLabelTextForYear(model.getStartYear()));
         this.model = model;
+
+        setMenuListener(this);
     }
 
     @Override
@@ -77,8 +79,9 @@ import name.abuchen.portfolio.ui.util.SimpleAction;
 
         }));
     }
-    
-    private static String createLabelTextForYear(int year) {
-        return Messages.LabelSelectYearSince + " " + String.valueOf(year); //$NON-NLS-1$
+
+    private static String createLabelTextForYear(int year)
+    {
+        return Messages.LabelSelectYearSince + " " + year; //$NON-NLS-1$
     }
 }

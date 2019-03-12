@@ -86,7 +86,7 @@ public class VerticalSpacerWidget extends WidgetDelegate<Object>
                 delegate.getWidget().getConfiguration().put(Dashboard.Config.HEIGHT.name(), String.valueOf(height));
 
                 delegate.update();
-                delegate.markDirty();
+                delegate.getClient().touch();
             }));
         }
 
@@ -121,6 +121,7 @@ public class VerticalSpacerWidget extends WidgetDelegate<Object>
         title = new Label(container, SWT.CENTER);
         title.setText(getWidget().getLabel());
         title.setForeground(container.getBackground());
+        title.setBackground(container.getBackground());
 
         title.addMouseTrackListener(new MouseTrackAdapter()
         {

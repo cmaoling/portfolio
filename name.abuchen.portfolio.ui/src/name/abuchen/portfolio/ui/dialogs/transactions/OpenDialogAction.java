@@ -9,7 +9,7 @@ import org.eclipse.jface.action.IMenuManager;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.Security;
-import name.abuchen.portfolio.ui.AbstractFinanceView;
+import name.abuchen.portfolio.ui.editor.AbstractFinanceView;
 
 public class OpenDialogAction extends Action
 {
@@ -95,7 +95,6 @@ public class OpenDialogAction extends Action
         if (dialog.hasAtLeastOneSuccessfulEdit())
         {
             owner.markDirty();
-            owner.notifyModelUpdated();
         }
     }
 }

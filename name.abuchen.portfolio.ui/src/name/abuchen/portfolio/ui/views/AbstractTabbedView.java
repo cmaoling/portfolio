@@ -2,17 +2,20 @@ package name.abuchen.portfolio.ui.views;
 
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import org.eclipse.e4.core.di.annotations.Optional;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
 
-import name.abuchen.portfolio.ui.AbstractFinanceView;
-import name.abuchen.portfolio.ui.PortfolioPart;
+import name.abuchen.portfolio.ui.UIConstants;
+import name.abuchen.portfolio.ui.editor.AbstractFinanceView;
 
 public abstract class AbstractTabbedView<T extends AbstractTabbedView.Tab> extends AbstractFinanceView
 {
@@ -22,11 +25,10 @@ public abstract class AbstractTabbedView<T extends AbstractTabbedView.Tab> exten
 
         Composite createTab(Composite parent);
 
-        default void addButtons(ToolBar toolBar)
+        default void addButtons(ToolBarManager toolBarManager)
         {}
     }
 
-    private ToolBar toolBar;
     private CTabFolder folder;
     private int initiallySelectedTab = 0;
 
@@ -37,34 +39,21 @@ public abstract class AbstractTabbedView<T extends AbstractTabbedView.Tab> exten
 
     protected abstract List<T> createTabs();
 
-    @Override
-    public void init(PortfolioPart part, Object parameter)
+    @Inject
+    @Optional
+    public void init(@Named(UIConstants.Parameter.VIEW_PARAMETER) Integer parameter)
     {
-        super.init(part, parameter);
-
-        if (parameter instanceof Integer)
-            initiallySelectedTab = ((Integer) parameter).intValue();
-    }
-
-    @Override
-    protected final void addButtons(ToolBar toolBar)
-    {
-        this.toolBar = toolBar;
+        initiallySelectedTab = parameter.intValue();
     }
 
     private void updateToolBar()
     {
-        if (toolBar.isDisposed())
-            return;
+        ToolBarManager manager = getToolBarManager();
+        manager.removeAll();
 
-        for (ToolItem child : toolBar.getItems())
-        {
-            child.dispose();
-        }
+        getSelection().addButtons(getToolBarManager());
 
-        getSelection().addButtons(toolBar);
-
-        toolBar.getParent().layout(true);
+        manager.update(true);
     }
 
     @Override

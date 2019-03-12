@@ -107,7 +107,7 @@ public class EarningsHeatmapWidget extends AbstractHeatmapWidget<Long>
     {
         int numDashboardColumns = getDashboardData().getDashboard().getColumns().size();
 
-        Interval interval = get(ReportingPeriodConfig.class).getReportingPeriod().toInterval();
+        Interval interval = get(ReportingPeriodConfig.class).getReportingPeriod().toInterval(LocalDate.now());
 
         // adapt interval to include the first and last month fully
 
@@ -119,7 +119,7 @@ public class EarningsHeatmapWidget extends AbstractHeatmapWidget<Long>
         // build model
         HeatmapModel<Long> model = new HeatmapModel<>(numDashboardColumns <= 1 ? Values.Amount : Values.AmountShort);
         model.setCellToolTip(value -> value != null ? Values.Amount.format(value) : ""); //$NON-NLS-1$
-        addMonthlyHeader(model, numDashboardColumns, true);
+        addMonthlyHeader(model, numDashboardColumns, true, false);
         int startYear = calcInterval.getStart().plusDays(1).getYear();
 
         // prepare data

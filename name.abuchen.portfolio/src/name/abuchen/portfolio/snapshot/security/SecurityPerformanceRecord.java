@@ -26,6 +26,7 @@ import name.abuchen.portfolio.money.Quote;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.snapshot.PerformanceIndex;
 import name.abuchen.portfolio.snapshot.ReportingPeriod;
+import name.abuchen.portfolio.util.Interval;
 
 public final class SecurityPerformanceRecord implements Adaptable
 {
@@ -149,6 +150,11 @@ public final class SecurityPerformanceRecord implements Adaptable
      */
     private Periodicity periodicity = Periodicity.UNKNOWN;
 
+    /**
+     * rate of return per year {@link #calculateDividends()}
+     */
+    private double rateOfReturnPerYear;
+    
     /**
      * market value - fifo cost of shares held
      * {@link #calculateFifoAndMovingAverageCosts()}
@@ -326,6 +332,17 @@ public final class SecurityPerformanceRecord implements Adaptable
     {
         return periodicity.ordinal();
     }
+    
+    /**
+     * Gets the rate of return of dividends per year as a percentage of
+     * invested.
+     * 
+     * @return rate of return per year on success, else 0
+     */
+    public double getRateOfReturnPerYear()
+    {
+        return this.rateOfReturnPerYear;
+    }
 
     public double getTotalRateOfReturnDiv()
     {
@@ -366,15 +383,16 @@ public final class SecurityPerformanceRecord implements Adaptable
     }
 
     /* package */
-    void calculate(Client client, CurrencyConverter converter, ReportingPeriod period)
+    void calculate(Client client, CurrencyConverter converter, Interval interval)
     {
         Collections.sort(transactions, new TransactionComparator());
 
         if (!transactions.isEmpty())
         {
-            calculateMarketValue(converter, period);
+            calculateSharesHeld(converter);
+            calculateMarketValue(converter, interval);
             calculateIRR(converter);
-            calculateTTWROR(client, converter, period);
+            calculateTTWROR(client, converter, interval);
             calculateDelta(converter);
             calculateFifoAndMovingAverageCosts(converter);
             calculateDividends(converter);
@@ -382,7 +400,12 @@ public final class SecurityPerformanceRecord implements Adaptable
         }
     }
 
-    private void calculateMarketValue(CurrencyConverter converter, ReportingPeriod period)
+    private void calculateSharesHeld(CurrencyConverter converter)
+    {
+        this.sharesHeld = Calculation.perform(SharesHeldCalculation.class, converter, security, transactions).getSharesHeld();
+    }
+
+    private void calculateMarketValue(CurrencyConverter converter, Interval interval)
     {
         MutableMoney mv = MutableMoney.of(converter.getTermCurrency());
         for (Transaction t : transactions)
@@ -390,17 +413,17 @@ public final class SecurityPerformanceRecord implements Adaptable
                 mv.add(t.getMonetaryAmount().with(converter.at(t.getDateTime())));
 
         this.marketValue = mv.toMoney();
-        this.quote = security.getSecurityPrice(period.getEndDate());
+        this.quote = security.getSecurityPrice(interval.getEnd());
     }
 
     private void calculateIRR(CurrencyConverter converter)
     {
-        this.irr = Calculation.perform(IRRCalculation.class, converter, transactions).getIRR();
+        this.irr = Calculation.perform(IRRCalculation.class, converter, security, transactions).getIRR();
     }
 
-    private void calculateTTWROR(Client client, CurrencyConverter converter, ReportingPeriod period)
+    private void calculateTTWROR(Client client, CurrencyConverter converter, Interval interval)
     {
-        PerformanceIndex index = PerformanceIndex.forInvestment(client, converter, security, period,
+        PerformanceIndex index = PerformanceIndex.forInvestment(client, converter, security, interval,
                         new ArrayList<Exception>());
         this.twror = index.getFinalAccumulatedPercentage();
         this.drawdown = index.getDrawdown();
@@ -409,17 +432,16 @@ public final class SecurityPerformanceRecord implements Adaptable
 
     private void calculateDelta(CurrencyConverter converter)
     {
-        DeltaCalculation calculation = Calculation.perform(DeltaCalculation.class, converter, transactions);
+        DeltaCalculation calculation = Calculation.perform(DeltaCalculation.class, converter, security, transactions);
         this.delta = calculation.getDelta();
         this.deltaPercent = calculation.getDeltaPercent();
     }
 
     private void calculateFifoAndMovingAverageCosts(CurrencyConverter converter)
     {
-        CostCalculation cost = Calculation.perform(CostCalculation.class, converter, transactions);
+        CostCalculation cost = Calculation.perform(CostCalculation.class, converter, security, transactions);
         this.fifoCost = cost.getFifoCost();
         this.movingAverageCost = cost.getMovingAverageCost();
-        this.sharesHeld = cost.getSharesHeld();
 
         Money netFifoCost = cost.getNetFifoCost();
         this.fifoCostPerSharesHeld = Quote.of(netFifoCost.getCurrencyCode(), Math.round(netFifoCost.getAmount()
@@ -449,16 +471,17 @@ public final class SecurityPerformanceRecord implements Adaptable
 
     private void calculateDividends(CurrencyConverter converter)
     {
-        DividendCalculation dividends = Calculation.perform(DividendCalculation.class, converter, transactions);
+        DividendCalculation dividends = Calculation.perform(DividendCalculation.class, converter, security, transactions);
         this.sumOfDividends = dividends.getSum();
         this.dividendEventCount = dividends.getNumOfEvents();
         this.lastDividendPayment = dividends.getLastDividendPayment();
+        this.rateOfReturnPerYear = dividends.getRateOfReturnPerYear();
     }
 
     private void calculatePeriodicity(CurrencyConverter converter)
     {
         // periodicity is calculated by looking at all dividend transactions, so
-        // collect them
+        // collect all of them instead of using just a fraction in the current filter
         List<Transaction> allTransactions = security.getTransactions(client).stream()
                         .filter(t -> t.getTransaction() instanceof AccountTransaction) //
                         .filter(t -> {
@@ -468,7 +491,7 @@ public final class SecurityPerformanceRecord implements Adaptable
                         .map(t -> DividendTransaction.from((AccountTransaction) t.getTransaction()))
                         .collect(Collectors.toList());
 
-        DividendCalculation allDividends = Calculation.perform(DividendCalculation.class, converter, allTransactions);
+        DividendCalculation allDividends = Calculation.perform(DividendCalculation.class, converter, security, allTransactions);
         this.periodicity = allDividends.getPeriodicity();
     }
 }

@@ -14,7 +14,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.databinding.swt.ISWTObservableValue;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -39,6 +38,7 @@ import name.abuchen.portfolio.model.Exchange;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.online.QuoteFeed;
 import name.abuchen.portfolio.online.impl.AlphavantageQuoteFeed;
+import name.abuchen.portfolio.online.impl.EurostatHICPQuoteFeed;
 import name.abuchen.portfolio.online.impl.HTMLTableQuoteFeed;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
@@ -208,7 +208,8 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
         QuoteFeed feed = (QuoteFeed) ((IStructuredSelection) comboProvider.getSelection()).getFirstElement();
         setFeed(feed.getId());
 
-        if (comboExchange != null && feed.getId() != null && feed.getId().startsWith(YAHOO))
+        if (comboExchange != null && feed.getId() != null
+                        && (feed.getId().startsWith(YAHOO) || feed.getId().equals(EurostatHICPQuoteFeed.ID)))
         {
             Exchange exchange = (Exchange) ((IStructuredSelection) comboExchange.getSelection()).getFirstElement();
             if (exchange != null)
@@ -259,6 +260,7 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
         // create a temporary security and set all attributes
         Security security = new Security();
         model.setAttributes(security);
+        model.getSecurity().getProperties().forEach(security::addProperty);
         return security;
     }
 
@@ -296,7 +298,8 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
 
     private void createDetailDataWidgets(QuoteFeed feed)
     {
-        boolean dropDown = feed != null && feed.getId() != null && feed.getId().startsWith(YAHOO);
+        boolean dropDown = feed != null && feed.getId() != null
+                        && (feed.getId().startsWith(YAHOO) || feed.getId().equals(EurostatHICPQuoteFeed.ID));
         boolean feedURL = feed != null && feed.getId() != null && feed.getId().equals(HTMLTableQuoteFeed.ID);
         boolean needsTicker = feed != null && feed.getId() != null && feed.getId().equals(AlphavantageQuoteFeed.ID);
 
@@ -331,7 +334,8 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
                 @Override
                 public String getText(Object element)
                 {
-                    return ((Exchange) element).getName();
+                    Exchange exchange = (Exchange) element;
+                    return MessageFormat.format("{0} ({1})", exchange.getId(), exchange.getName()); //$NON-NLS-1$
                 }
             });
             GridDataFactory.fillDefaults().hint(300, SWT.DEFAULT).applyTo(comboExchange.getControl());
@@ -354,7 +358,7 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
             textTicker = new Text(grpQuoteFeed, SWT.BORDER);
             GridDataFactory.fillDefaults().hint(100, SWT.DEFAULT).applyTo(textTicker);
             
-            ISWTObservableValue observeText = WidgetProperties.text(SWT.Modify).observe(textTicker);
+            IObservableValue<?> observeText = WidgetProperties.text(SWT.Modify).observe(textTicker);
             @SuppressWarnings("unchecked")
             IObservableValue<?> observable = BeanProperties.value("tickerSymbol").observe(model); //$NON-NLS-1$
             bindings.getBindingContext().bindValue(observeText, observable);
@@ -381,7 +385,8 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
 
         createDetailDataWidgets(feed);
 
-        if (model.getTickerSymbol() != null && feed != null && feed.getId() != null && feed.getId().startsWith("YAHOO")) //$NON-NLS-1$
+        if (model.getTickerSymbol() != null && feed != null && feed.getId() != null
+                        && (feed.getId().startsWith(YAHOO) || feed.getId().equals(EurostatHICPQuoteFeed.ID)))
         {
             Exchange exchange = new Exchange(model.getTickerSymbol(), model.getTickerSymbol());
             ArrayList<Exchange> input = new ArrayList<>();

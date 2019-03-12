@@ -6,10 +6,10 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -19,7 +19,6 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.ToolBar;
 
 import name.abuchen.portfolio.model.Bookmark;
 import name.abuchen.portfolio.model.Client;
@@ -57,13 +56,13 @@ public class BookmarksListTab implements AbstractTabbedView.Tab, ModificationLis
     }
 
     @Override
-    public void addButtons(ToolBar toolBar)
+    public void addButtons(ToolBarManager manager)
     {
         Action add = new SimpleAction(a -> {
             Bookmark wl = new Bookmark(Messages.BookmarksListView_NewBookmark, DEFAULT_URL);
 
             client.getSettings().getBookmarks().add(wl);
-            client.markDirty();
+            client.touch();
 
             bookmarks.setInput(client.getSettings().getBookmarks());
             bookmarks.editElement(wl, 0);
@@ -71,7 +70,7 @@ public class BookmarksListTab implements AbstractTabbedView.Tab, ModificationLis
         
         add.setImageDescriptor(Images.PLUS.descriptor());
 
-        new ActionContributionItem(add).fill(toolBar, -1);
+        manager.add(add);
     }
 
     @Override
@@ -141,7 +140,7 @@ public class BookmarksListTab implements AbstractTabbedView.Tab, ModificationLis
     @Override
     public void onModified(Object element, Object newValue, Object oldValue)
     {
-        client.markDirty();
+        client.touch();
     }
 
     private void fillContextMenu(IMenuManager manager)
@@ -166,7 +165,7 @@ public class BookmarksListTab implements AbstractTabbedView.Tab, ModificationLis
                 Bookmark wl = new Bookmark(Messages.BookmarksListView_NewBookmark, DEFAULT_URL);
 
                 client.getSettings().insertBookmark(index, wl);
-                client.markDirty();
+                client.touch();
 
                 bookmarks.setInput(client.getSettings().getBookmarks());
                 bookmarks.editElement(wl, 0);
@@ -182,7 +181,7 @@ public class BookmarksListTab implements AbstractTabbedView.Tab, ModificationLis
                 Bookmark wl = new Bookmark(Messages.BookmarksListView_NewBookmark, DEFAULT_URL);
 
                 client.getSettings().insertBookmarkAfter(index, wl);
-                client.markDirty();
+                client.touch();
 
                 bookmarks.setInput(client.getSettings().getBookmarks());
                 bookmarks.editElement(wl, 0);
@@ -198,7 +197,7 @@ public class BookmarksListTab implements AbstractTabbedView.Tab, ModificationLis
                 Bookmark wl = new Bookmark("-", ""); //$NON-NLS-1$ //$NON-NLS-2$
 
                 client.getSettings().insertBookmarkAfter(index, wl);
-                client.markDirty();
+                client.touch();
 
                 bookmarks.setInput(client.getSettings().getBookmarks());
             }
@@ -217,7 +216,7 @@ public class BookmarksListTab implements AbstractTabbedView.Tab, ModificationLis
                 for (Object element : ((IStructuredSelection) bookmarks.getSelection()).toArray())
                     settings.removeBookmark((Bookmark) element);
 
-                client.markDirty();
+                client.touch();
                 bookmarks.setInput(settings.getBookmarks());
             }
         });
@@ -252,7 +251,7 @@ public class BookmarksListTab implements AbstractTabbedView.Tab, ModificationLis
             Bookmark bookmark = (Bookmark) ((IStructuredSelection) bookmarks.getSelection()).getFirstElement();
             bookmark.setPattern(bookmark.getPattern() + '{' + replacement + '}');
             bookmarks.refresh(bookmark);
-            client.markDirty();
+            client.touch();
         }));
     }
 
@@ -282,7 +281,7 @@ public class BookmarksListTab implements AbstractTabbedView.Tab, ModificationLis
                     settings.removeBookmark(bookmark);
                     settings.insertBookmark(index - 1, bookmark);
                     bookmarks.setInput(client.getSettings().getBookmarks());
-                    client.markDirty();
+                    client.touch();
                 }
             });
         }
@@ -298,7 +297,7 @@ public class BookmarksListTab implements AbstractTabbedView.Tab, ModificationLis
                     settings.removeBookmark(bookmark);
                     settings.insertBookmark(index + 1, bookmark);
                     bookmarks.setInput(client.getSettings().getBookmarks());
-                    client.markDirty();
+                    client.touch();
                 }
             });
         }

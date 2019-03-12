@@ -1,6 +1,5 @@
 package name.abuchen.portfolio.datatransfer.pdf;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -22,7 +21,7 @@ public class DegiroPDFExtractor extends AbstractPDFExtractor
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm", Locale.GERMANY); //$NON-NLS-1$
     
-    public DegiroPDFExtractor(Client client) throws IOException
+    public DegiroPDFExtractor(Client client)
     {
         super(client);
         addBankIdentifier("DEGIRO"); //$NON-NLS-1$
@@ -95,7 +94,7 @@ public class DegiroPDFExtractor extends AbstractPDFExtractor
                                 t.setMonetaryAmount(accountMoney); // in EUR 
                                 
                                 // replace BRUTTO (which is in foreign currency) with the value in transaction currency
-                                BigDecimal inverseRate = BigDecimal.ONE.divide(exchangeRate, 10, BigDecimal.ROUND_HALF_DOWN);
+                                BigDecimal inverseRate = BigDecimal.ONE.divide(exchangeRate, 10, RoundingMode.HALF_DOWN);
                                 Unit grossValue = new Unit(Unit.Type.GROSS_VALUE, accountMoney, currentMonetaryAmount, inverseRate);
                                 t.getPortfolioTransaction().addUnit(grossValue);
                             

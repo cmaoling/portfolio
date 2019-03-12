@@ -9,9 +9,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import name.abuchen.portfolio.money.CurrencyUnit;
 
+/**
+ * A <code>Security</code> is used for assets that have historical prices
+ * attached.
+ * </p>
+ * <strong>Attributes</strong> are managed and edited by the user while
+ * <strong>properties</strong> are managed by the program.
+ */
 public final class Security implements Attributable, InvestmentVehicle
 {
     public static final class ByName implements Comparator<Security>, Serializable
@@ -28,6 +36,7 @@ public final class Security implements Attributable, InvestmentVehicle
     }
 
     private String uuid;
+    private String onlineId;
 
     private String name;
     private String currencyCode = CurrencyUnit.EUR;
@@ -38,6 +47,7 @@ public final class Security implements Attributable, InvestmentVehicle
     private String isin;
     private String tickerSymbol;
     private String wkn;
+    private String calendar;
 
     // feed and feedURL are used to update historical prices
     private String feed;
@@ -53,6 +63,7 @@ public final class Security implements Attributable, InvestmentVehicle
     private Attributes attributes;
 
     private List<SecurityEvent> events;
+    private List<SecurityProperty> properties;
 
     private boolean isRetired = false;
 
@@ -104,6 +115,16 @@ public final class Security implements Attributable, InvestmentVehicle
     {
         if (uuid == null)
             generateUUID();
+    }
+
+    public String getOnlineId()
+    {
+        return onlineId;
+    }
+
+    public void setOnlineId(String onlineId)
+    {
+        this.onlineId = onlineId;
     }
 
     @Override
@@ -195,6 +216,16 @@ public final class Security implements Attributable, InvestmentVehicle
         this.wkn = wkn;
     }
 
+    public String getCalendar()
+    {
+        return calendar;
+    }
+
+    public void setCalendar(String calendar)
+    {
+        this.calendar = calendar;
+    }
+
     /**
      * Is this an exchange rate symbol?
      * 
@@ -204,7 +235,7 @@ public final class Security implements Attributable, InvestmentVehicle
     {
         return this.targetCurrencyCode != null;
     }
-    
+
     /**
      * Returns ISIN, Ticker or WKN - whatever is available.
      */
@@ -440,6 +471,27 @@ public final class Security implements Attributable, InvestmentVehicle
         this.events.add(event);
     }
 
+    public Stream<SecurityProperty> getProperties()
+    {
+        if (properties == null)
+            properties = new ArrayList<>();
+        return properties.stream();
+    }
+
+    public void addProperty(SecurityProperty data)
+    {
+        if (properties == null)
+            properties = new ArrayList<>();
+        this.properties.add(data);
+    }
+
+    public boolean removeProperty(SecurityProperty data)
+    {
+        if (properties == null)
+            properties = new ArrayList<>();
+        return this.properties.remove(data);
+    }
+
     @Override
     public Attributes getAttributes()
     {
@@ -510,6 +562,8 @@ public final class Security implements Attributable, InvestmentVehicle
     {
         Security answer = new Security();
 
+        answer.onlineId = onlineId;
+
         answer.name = name;
         answer.currencyCode = currencyCode;
         answer.targetCurrencyCode = targetCurrencyCode;
@@ -518,6 +572,7 @@ public final class Security implements Attributable, InvestmentVehicle
         answer.isin = isin;
         answer.tickerSymbol = tickerSymbol;
         answer.wkn = wkn;
+        answer.calendar = calendar;
 
         answer.feed = feed;
         answer.feedURL = feedURL;
@@ -528,6 +583,9 @@ public final class Security implements Attributable, InvestmentVehicle
         answer.latest = latest;
 
         answer.events = new ArrayList<>(getEvents());
+
+        if (properties != null)
+            answer.properties = new ArrayList<>(properties);
 
         answer.isRetired = isRetired;
 

@@ -2,28 +2,29 @@ package name.abuchen.portfolio.ui.wizards.security;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.TraverseEvent;
-import org.eclipse.swt.events.TraverseListener;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableColumn;
@@ -34,18 +35,21 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.online.Factory;
 import name.abuchen.portfolio.online.SecuritySearchProvider;
 import name.abuchen.portfolio.online.SecuritySearchProvider.ResultItem;
+import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
 
 public class SearchSecurityWizardPage extends WizardPage
 {
+    public static final String PAGE_ID = "searchpage"; //$NON-NLS-1$
+
     private Client client;
 
     private ResultItem item;
 
     public SearchSecurityWizardPage(Client client)
     {
-        super("searchpage"); //$NON-NLS-1$
+        super(PAGE_ID);
         setTitle(Messages.SecurityMenuAddNewSecurity);
         setDescription(Messages.SecurityMenuAddNewSecurityDescription);
 
@@ -56,23 +60,39 @@ public class SearchSecurityWizardPage extends WizardPage
     public void createControl(Composite parent)
     {
         Composite container = new Composite(parent, SWT.NULL);
-        GridLayoutFactory.fillDefaults().numColumns(1).applyTo(container);
+        GridLayoutFactory.fillDefaults().numColumns(3).applyTo(container);
 
         final Text searchBox = new Text(container, SWT.BORDER | SWT.SINGLE);
         searchBox.setText(""); //$NON-NLS-1$
         searchBox.setFocus();
-        GridDataFactory.fillDefaults().grab(true, false).applyTo(searchBox);
+        GridDataFactory.fillDefaults().grab(true, false).align(SWT.FILL, SWT.CENTER).applyTo(searchBox);
+
+        final ComboViewer typeBox = new ComboViewer(container, SWT.READ_ONLY);
+        typeBox.setContentProvider(ArrayContentProvider.getInstance());
+        typeBox.setInput(SecuritySearchProvider.Type.values());
+        typeBox.setSelection(new StructuredSelection(SecuritySearchProvider.Type.ALL));
+
+        final Button searchButton = new Button(container, SWT.PUSH);
+        searchButton.setText(Messages.LabelSearch);
 
         final TableViewer resultTable = new TableViewer(container, SWT.FULL_SELECTION);
-        GridDataFactory.fillDefaults().grab(true, true).applyTo(resultTable.getControl());
+        GridDataFactory.fillDefaults().span(3, 1).grab(true, true).applyTo(resultTable.getControl());
 
         TableColumn column = new TableColumn(resultTable.getTable(), SWT.NONE);
+        column.setText(Messages.ColumnName);
+        column.setWidth(250);
+
+        column = new TableColumn(resultTable.getTable(), SWT.NONE);
         column.setText(Messages.ColumnSymbol);
         column.setWidth(60);
 
         column = new TableColumn(resultTable.getTable(), SWT.NONE);
-        column.setText(Messages.ColumnName);
-        column.setWidth(250);
+        column.setText(Messages.ColumnISIN);
+        column.setWidth(100);
+
+        column = new TableColumn(resultTable.getTable(), SWT.NONE);
+        column.setText(Messages.ColumnWKN);
+        column.setWidth(60);
 
         column = new TableColumn(resultTable.getTable(), SWT.NONE);
         column.setText(Messages.ColumnSecurityType);
@@ -92,34 +112,22 @@ public class SearchSecurityWizardPage extends WizardPage
         resultTable.setLabelProvider(new ResultItemLabelProvider(existingSymbols));
         resultTable.setContentProvider(ArrayContentProvider.getInstance());
 
-        searchBox.addTraverseListener(new TraverseListener()
-        {
-            @Override
-            public void keyTraversed(TraverseEvent e)
-            {
-                // don't forward to the default button
+        // don't forward return to the default button
+        searchBox.addTraverseListener(e -> {
+            if (e.detail == SWT.TRAVERSE_RETURN)
                 e.doit = false;
-            }
         });
 
-        searchBox.addSelectionListener(new SelectionAdapter()
-        {
-            @Override
-            public void widgetDefaultSelected(SelectionEvent event)
-            {
-                doSearch(searchBox.getText(), resultTable);
-            }
-        });
+        Consumer<SelectionEvent> onSearchEvent = e -> doSearch(searchBox.getText(),
+                        (SecuritySearchProvider.Type) typeBox.getStructuredSelection().getFirstElement(),
+                        resultTable);
 
-        resultTable.addSelectionChangedListener(new ISelectionChangedListener()
-        {
-            @Override
-            public void selectionChanged(SelectionChangedEvent event)
-            {
-                item = (ResultItem) ((IStructuredSelection) event.getSelection()).getFirstElement();
-                setPageComplete(item != null && item.getSymbol() != null
-                                && !existingSymbols.contains(item.getSymbol()));
-            }
+        searchBox.addSelectionListener(SelectionListener.widgetDefaultSelectedAdapter(onSearchEvent));
+        searchButton.addSelectionListener(SelectionListener.widgetSelectedAdapter(onSearchEvent));
+
+        resultTable.addSelectionChangedListener(event -> {
+            item = (ResultItem) ((IStructuredSelection) event.getSelection()).getFirstElement();
+            setPageComplete(item != null && !existingSymbols.contains(item.getSymbol()));
         });
 
         setControl(container);
@@ -130,22 +138,40 @@ public class SearchSecurityWizardPage extends WizardPage
         return item;
     }
 
-    private void doSearch(String query, TableViewer resultTable)
+    private void doSearch(String query, SecuritySearchProvider.Type type, TableViewer resultTable)
     {
         try
         {
-            getContainer().run(true, false, m -> {
-                try
+            getContainer().run(true, false, progressMonitor -> {
+                List<SecuritySearchProvider> providers = Factory.getSearchProvider();
+
+                progressMonitor.beginTask(Messages.SecurityMenuSearch4Securities, providers.size());
+
+                List<ResultItem> result = new ArrayList<>();
+                List<String> errors = new ArrayList<>();
+
+                for (SecuritySearchProvider provider : providers)
                 {
-                    SecuritySearchProvider provider = Factory.getSearchProvider().get(0);
-                    List<ResultItem> result = provider.search(query);
-                    Display.getDefault().asyncExec(() -> resultTable.setInput(result));
+                    try
+                    {
+                        progressMonitor.setTaskName(provider.getName());
+                        result.addAll(provider.search(query, type));
+                    }
+                    catch (IOException e)
+                    {
+                        PortfolioPlugin.log(e);
+                        errors.add(provider.getName() + ": " + e.getMessage()); //$NON-NLS-1$
+                    }
+                    progressMonitor.worked(1);
                 }
-                catch (IOException e)
-                {
-                    PortfolioPlugin.log(e);
-                    Display.getDefault().asyncExec(() -> setErrorMessage(e.getMessage()));
-                }
+
+                Display.getDefault().asyncExec(() -> {
+                    resultTable.setInput(result);
+
+                    if (!errors.isEmpty())
+                        setErrorMessage(String.join(", ", errors)); //$NON-NLS-1$
+                });
+
             });
         }
         catch (InvocationTargetException | InterruptedException e)
@@ -167,7 +193,7 @@ public class SearchSecurityWizardPage extends WizardPage
         @Override
         public Image getColumnImage(Object element, int columnIndex)
         {
-            return null;
+            return columnIndex == 0 && ((ResultItem) element).getOnlineId() != null ? Images.ONLINE.image() : null;
         }
 
         @Override
@@ -177,12 +203,16 @@ public class SearchSecurityWizardPage extends WizardPage
             switch (columnIndex)
             {
                 case 0:
-                    return item.getSymbol();
-                case 1:
                     return item.getName();
+                case 1:
+                    return item.getSymbol();
                 case 2:
-                    return item.getType();
+                    return item.getIsin();
                 case 3:
+                    return item.getWkn();
+                case 4:
+                    return item.getType();
+                case 5:
                     return item.getExchange();
                 default:
                     throw new IllegalArgumentException(String.valueOf(columnIndex));
@@ -194,9 +224,7 @@ public class SearchSecurityWizardPage extends WizardPage
         {
             ResultItem item = (ResultItem) element;
 
-            if (item.getSymbol() == null)
-                return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GRAY);
-            else if (symbols.contains(item.getSymbol()))
+            if (item.getSymbol() != null && symbols.contains(item.getSymbol()))
                 return Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
             else
                 return null;

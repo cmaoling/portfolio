@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.ui.views.dashboard.heatmap;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -31,11 +32,13 @@ public class YearlyPerformanceHeatmapWidget extends AbstractHeatmapWidget<Double
     {
         int numDashboardColumns = getDashboardData().getDashboard().getColumns().size();
 
+        LocalDate now = LocalDate.now();
+
         // fill the table lines according to the supplied period
         // calculate the performance with a temporary reporting period
         // calculate the color interpolated between red and green with yellow as
         // the median
-        Interval interval = get(ReportingPeriodConfig.class).getReportingPeriod().toInterval();
+        Interval interval = get(ReportingPeriodConfig.class).getReportingPeriod().toInterval(now);
 
         List<DataSeries> dataSeries = get(MultiDataSeriesConfig.class).getDataSeries();
 
@@ -57,13 +60,13 @@ public class YearlyPerformanceHeatmapWidget extends AbstractHeatmapWidget<Double
         for (Integer year : calcInterval.iterYears())
         {
             String label = numDashboardColumns > 2 ? String.valueOf(year % 100) : String.valueOf(year);
-            HeatmapModel.Row<Double> row = new HeatmapModel.Row<Double>(label);
+            HeatmapModel.Row<Double> row = new HeatmapModel.Row<>(label);
 
             // yearly data
             for (DataSeries series : dataSeries)
             {
                 PerformanceIndex performanceIndex = getDashboardData().calculate(series,
-                                new ReportingPeriod.YearX(year));
+                                new ReportingPeriod.YearX(year).toInterval(now));
                 row.addData(performanceIndex.getFinalAccumulatedPercentage());
             }
 
@@ -71,17 +74,31 @@ public class YearlyPerformanceHeatmapWidget extends AbstractHeatmapWidget<Double
         }
 
         // add sum
+        HeatmapModel.Row<Double> sum = null;
         if (get(HeatmapOrnamentConfig.class).getValues().contains(HeatmapOrnament.SUM))
         {
-            HeatmapModel.Row<Double> row = new HeatmapModel.Row<Double>("\u03A3"); //$NON-NLS-1$
+            sum = new HeatmapModel.Row<>("\u03A3", HeatmapOrnament.SUM.toString()); //$NON-NLS-1$
             for (DataSeries series : dataSeries)
             {
-                PerformanceIndex performanceIndex = getDashboardData().calculate(series,
-                                new ReportingPeriod.FromXtoY(calcInterval));
-                row.addData(performanceIndex.getFinalAccumulatedPercentage());
+                PerformanceIndex performanceIndex = getDashboardData().calculate(series, calcInterval);
+                sum.addData(performanceIndex.getFinalAccumulatedPercentage());
             }
-            model.addRow(row);
         }
+
+        // add standard deviation
+        HeatmapModel.Row<Double> sd = null;
+        if (get(HeatmapOrnamentConfig.class).getValues().contains(HeatmapOrnament.STANDARD_DEVIATION))
+        {
+            sd = new HeatmapModel.Row<>("s", HeatmapOrnament.STANDARD_DEVIATION.toString()); //$NON-NLS-1$
+
+            for (int ii = 0; ii < dataSeries.size(); ii++)
+                sd.addData(standardDeviation(model.getColumnValues(ii)));
+        }
+
+        if (sum != null)
+            model.addRow(sum);
+        if (sd != null)
+            model.addRow(sd);
 
         // add geometric mean
         if (get(HeatmapOrnamentConfig.class).getValues().contains(HeatmapOrnament.GEOMETRIC_MEAN))

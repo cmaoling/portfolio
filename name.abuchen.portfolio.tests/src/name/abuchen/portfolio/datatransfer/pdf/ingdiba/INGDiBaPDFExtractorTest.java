@@ -499,7 +499,7 @@ public class INGDiBaPDFExtractorTest
         assertThat(t.getType(), is(AccountTransaction.Type.DIVIDENDS));
 
         assertThat(t.getAmount(), is(Values.Amount.factorize(44.01)));
-        assertThat(t.getDateTime(), is(LocalDateTime.parse("2016-11-29T00:00")));
+        assertThat(t.getDateTime(), is(LocalDateTime.parse("2016-12-15T00:00")));
         assertThat(t.getShares(), is(Values.Share.factorize(66)));
 
         assertThat(t.getGrossValue(), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(50.24 + 8.87))));
@@ -561,7 +561,7 @@ public class INGDiBaPDFExtractorTest
         assertThat(t.getType(), is(AccountTransaction.Type.DIVIDENDS));
 
         assertThat(t.getAmount(), is(Values.Amount.factorize(58.19)));
-        assertThat(t.getDateTime(), is(LocalDateTime.parse("2017-03-20T00:00")));
+        assertThat(t.getDateTime(), is(LocalDateTime.parse("2017-03-22T00:00")));
         assertThat(t.getShares(), is(Values.Share.factorize(35)));
 
         assertThat(t.getUnitSum(Unit.Type.TAX), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(31.34))));
@@ -599,5 +599,38 @@ public class INGDiBaPDFExtractorTest
         assertThat(t.getGrossValue(), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(650.00))));
         assertThat(t.getUnitSum(Unit.Type.TAX), is(Money.of(CurrencyUnit.EUR,
                         Values.Amount.factorize(79.46 + 7.15 + 4.37 + 79.46 + 7.15 + 4.37))));
+    }
+    
+    @Test
+    public void testNVDividendengutschrift1() throws IOException
+    {
+        INGDiBaExtractor extractor = new INGDiBaExtractor(new Client());
+
+        List<Exception> errors = new ArrayList<>();
+
+        List<Item> results = extractor.extract(
+                        PDFInputFile.loadTestCase(getClass(), "INGDiBa_NV_Dividendengutschrift.txt"),
+                        errors);
+
+        assertThat(errors, empty());
+        assertThat(results.size(), is(2));
+
+        Security security = results.stream().filter(i -> i instanceof SecurityItem).findFirst().get().getSecurity();
+        assertThat(security.getIsin(), is("GB0007980591"));
+        assertThat(security.getWkn(), is("850517"));
+        assertThat(security.getName(), is("BP PLC Registered Shares DL -,25"));
+
+        AccountTransaction t = (AccountTransaction) results.stream().filter(i -> i instanceof TransactionItem)
+                        .findFirst().get().getSubject();
+
+        assertThat(t.getType(), is(AccountTransaction.Type.DIVIDENDS));
+
+        assertThat(t.getAmount(), is(Values.Amount.factorize(61.85)));
+        assertThat(t.getDateTime(), is(LocalDateTime.parse("2018-12-21T00:00")));
+        assertThat(t.getShares(), is(Values.Share.factorize(700)));
+
+        assertThat(t.getGrossValue(), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(61.85))));
+        assertThat(t.getUnitSum(Unit.Type.TAX), is(Money.of(CurrencyUnit.EUR,
+                        Values.Amount.factorize(0.0))));
     }
 }

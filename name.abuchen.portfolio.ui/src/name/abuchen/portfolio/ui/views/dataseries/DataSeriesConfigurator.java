@@ -3,12 +3,13 @@ package name.abuchen.portfolio.ui.views.dataseries;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 
-import name.abuchen.portfolio.ui.AbstractFinanceView;
 import name.abuchen.portfolio.ui.Messages;
+import name.abuchen.portfolio.ui.editor.AbstractFinanceView;
 import name.abuchen.portfolio.ui.util.ConfigurationStore;
 import name.abuchen.portfolio.ui.util.ConfigurationStore.ConfigurationStoreOwner;
 import name.abuchen.portfolio.ui.util.SimpleAction;
@@ -39,6 +40,11 @@ public class DataSeriesConfigurator extends BasicDataSeriesConfigurator implemen
         view.getControl().addDisposeListener(e -> DataSeriesConfigurator.this.widgetDisposed());
     }
 
+    public void setToolBarManager(ToolBarManager toolBar)
+    {
+        store.setToolBarManager(toolBar);
+    }
+
     public String getConfigurationName()
     {
         return store.getActiveName();
@@ -57,17 +63,6 @@ public class DataSeriesConfigurator extends BasicDataSeriesConfigurator implemen
         configContextMenu.setVisible(true);
     }
 
-    /**
-     * Shows the menu to manage sets of data series, e.g. add, create, delete
-     * sets.
-     * 
-     * @param shell
-     */
-    public void showSaveMenu(Shell shell)
-    {
-        store.showMenu(shell);
-    }
-
     private Menu createMenu(Shell shell, IMenuListener listener)
     {
         MenuManager menuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
@@ -80,8 +75,6 @@ public class DataSeriesConfigurator extends BasicDataSeriesConfigurator implemen
     {
         if (configContextMenu != null && !configContextMenu.isDisposed())
             configContextMenu.dispose();
-
-        store.dispose();
     }
 
     @Override

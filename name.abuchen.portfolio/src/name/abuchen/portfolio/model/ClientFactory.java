@@ -246,12 +246,12 @@ public class ClientFactory
                     read = decrypted.read(bytes); // major version number
                     if (read != bytes.length)
                         throw new IOException();
-                    
+
                     int majorVersion = ByteBuffer.wrap(bytes).getInt();
                     read = decrypted.read(bytes); // version number
                     if (read != bytes.length)
                         throw new IOException();
-                    
+
                     int version = ByteBuffer.wrap(bytes).getInt();
 
                     // sanity check if the file was properly decrypted
@@ -563,6 +563,9 @@ public class ClientFactory
                 // converted from LocalDate to LocalDateTime
             case 37:
                 // added boolean attribute type
+            case 38:
+                // added security exchange calendar
+                // added onlineId to security
 
                 client.setVersion(Client.CURRENT_VERSION);
                 break;
@@ -579,7 +582,7 @@ public class ClientFactory
         {
             if ("STOCK".equals(security.getType())) //$NON-NLS-1$ // NOSONAR
                 security.setType("EQUITY"); //$NON-NLS-1$ // NOSONAR
-            else if ("BOND".equals(security.getType())) //$NON-NLS-1$ // NOSONAR
+            else if ("BOND".equals(security.getType())) // NOSONAR //$NON-NLS-1$
                 security.setType("DEBT"); //$NON-NLS-1$ // NOSONAR
         }
     }
@@ -1073,6 +1076,7 @@ public class ClientFactory
             xstream.alias("account-transaction", AccountTransaction.class);
             xstream.alias("portfolio-transaction", PortfolioTransaction.class);
             xstream.alias("security", Security.class);
+            xstream.addImplicitCollection(Security.class, "properties");
             xstream.alias("latest", LatestSecurityPrice.class);
             xstream.alias("category", Category.class); // NOSONAR
             xstream.alias("watchlist", Watchlist.class);
@@ -1110,6 +1114,8 @@ public class ClientFactory
             xstream.alias("event", SecurityEvent.class);
             xstream.alias("config-set", ConfigurationSet.class);
             xstream.alias("config", ConfigurationSet.Configuration.class);
+
+            xstream.processAnnotations(SecurityProperty.class);
         }
         return xstream;
     }

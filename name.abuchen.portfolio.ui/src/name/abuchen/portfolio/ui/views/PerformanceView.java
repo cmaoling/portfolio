@@ -1,12 +1,14 @@
 package name.abuchen.portfolio.ui.views;
 
 import java.text.MessageFormat;
+import java.time.LocalDate;
 import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.layout.TreeColumnLayout;
 import org.eclipse.jface.resource.JFaceResources;
@@ -26,7 +28,6 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.ToolBar;
 
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
@@ -45,12 +46,13 @@ import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.snapshot.ClientPerformanceSnapshot;
 import name.abuchen.portfolio.snapshot.GroupEarningsByAccount;
-import name.abuchen.portfolio.snapshot.ReportingPeriod;
+import name.abuchen.portfolio.snapshot.filter.WithoutTaxesFilter;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.selection.SecuritySelection;
-import name.abuchen.portfolio.ui.util.AbstractDropDown;
+import name.abuchen.portfolio.ui.selection.SelectionService;
 import name.abuchen.portfolio.ui.util.ClientFilterDropDown;
+import name.abuchen.portfolio.ui.util.DropDown;
 import name.abuchen.portfolio.ui.util.SimpleAction;
 import name.abuchen.portfolio.ui.util.TableViewerCSVExporter;
 import name.abuchen.portfolio.ui.util.TreeViewerCSVExporter;
@@ -59,16 +61,19 @@ import name.abuchen.portfolio.ui.util.viewers.ColumnViewerSorter;
 import name.abuchen.portfolio.ui.util.viewers.ShowHideColumnHelper;
 import name.abuchen.portfolio.ui.views.columns.NameColumn;
 import name.abuchen.portfolio.ui.views.columns.NoteColumn;
+import name.abuchen.portfolio.util.Interval;
 
 public class PerformanceView extends AbstractHistoricView
 {
     @Inject
-    private ESelectionService selectionService;
+    private SelectionService selectionService;
 
     @Inject
     private ExchangeRateProviderFactory factory;
 
     private ClientFilterDropDown clientFilter;
+
+    private boolean preTax = false;
 
     private TreeViewer calculation;
     private StatementOfAssetsViewer snapshotStart;
@@ -85,22 +90,38 @@ public class PerformanceView extends AbstractHistoricView
     }
 
     @Override
-    protected void addButtons(ToolBar toolBar)
+    protected void addButtons(ToolBarManager toolBar)
     {
         super.addButtons(toolBar);
 
-        this.clientFilter = new ClientFilterDropDown(toolBar, getClient(), getPreferenceStore(),
+        this.clientFilter = new ClientFilterDropDown(getClient(), getPreferenceStore(),
                         PerformanceView.class.getSimpleName(), filter -> notifyModelUpdated());
 
-        new ExportDropDown(toolBar); // NOSONAR
+        toolBar.add(clientFilter);
+
+        toolBar.add(new ExportDropDown());
+
+        toolBar.add(new DropDown(Messages.MenuConfigureView, Images.CONFIG, SWT.NONE, manager -> {
+            SimpleAction action = new SimpleAction(Messages.LabelPreTax, a -> {
+                this.preTax = !this.preTax;
+                reportingPeriodUpdated();
+            });
+
+            action.setChecked(this.preTax);
+            manager.add(action);
+        }));
     }
 
     @Override
     public void reportingPeriodUpdated()
     {
-        ReportingPeriod period = getReportingPeriod();
+        Interval period = getReportingPeriod().toInterval(LocalDate.now());
         CurrencyConverter converter = new CurrencyConverterImpl(factory, getClient().getBaseCurrency());
         Client filteredClient = clientFilter.getSelectedFilter().filter(getClient());
+
+        if (preTax)
+            filteredClient = new WithoutTaxesFilter().filter(filteredClient);
+
         ClientPerformanceSnapshot snapshot = new ClientPerformanceSnapshot(filteredClient, converter, period);
 
         try
@@ -275,7 +296,7 @@ public class PerformanceView extends AbstractHistoricView
 
         calculation.addSelectionChangedListener(event -> {
             Object selection = ((IStructuredSelection) event.getSelection()).getFirstElement();
-            if (selection != null && selection instanceof ClientPerformanceSnapshot.Position
+            if (selection instanceof ClientPerformanceSnapshot.Position
                             && ((ClientPerformanceSnapshot.Position) selection).getSecurity() != null)
                 selectionService.setSelection(new SecuritySelection(getClient(),
                                 ((ClientPerformanceSnapshot.Position) selection).getSecurity()));
@@ -305,6 +326,7 @@ public class PerformanceView extends AbstractHistoricView
         container.setLayout(layout);
 
         TableViewer transactionViewer = new TableViewer(container, SWT.FULL_SELECTION);
+        ColumnViewerToolTipSupport.enableFor(transactionViewer, ToolTip.NO_RECREATE);
 
         transactionViewer.addSelectionChangedListener(event -> {
             TransactionPair<?> tx = ((TransactionPair<?>) ((IStructuredSelection) event.getSelection())
@@ -556,6 +578,7 @@ public class PerformanceView extends AbstractHistoricView
         container.setLayout(layout);
 
         earningsByAccount = new TableViewer(container, SWT.FULL_SELECTION);
+        ColumnViewerToolTipSupport.enableFor(earningsByAccount, ToolTip.NO_RECREATE);
 
         ShowHideColumnHelper support = new ShowHideColumnHelper(PerformanceView.class.getSimpleName() + "@byaccounts2", //$NON-NLS-1$
                         getPreferenceStore(), earningsByAccount, layout);
@@ -730,11 +753,12 @@ public class PerformanceView extends AbstractHistoricView
         }
     }
 
-    private final class ExportDropDown extends AbstractDropDown
+    private final class ExportDropDown extends DropDown implements IMenuListener
     {
-        private ExportDropDown(ToolBar toolBar)
+        private ExportDropDown()
         {
-            super(toolBar, Messages.MenuExportData, Images.EXPORT.image(), SWT.NONE);
+            super(Messages.MenuExportData, Images.EXPORT, SWT.NONE);
+            setMenuListener(this);
         }
 
         @Override

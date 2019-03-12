@@ -4,7 +4,6 @@ import java.text.MessageFormat;
 
 import javax.inject.Inject;
 
-import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.layout.TableColumnLayout;
@@ -28,11 +27,13 @@ import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.selection.SecuritySelection;
+import name.abuchen.portfolio.ui.selection.SelectionService;
 import name.abuchen.portfolio.ui.util.TableViewerCSVExporter;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnViewerSorter;
 import name.abuchen.portfolio.ui.util.viewers.SharesLabelProvider;
 import name.abuchen.portfolio.ui.util.viewers.ShowHideColumnHelper;
+import name.abuchen.portfolio.util.TextUtil;
 
 public class TransactionsTab implements DividendsTab
 {
@@ -43,7 +44,7 @@ public class TransactionsTab implements DividendsTab
     private DividendsViewModel model;
 
     @Inject
-    private ESelectionService selectionService;
+    private SelectionService selectionService;
 
     @Inject
     private IPreferenceStore preferences;
@@ -210,6 +211,12 @@ public class TransactionsTab implements DividendsTab
             {
                 String note = ((TransactionPair<?>) element).getTransaction().getNote();
                 return note != null && note.length() > 0 ? Images.NOTE.image() : null;
+            }
+
+            @Override
+            public String getToolTipText(Object e)
+            {
+                return TextUtil.wordwrap(getText(e));
             }
         });
         ColumnViewerSorter.create(e -> ((TransactionPair<?>) e).getTransaction().getNote()).attachTo(column);

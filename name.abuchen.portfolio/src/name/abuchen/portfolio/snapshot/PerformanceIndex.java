@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.function.IntPredicate;
 import java.util.function.ToLongBiFunction;
 
 import org.apache.commons.csv.CSVPrinter;
@@ -36,12 +36,13 @@ import name.abuchen.portfolio.snapshot.filter.ClientSecurityFilter;
 import name.abuchen.portfolio.snapshot.filter.PortfolioClientFilter;
 import name.abuchen.portfolio.util.Interval;
 import name.abuchen.portfolio.util.TradeCalendar;
+import name.abuchen.portfolio.util.TradeCalendarManager;
 
 public class PerformanceIndex
 {
     private final Client client;
     private final CurrencyConverter converter;
-    private final ReportingPeriod reportInterval;
+    private final Interval reportInterval;
 
     protected LocalDate[] dates;
     protected long[] totals;
@@ -58,14 +59,14 @@ public class PerformanceIndex
     private Volatility volatility;
     private ClientPerformanceSnapshot performanceSnapshot;
 
-    /* package */ PerformanceIndex(Client client, CurrencyConverter converter, ReportingPeriod reportInterval)
+    /* package */ PerformanceIndex(Client client, CurrencyConverter converter, Interval reportInterval)
     {
         this.client = client;
         this.converter = converter;
         this.reportInterval = reportInterval;
     }
 
-    public static PerformanceIndex forClient(Client client, CurrencyConverter converter, ReportingPeriod reportInterval,
+    public static PerformanceIndex forClient(Client client, CurrencyConverter converter, Interval reportInterval,
                     List<Exception> warnings)
     {
         ClientIndex index = new ClientIndex(client, converter, reportInterval);
@@ -74,35 +75,35 @@ public class PerformanceIndex
     }
 
     public static PerformanceIndex forAccount(Client client, CurrencyConverter converter, Account account,
-                    ReportingPeriod reportInterval, List<Exception> warnings)
+                    Interval reportInterval, List<Exception> warnings)
     {
         Client pseudoClient = new PortfolioClientFilter(Collections.emptyList(), Arrays.asList(account)).filter(client);
         return PerformanceIndex.forClient(pseudoClient, converter, reportInterval, warnings);
     }
 
     public static PerformanceIndex forPortfolio(Client client, CurrencyConverter converter, Portfolio portfolio,
-                    ReportingPeriod reportInterval, List<Exception> warnings)
+                    Interval reportInterval, List<Exception> warnings)
     {
         Client pseudoClient = new PortfolioClientFilter(portfolio).filter(client);
         return PerformanceIndex.forClient(pseudoClient, converter, reportInterval, warnings);
     }
 
     public static PerformanceIndex forPortfolioPlusAccount(Client client, CurrencyConverter converter,
-                    Portfolio portfolio, ReportingPeriod reportInterval, List<Exception> warnings)
+                    Portfolio portfolio, Interval reportInterval, List<Exception> warnings)
     {
         Client pseudoClient = new PortfolioClientFilter(portfolio, portfolio.getReferenceAccount()).filter(client);
         return PerformanceIndex.forClient(pseudoClient, converter, reportInterval, warnings);
     }
 
     public static PerformanceIndex forClassification(Client client, CurrencyConverter converter,
-                    Classification classification, ReportingPeriod reportInterval, List<Exception> warnings)
+                    Classification classification, Interval reportInterval, List<Exception> warnings)
     {
         Client filteredClient = new ClientClassificationFilter(classification).filter(client);
         return PerformanceIndex.forClient(filteredClient, converter, reportInterval, warnings);
     }
 
     public static PerformanceIndex forInvestment(Client client, CurrencyConverter converter, Security security,
-                    ReportingPeriod reportInterval, List<Exception> warnings)
+                    Interval reportInterval, List<Exception> warnings)
     {
         Client filteredClient = new ClientSecurityFilter(security).filter(client);
         return forClient(filteredClient, converter, reportInterval, warnings);
@@ -110,9 +111,8 @@ public class PerformanceIndex
 
     public static PerformanceIndex forSecurity(PerformanceIndex clientIndex, Security security)
     {
-        SecurityIndex index = new SecurityIndex(clientIndex.getClient(), clientIndex.getCurrencyConverter(),
-                        clientIndex.getReportInterval());
-        index.calculate(clientIndex, security);
+        SecurityIndex index = new SecurityIndex(clientIndex, security);
+        index.calculate();
         return index;
     }
 
@@ -130,7 +130,7 @@ public class PerformanceIndex
         return client;
     }
 
-    public ReportingPeriod getReportInterval()
+    public Interval getReportInterval()
     {
         return reportInterval;
     }
@@ -207,10 +207,10 @@ public class PerformanceIndex
             for (; startAt < totals.length; startAt++)
                 if (totals[startAt] != 0)
                     break;
-            
+
             if (startAt == totals.length)
                 startAt = totals.length - 1;
-            
+
             drawdown = new Drawdown(accumulated, dates, startAt);
         }
 
@@ -236,18 +236,28 @@ public class PerformanceIndex
      * <li>on weekends or public holidays</li>
      * </ul>
      */
-    private Predicate<Integer> filterReturnsForVolatilityCalculation()
+    private IntPredicate filterReturnsForVolatilityCalculation()
     {
-        TradeCalendar calendar = new TradeCalendar();
+        TradeCalendar calendar = TradeCalendarManager.getDefaultInstance();
         return index -> index > 0 && totals[index] != 0 && totals[index - 1] != 0 && !calendar.isHoliday(dates[index]);
     }
 
-    public ClientPerformanceSnapshot getClientPerformanceSnapshot()
+    /**
+     * Returns the ClientPerformanceSnapshot if available. The snapshot is not
+     * available for benchmarks and the consumer price indices.
+     */
+    public Optional<ClientPerformanceSnapshot> getClientPerformanceSnapshot()
     {
         if (performanceSnapshot == null)
             performanceSnapshot = new ClientPerformanceSnapshot(client, converter, reportInterval);
 
-        return performanceSnapshot;
+        return Optional.of(performanceSnapshot);
+    }
+
+    public double getPerformanceIRR()
+    {
+        return getClientPerformanceSnapshot().map(ClientPerformanceSnapshot::getPerformanceIRR)
+                        .orElseThrow(IllegalArgumentException::new);
     }
 
     public long[] getTaxes()
@@ -285,7 +295,7 @@ public class PerformanceIndex
 
         long startValue = 0;
         Interval interval = getActualInterval();
-        
+
         LocalDateTime intervalStart = interval.getStart().atStartOfDay();
 
         for (Account account : getClient().getAccounts())
@@ -390,7 +400,7 @@ public class PerformanceIndex
         exportTo(file, filterReturnsForVolatilityCalculation());
     }
 
-    private void exportTo(File file, Predicate<Integer> filter) throws IOException
+    private void exportTo(File file, IntPredicate filter) throws IOException
     {
         CSVStrategy strategy = new CSVStrategy(';', '"', CSVStrategy.COMMENTS_DISABLED, CSVStrategy.ESCAPE_DISABLED,
                         false, false, false, false);

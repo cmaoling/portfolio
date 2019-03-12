@@ -9,12 +9,16 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
+import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.ActionContributionItem;
+import org.eclipse.jface.action.ControlContribution;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -34,9 +38,11 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
+
+import com.ibm.icu.text.MessageFormat;
 
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
@@ -58,16 +64,19 @@ import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Quote;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
+import name.abuchen.portfolio.online.impl.EurostatHICPQuoteFeed;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
-import name.abuchen.portfolio.ui.PortfolioPart;
+import name.abuchen.portfolio.ui.UIConstants;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.OpenDialogAction;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransactionDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransferDialog;
 import name.abuchen.portfolio.ui.selection.SecuritySelection;
-import name.abuchen.portfolio.ui.util.AbstractDropDown;
+import name.abuchen.portfolio.ui.selection.SelectionService;
 import name.abuchen.portfolio.ui.util.Colors;
+import name.abuchen.portfolio.ui.util.ConfirmAction;
+import name.abuchen.portfolio.ui.util.DropDown;
 import name.abuchen.portfolio.ui.util.SWTHelper;
 import name.abuchen.portfolio.ui.util.SimpleAction;
 import name.abuchen.portfolio.ui.util.TableViewerCSVExporter;
@@ -86,16 +95,18 @@ import name.abuchen.portfolio.ui.views.actions.ConvertBuySellToDeliveryAction;
 import name.abuchen.portfolio.ui.views.actions.ConvertDeliveryToBuySellAction;
 import name.abuchen.portfolio.ui.views.columns.NoteColumn;
 import name.abuchen.portfolio.ui.wizards.security.EditSecurityDialog;
-import name.abuchen.portfolio.ui.wizards.security.SearchYahooWizardDialog;
-import name.abuchen.portfolio.util.Dates;
+import name.abuchen.portfolio.ui.wizards.security.SearchSecurityWizardDialog;
+import name.abuchen.portfolio.util.TradeCalendar;
+import name.abuchen.portfolio.util.TradeCalendarManager;
 
 public class SecurityListView extends AbstractListView implements ModificationListener
 {
-    private class CreateSecurityDropDown extends AbstractDropDown
+    private class CreateSecurityDropDown extends DropDown implements IMenuListener
     {
-        public CreateSecurityDropDown(ToolBar toolBar)
+        public CreateSecurityDropDown()
         {
-            super(toolBar, Messages.SecurityMenuAddNewSecurity, Images.PLUS.image(), SWT.NONE);
+            super(Messages.SecurityMenuAddNewSecurity, Images.PLUS, SWT.NONE);
+            setMenuListener(this);
         }
 
         @Override
@@ -116,10 +127,26 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 openEditDialog(newSecurity);
             }));
 
+            MenuManager newHICP = new MenuManager(Messages.SecurityMenuNewHICP);
+            manager.add(newHICP);
+
+            new EurostatHICPQuoteFeed().getExchanges(new Security(), new ArrayList<>()).stream()
+                            .forEach(region -> newHICP.add(new SimpleAction(region.getName(), a -> {
+                                Security newSecurity = new Security();
+                                newSecurity.setFeed(EurostatHICPQuoteFeed.ID);
+                                newSecurity.setLatestFeed(QuoteFeed.MANUAL);
+                                newSecurity.setCurrencyCode(null);
+                                newSecurity.setTickerSymbol(region.getId());
+                                newSecurity.setName(region.getName() + Messages.LabelSuffix_HICP);
+                                newSecurity.setCalendar(TradeCalendar.EMPTY_CODE);
+                                openEditDialog(newSecurity);
+                            })));
+
             manager.add(new Separator());
 
-            manager.add(new SimpleAction(Messages.SecurityMenuSearchYahoo, a -> {
-                SearchYahooWizardDialog dialog = new SearchYahooWizardDialog(getToolBar().getShell(), getClient());
+            manager.add(new SimpleAction(Messages.SecurityMenuSearch4Securities, a -> {
+                SearchSecurityWizardDialog dialog = new SearchSecurityWizardDialog(
+                                Display.getDefault().getActiveShell(), getClient());
                 if (dialog.open() == Dialog.OK)
                     openEditDialog(dialog.getSecurity());
             }));
@@ -143,7 +170,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         }
     }
 
-    private class FilterDropDown extends AbstractDropDown
+    private class FilterDropDown extends DropDown implements IMenuListener
     {
         private final Predicate<Security> securityIsNotInactive = record -> !record.isRetired();
         private final Predicate<Security> onlySecurities = record -> !record.isExchangeRate();
@@ -151,9 +178,10 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         private final Predicate<Security> sharesGreaterZero = record -> getSharesHeld(getClient(), record) > 0;
         private final Predicate<Security> sharesEqualZero = record -> getSharesHeld(getClient(), record) == 0;
 
-        public FilterDropDown(ToolBar toolBar, IPreferenceStore preferenceStore)
+        public FilterDropDown(IPreferenceStore preferenceStore)
         {
-            super(toolBar, Messages.SecurityListFilter, Images.FILTER_OFF.image(), SWT.NONE);
+            super(Messages.SecurityListFilter, Images.FILTER_OFF, SWT.NONE);
+            setMenuListener(this);
 
             int savedFilters = preferenceStore.getInt(this.getClass().getSimpleName() + "-filterSettings"); //$NON-NLS-1$
 
@@ -169,9 +197,9 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 filter.add(sharesEqualZero);
 
             if (!filter.isEmpty())
-                getToolItem().setImage(Images.FILTER_ON.image());
+                setImage(Images.FILTER_ON);
 
-            toolBar.addDisposeListener(e -> {
+            addDisposeListener(e -> {
 
                 int savedFilter = 0;
                 if (filter.contains(securityIsNotInactive))
@@ -256,8 +284,8 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                             filter.remove(sharesEqualZero);
                     }
 
-                    getToolItem().setImage(filter.isEmpty() ? Images.FILTER_OFF.image() : Images.FILTER_ON.image());
-                    securities.refresh();
+                    setImage(filter.isEmpty() ? Images.FILTER_OFF : Images.FILTER_ON);
+                    securities.refresh(false);
                 }
             };
             action.setChecked(filter.contains(predicate));
@@ -266,7 +294,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
     }
 
     @Inject
-    private ESelectionService selectionService;
+    private SelectionService selectionService;
 
     @Inject
     private ExchangeRateProviderFactory factory;
@@ -277,6 +305,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
     private TableViewer events;
     private SecuritiesChart chart;
     private SecurityDetailsViewer latest;
+    private SecurityQuoteQualityMetricsViewer metrics;
 
     private List<Predicate<Security>> filter = new ArrayList<>();
 
@@ -305,8 +334,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         if (securities != null && !securities.getTableViewer().getTable().isDisposed())
         {
             updateTitle(getDefaultTitle());
-            securities.getTableViewer().refresh(true);
-            securities.getTableViewer().setSelection(securities.getTableViewer().getSelection());
+            securities.refresh(true);
         }
     }
 
@@ -340,6 +368,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         securities.refresh(security);
         prices.refresh(element);
         latest.setInput(security);
+        metrics.setInput(security);
         transactions.setInput(security.getTransactions(getClient()));
         events.setInput(security.getEvents());
         chart.updateChart(security);
@@ -347,55 +376,65 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         markDirty();
     }
 
-    @Override
-    public void init(PortfolioPart part, Object parameter)
+    @Inject
+    @Optional
+    public void setup(@Named(UIConstants.Parameter.VIEW_PARAMETER) Watchlist parameter)
     {
-        super.init(part, parameter);
-
-        if (parameter instanceof Watchlist)
-            this.watchlist = (Watchlist) parameter;
+        this.watchlist = parameter;
     }
 
     @Override
-    protected void addButtons(ToolBar toolBar)
+    protected void addButtons(ToolBarManager toolBar)
     {
         addSearchButton(toolBar);
 
-        new ToolItem(toolBar, SWT.SEPARATOR | SWT.VERTICAL).setWidth(20);
+        toolBar.add(new Separator());
 
-        new CreateSecurityDropDown(toolBar);
-        new FilterDropDown(toolBar, getPreferenceStore());
+        toolBar.add(new CreateSecurityDropDown());
+        toolBar.add(new FilterDropDown(getPreferenceStore()));
         addExportButton(toolBar);
-        addSaveButton(toolBar);
-        addConfigButton(toolBar);
+
+        toolBar.add(new DropDown(Messages.MenuShowHideColumns, Images.CONFIG, SWT.NONE,
+                        manager -> securities.getColumnHelper().menuAboutToShow(manager)));
     }
 
-    private void addSearchButton(ToolBar toolBar)
+    private void addSearchButton(ToolBarManager toolBar)
     {
-        final Text search = new Text(toolBar, SWT.SEARCH | SWT.ICON_CANCEL);
-        search.setSize(100, SWT.DEFAULT);
-        search.setMessage(Messages.LabelSearch);
-
-        ToolItem toolItem = new ToolItem(toolBar, SWT.SEPARATOR);
-        toolItem.setWidth(search.getSize().x);
-        toolItem.setControl(search);
-
-        search.addModifyListener(e -> {
-            String filterText = search.getText().trim();
-            if (filterText.length() == 0)
+        toolBar.add(new ControlContribution("searchbox") //$NON-NLS-1$
+        {
+            @Override
+            protected Control createControl(Composite parent)
             {
-                filterPattern = null;
-                securities.refresh();
+                final Text search = new Text(parent, SWT.SEARCH | SWT.ICON_CANCEL);
+                search.setMessage(Messages.LabelSearch);
+                search.setSize(300, SWT.DEFAULT);
+
+                search.addModifyListener(e -> {
+                    String filterText = search.getText().trim();
+                    if (filterText.length() == 0)
+                    {
+                        filterPattern = null;
+                        securities.refresh(false);
+                    }
+                    else
+                    {
+                        filterPattern = Pattern.compile(".*" + filterText + ".*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$ //$NON-NLS-2$
+                        securities.refresh(false);
+                    }
+                });
+
+                return search;
             }
-            else
+
+            @Override
+            protected int computeWidth(Control control)
             {
-                filterPattern = Pattern.compile(".*" + filterText + ".*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$ //$NON-NLS-2$
-                securities.refresh();
+                return control.computeSize(100, SWT.DEFAULT, true).x;
             }
         });
     }
 
-    private void addExportButton(ToolBar toolBar)
+    private void addExportButton(ToolBarManager toolBar)
     {
         Action export = new Action()
         {
@@ -409,38 +448,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         export.setImageDescriptor(Images.EXPORT.descriptor());
         export.setToolTipText(Messages.MenuExportData);
 
-        new ActionContributionItem(export).fill(toolBar, -1);
-    }
-
-    private void addSaveButton(ToolBar toolBar)
-    {
-        Action save = new Action()
-        {
-            @Override
-            public void run()
-            {
-                securities.getColumnHelper().showSaveMenu(getActiveShell());
-            }
-        };
-        save.setImageDescriptor(Images.SAVE.descriptor());
-        save.setToolTipText(Messages.MenuConfigureChart);
-        new ActionContributionItem(save).fill(toolBar, -1);
-    }
-
-    private void addConfigButton(ToolBar toolBar)
-    {
-        Action config = new Action()
-        {
-            @Override
-            public void run()
-            {
-                securities.getColumnHelper().showHideShowColumnsMenu(getActiveShell());
-            }
-        };
-        config.setImageDescriptor(Images.CONFIG.descriptor());
-        config.setToolTipText(Messages.MenuShowHideColumns);
-
-        new ActionContributionItem(config).fill(toolBar, -1);
+        toolBar.add(export);
     }
 
     // //////////////////////////////////////////////////////////////
@@ -453,6 +461,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         securities = new SecuritiesTable(parent, this);
         updateTitle(getDefaultTitle());
         securities.getColumnHelper().addListener(() -> updateTitle(getDefaultTitle()));
+        securities.getColumnHelper().setToolBarManager(getViewToolBarManager());
 
         securities.addSelectionChangedListener(event -> onSecurityChanged(
                         (Security) ((IStructuredSelection) event.getSelection()).getFirstElement()));
@@ -523,6 +532,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         prices.refresh();
 
         latest.setInput(security);
+        metrics.setInput(security);
 
         transactions.setInput(security != null ? security.getTransactions(getClient()) : new ArrayList<Transaction>(0));
 
@@ -574,6 +584,12 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         item.setText(Messages.SecurityTabEvents);
         item.setControl(createEventsTable(folder));
 
+        // tab 5: data quality
+        metrics = make(SecurityQuoteQualityMetricsViewer.class);
+        item = new CTabItem(folder, SWT.NONE);
+        item.setText(Messages.GroupLabelDataQuality);
+        item.setControl(metrics.createViewControl(folder));
+
         folder.setSelection(0);
     }
 
@@ -612,8 +628,19 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                     return null;
 
                 SecurityPrice previous = (SecurityPrice) all.get(index - 1);
-                int days = Dates.daysBetween(previous.getDate(), current.getDate());
-                return days > 3 ? Colors.WARNING : null;
+
+                Security security = (Security) prices.getData(Security.class.toString());
+                TradeCalendar calendar = TradeCalendarManager.getInstance(security);
+
+                boolean hasMissing = false;
+                LocalDate date = current.getDate().minusDays(1);
+                while (!hasMissing && date.isAfter(previous.getDate()))
+                {
+                    hasMissing = !calendar.isHoliday(date);
+                    date = date.minusDays(1);
+                }
+
+                return hasMissing ? Colors.WARNING : null;
             }
         });
         ColumnViewerSorter.create(SecurityPrice.class, "date").attachTo(column, SWT.UP); //$NON-NLS-1$
@@ -670,6 +697,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 
                     prices.setInput(security.getPrices());
                     latest.setInput(security);
+                    metrics.setInput(security);
                     transactions.setInput(security.getTransactions(getClient()));
                     events.setInput(security.getEvents());
                     chart.updateChart(security);
@@ -706,6 +734,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 
                     prices.setInput(security.getPrices());
                     latest.setInput(security);
+                    metrics.setInput(security);
                     transactions.setInput(security.getTransactions(getClient()));
                     events.setInput(security.getEvents());
                     chart.updateChart(security);
@@ -730,6 +759,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 
                     prices.setInput(security.getPrices());
                     latest.setInput(security);
+                    metrics.setInput(security);
                     transactions.setInput(security.getTransactions(getClient()));
                     events.setInput(security.getEvents());
                     chart.updateChart(security);
@@ -1007,19 +1037,21 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         });
 
         manager.add(new Separator());
-        manager.add(new SimpleAction(Messages.MenuDeleteAllTransactions, a -> {
+        manager.add(new ConfirmAction(Messages.MenuDeleteAllTransactions,
+                        MessageFormat.format(Messages.MenuConfirmDeleteAllTransactions, security.getName()), //
+                        a -> {
 
-            List<TransactionPair<?>> txs = security.getTransactions(getClient());
+                            List<TransactionPair<?>> txs = security.getTransactions(getClient());
 
-            for (TransactionPair<?> tx : txs)
-            {
-                @SuppressWarnings("unchecked")
-                TransactionPair<Transaction> t = (TransactionPair<Transaction>) tx;
-                t.getOwner().deleteTransaction(t.getTransaction(), getClient());
-            }
+                            for (TransactionPair<?> tx : txs)
+                            {
+                                @SuppressWarnings("unchecked")
+                                TransactionPair<Transaction> t = (TransactionPair<Transaction>) tx;
+                                t.getOwner().deleteTransaction(t.getTransaction(), getClient());
+                            }
 
-            getClient().markDirty();
-        }));
+                            getClient().markDirty();
+                        }));
     }
 
     private Action createEditAction(TransactionPair<?> transactionPair)
@@ -1059,10 +1091,6 @@ public class SecurityListView extends AbstractListView implements ModificationLi
             throw new IllegalArgumentException();
         }
     }
-
-    // //////////////////////////////////////////////////////////////
-    // tab item: transactions
-    // //////////////////////////////////////////////////////////////
 
     protected Composite createEventsTable(Composite parent)
     {

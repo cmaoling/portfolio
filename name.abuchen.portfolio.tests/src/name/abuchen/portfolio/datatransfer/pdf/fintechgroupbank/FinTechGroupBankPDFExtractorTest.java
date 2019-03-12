@@ -521,6 +521,76 @@ public class FinTechGroupBankPDFExtractorTest
                         is(Money.of("EUR", Values.Amount.factorize(3.9))));
         assertThat(entry.getPortfolioTransaction().getShares(), is(Values.Share.factorize(2000)));
     }
+    
+    @Test
+    public void testWertpapierKauf13() throws IOException
+    {
+        FinTechGroupBankPDFExtractor extractor = new FinTechGroupBankPDFExtractor(new Client());
+
+        List<Exception> errors = new ArrayList<Exception>();
+
+        List<Item> results = extractor.extract(PDFInputFile.loadTestCase(getClass(), "FlatexKauf13.txt"), errors);
+
+        assertThat(errors, empty());
+        assertThat(results.size(), is(2));
+
+        // security
+        Optional<Item> item = results.stream().filter(i -> i instanceof SecurityItem).findFirst();
+        assertThat(item.isPresent(), is(true));
+        Security security = ((SecurityItem) item.get()).getSecurity();
+        assertThat(security.getIsin(), is("LU0635178014"));
+        assertThat(security.getWkn(), is("ETF127"));
+        assertThat(security.getName(), is("COMS.-MSCI EM.M.T.U.ETF I"));
+
+        item = results.stream().filter(i -> i instanceof BuySellEntryItem).findFirst();
+        assertThat(item.isPresent(), is(true));
+        assertThat(item.get().getSubject(), instanceOf(BuySellEntry.class));
+        BuySellEntry entry = (BuySellEntry) item.get().getSubject();
+
+        assertThat(entry.getPortfolioTransaction().getType(), is(PortfolioTransaction.Type.BUY));
+        assertThat(entry.getAccountTransaction().getType(), is(AccountTransaction.Type.BUY));
+
+        assertThat(entry.getPortfolioTransaction().getAmount(), is(Values.Amount.factorize(52.50)));
+        assertThat(entry.getPortfolioTransaction().getDateTime(), is(LocalDateTime.parse("2019-01-03T00:00")));
+        assertThat(entry.getPortfolioTransaction().getUnitSum(Unit.Type.FEE),
+                        is(Money.of("EUR", Values.Amount.factorize(0.0))));
+        assertThat(entry.getPortfolioTransaction().getShares(), is(Values.Share.factorize(1.43414)));
+    }
+
+    @Test
+    public void testWertpapierKauf14() throws IOException
+    {
+        FinTechGroupBankPDFExtractor extractor = new FinTechGroupBankPDFExtractor(new Client());
+
+        List<Exception> errors = new ArrayList<Exception>();
+
+        List<Item> results = extractor.extract(PDFInputFile.loadTestCase(getClass(), "FlatexKauf14.txt"), errors);
+
+        assertThat(errors, empty());
+        assertThat(results.size(), is(2));
+
+        // security
+        Optional<Item> item = results.stream().filter(i -> i instanceof SecurityItem).findFirst();
+        assertThat(item.isPresent(), is(true));
+        Security security = ((SecurityItem) item.get()).getSecurity();
+        assertThat(security.getIsin(), is("IE00BF2B0K52"));
+        assertThat(security.getWkn(), is("A2DTF1"));
+        assertThat(security.getName(), is("FRAN.LIB.Q EM EQ.UC.DLA"));
+
+        item = results.stream().filter(i -> i instanceof BuySellEntryItem).findFirst();
+        assertThat(item.isPresent(), is(true));
+        assertThat(item.get().getSubject(), instanceOf(BuySellEntry.class));
+        BuySellEntry entry = (BuySellEntry) item.get().getSubject();
+
+        assertThat(entry.getPortfolioTransaction().getType(), is(PortfolioTransaction.Type.BUY));
+        assertThat(entry.getAccountTransaction().getType(), is(AccountTransaction.Type.BUY));
+
+        assertThat(entry.getPortfolioTransaction().getAmount(), is(Values.Amount.factorize(1279.55)));
+        assertThat(entry.getPortfolioTransaction().getDateTime(), is(LocalDateTime.parse("2019-01-17T00:00")));
+        assertThat(entry.getPortfolioTransaction().getUnitSum(Unit.Type.FEE),
+                        is(Money.of("EUR", Values.Amount.factorize(8.61))));
+        assertThat(entry.getPortfolioTransaction().getShares(), is(Values.Share.factorize(61)));
+    }
 
     @Test
     public void testKontoauszug() throws IOException
@@ -909,6 +979,31 @@ public class FinTechGroupBankPDFExtractorTest
                         hasProperty("type", is(PortfolioTransaction.Type.SELL)), //
                         hasProperty("monetaryAmount",
                                         is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(0.95)))))));
+    }
+    
+    @Test
+    public void testWertpapierVerkauf5() throws IOException
+    {
+        FinTechGroupBankPDFExtractor extractor = new FinTechGroupBankPDFExtractor(new Client());
+        List<Exception> errors = new ArrayList<Exception>();
+
+        List<Item> results = extractor.extract(PDFInputFile.loadTestCase(getClass(), "FlatexVerkauf5.txt"), errors);
+
+        assertThat(errors, empty());
+        assertThat(results.size(), is(2));
+        
+        List<PortfolioTransaction> tx = results.stream() //
+                        .filter(i -> i instanceof BuySellEntryItem)
+                        .map(i -> ((BuySellEntry) i.getSubject()).getPortfolioTransaction())
+                        .collect(Collectors.toList());
+        
+        assertThat(tx.size(), is(1));
+        
+        assertThat(tx, hasItem(allOf( //
+                        hasProperty("dateTime", is(LocalDateTime.parse("2019-02-06T00:00"))), //
+                        hasProperty("type", is(PortfolioTransaction.Type.SELL)), //
+                        hasProperty("monetaryAmount",
+                                        is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(9.48)))))));
     }
     
     @Test

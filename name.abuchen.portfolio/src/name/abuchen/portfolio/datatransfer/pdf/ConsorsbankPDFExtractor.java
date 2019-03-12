@@ -1,10 +1,10 @@
 package name.abuchen.portfolio.datatransfer.pdf;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Optional;
 
+import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.pdf.PDFParser.Block;
 import name.abuchen.portfolio.datatransfer.pdf.PDFParser.DocumentType;
 import name.abuchen.portfolio.datatransfer.pdf.PDFParser.Transaction;
@@ -19,7 +19,7 @@ import name.abuchen.portfolio.money.Money;
 
 public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
 {
-    public ConsorsbankPDFExtractor(Client client) throws IOException
+    public ConsorsbankPDFExtractor(Client client)
     {
         super(client);
 
@@ -241,7 +241,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
                                                 Math.round(accountMoneyValue.doubleValue()));
                                 // replace BRUTTO (which is in foreign currency)
                                 // with the value in transaction currency
-                                BigDecimal inverseRate = BigDecimal.ONE.divide(rate, 10, BigDecimal.ROUND_HALF_DOWN);
+                                BigDecimal inverseRate = BigDecimal.ONE.divide(rate, 10, RoundingMode.HALF_DOWN);
                                 Unit grossValue = new Unit(Unit.Type.GROSS_VALUE, accountMoney, currentMonetaryAmount,
                                                 inverseRate);
 
@@ -431,7 +431,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
 
                         // Den Steuerausgleich buchen wir mit Wertstellung
                         // 10.07.2017
-                        .section("date")
+                        .section("date").optional()
                         .match(" *Den Steuerausgleich buchen wir mit Wertstellung (?<date>\\d+.\\d+.\\d{4}) .*")
                         .assign((t, v) -> t.setDateTime(asDate(v.get("date"))))
 
@@ -456,7 +456,19 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
                                 t.setType(AccountTransaction.Type.TAXES);
                         })
 
-                        .wrap(t -> new TransactionItem(t)));
+                        .wrap(t -> {
+                            if (t.getDateTime() == null)
+                            {
+                                if (t.getAmount() == 0L)
+                                    return new NonImportableItem("Erstattung/Belastung von Steuern mit 0 Euro");
+                                else
+                                    throw new IllegalArgumentException(Messages.MsgErrorMissingDate);
+                            }
+                            else
+                            {
+                                return new TransactionItem(t);
+                            }
+                        }));
     }
 
     @SuppressWarnings("nls")
@@ -532,7 +544,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
                         .match("Brutto in (\\w{3}+) (?<amount>[\\d.]+,\\d+) (?<currency>\\w{3}+)") //
                         .assign((t, v) -> {
                             BigDecimal rate = asExchangeRate(v.get("exchangeRate"));
-                            BigDecimal inverseRate = BigDecimal.ONE.divide(rate, 10, BigDecimal.ROUND_HALF_DOWN);
+                            BigDecimal inverseRate = BigDecimal.ONE.divide(rate, 10, RoundingMode.HALF_DOWN);
 
                             type.getCurrentContext().put("exchangeRate", inverseRate.toPlainString());
 
@@ -561,7 +573,7 @@ public class ConsorsbankPDFExtractor extends AbstractPDFExtractor
 
                                 Money txTax = Money.of(t.getCurrencyCode(),
                                                 BigDecimal.valueOf(tax.getAmount()).multiply(exchangeRate)
-                                                                .setScale(0, BigDecimal.ROUND_HALF_UP).longValue());
+                                                                .setScale(0, RoundingMode.HALF_UP).longValue());
 
                                 t.addUnit(new Unit(Unit.Type.TAX, txTax));
 

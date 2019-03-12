@@ -17,11 +17,11 @@ import org.eclipse.swt.widgets.FileDialog;
 import name.abuchen.portfolio.datatransfer.csv.CSVExporter;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.ui.AbstractFinanceView;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
-import name.abuchen.portfolio.ui.UpdateQuotesJob;
 import name.abuchen.portfolio.ui.dialogs.SecurityPriceDialog;
+import name.abuchen.portfolio.ui.editor.AbstractFinanceView;
+import name.abuchen.portfolio.ui.jobs.UpdateQuotesJob;
 import name.abuchen.portfolio.ui.wizards.datatransfer.CSVImportWizard;
 import name.abuchen.portfolio.ui.wizards.datatransfer.ImportQuotesWizard;
 import name.abuchen.portfolio.ui.wizards.security.EditSecurityDialog;
@@ -89,6 +89,7 @@ public class QuotesContextMenu
 
                 CSVImportWizard wizard = new CSVImportWizard(owner.getClient(), owner.getPreferenceStore(),
                                 new File(fileName));
+                owner.inject(wizard);
                 wizard.setTarget(security);
                 Dialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 
