@@ -63,6 +63,8 @@ import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
@@ -99,6 +101,9 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumMapFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.FieldFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Header;
+//import name.abuchen.portfolio.datatransfer.csv.CSVImporter.HeaderSet;
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
@@ -127,6 +132,11 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
 
     private CSVConfigManager configManager;
     private final boolean onlySecurityPrices;
+    private Account account = null;
+
+    private ComboViewer extractorComboViewer = null;
+    private Spinner skipLinesSpinner = null;
+    private ComboViewer encodingComboViewer = null;
 
     private TableViewer tableViewer;
     private Menu configurationDropDownMenu;
@@ -145,8 +155,10 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
         this.configManager = configManager;
         this.onlySecurityPrices = onlySecurityPrices;
 
-        importer.setExtractor(
-                        onlySecurityPrices ? importer.getSecurityPriceExtractor() : importer.getExtractors().get(0));
+        if (onlySecurityPrices)
+            this.changeExtractor(importer.getSecurityPriceExtractor());
+        else
+            this.changeExtractor(importer.getExtractor());
 
         this.context = new DataBindingContext();
     }
@@ -183,7 +195,8 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
 
         Label lblExtractor = new Label(container, SWT.RIGHT);
         lblExtractor.setText(Messages.CSVImportLabelTarget);
-        ComboViewer extractor = createExtractorComboViewer(container);
+        extractorComboViewer = createExtractorComboViewer(container);
+        ComboViewer extractor = extractorComboViewer;
 
         Button button = new Button(container, SWT.NONE);
         button.setImage(Images.CONFIG.image());
@@ -195,22 +208,29 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
 
         Label lblSkipLines = new Label(container, SWT.NONE);
         lblSkipLines.setText(Messages.CSVImportLabelSkipLines);
-        final Spinner skipLines = new Spinner(container, SWT.BORDER);
+        skipLinesSpinner = new Spinner(container, SWT.BORDER);
+        final Spinner skipLines = skipLinesSpinner;
         skipLines.setMinimum(0);
-
-        IObservableValue<?> spinnerTarget = WidgetProperties.selection().observe(skipLines);
-        @SuppressWarnings("unchecked")
-        IObservableValue<String> spinnerModel = BeanProperties.value("skipLines").observe(importer); //$NON-NLS-1$
-        context.bindValue(spinnerTarget, spinnerModel);
-
-        skipLines.addModifyListener(event -> doProcessFile());
+        skipLines.setSelection(importer.getSkipLines());
+        skipLines.addModifyListener(new ModifyListener()
+        {
+            @Override
+            public void modifyText(ModifyEvent event)
+            {
+                onSkipLinesChanged(skipLines.getSelection());
+                doProcessFile(); // from commit fca910a
+            }
+        });
 
         Label lblEncoding = new Label(container, SWT.NONE);
         lblEncoding.setText(Messages.CSVImportLabelEncoding);
         Combo cmbEncoding = new Combo(container, SWT.READ_ONLY);
-        ComboViewer encoding = new ComboViewer(cmbEncoding);
+        encodingComboViewer = new ComboViewer(cmbEncoding);
+        ComboViewer encoding = encodingComboViewer;
         encoding.setContentProvider(ArrayContentProvider.getInstance());
         encoding.setInput(Charset.availableCharsets().values().toArray());
+//        encoding.setSelection(new StructuredSelection(importer.getEncoding()));
+//        encoding.addSelectionChangedListener(this);
 
         IObservableValue<?> encodingTarget = ViewersObservables.observeSingleSelection(encoding);
         @SuppressWarnings("unchecked")
@@ -293,6 +313,17 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
         //
         // setup form elements
         //
+//        List<Object> targets = new ArrayList<Object>();
+//        for (CSVImportDefinition def : importer.getDefinitions())
+//        {
+//            targets.add(def);
+//            targets.addAll(def.getTargets(importer.getClient()));
+//        }
+//        target.setInput(targets);
+//        target.setSelection(new StructuredSelection(target.getElementAt(0)));
+        
+        extractorComboViewer.setInput(importer.getExtractors());
+        extractorComboViewer.getCombo().select(importer.getExtractors().indexOf(importer.getExtractor()));
         doProcessFile();
     }
 
@@ -344,6 +375,26 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
         return delimiter;
     }
 
+    private void changeExtractor(CSVExtractor def)
+    {
+            importer.setExtractor(def);
+//            importer.setEncoding(Charset.forName(def.getDefaultEncoding()));
+//            importer.setSkipLines(def.getDefaultSkipLines());
+//            importer.setHeader(headerset.get(def.getDefaultHeadering()));
+//
+//            if (extractorComboViewer != null)
+//                extractorComboViewer.setSelection(new StructuredSelection(importer.getExtractor()));
+//
+//            if (skipLinesSpinner != null)
+//                skipLinesSpinner.setSelection(importer.getSkipLines());
+//
+//            if (encodingComboViewer != null)
+//                encodingComboViewer.setSelection(new StructuredSelection(importer.getEncoding()));
+//
+//            if (headeringComboViewer != null)
+//                headeringComboViewer.setSelection(new StructuredSelection(importer.getHeader()));
+    }
+
     private void onTargetChanged()
     {
         // important: by changing the extractor, there still might be old (now
@@ -357,6 +408,12 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
         config.writeTo(importer);
 
         doProcessFile(false);
+    }
+
+    private void onSkipLinesChanged(int linesToSkip)
+    {
+        importer.setSkipLines(linesToSkip);
+        doProcessFile();
     }
 
     private void onColumnSelected(int columnIndex)
@@ -539,7 +596,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
                 setColumnLabel(tableColumn, column);
             }
 
-            List<Object> input = new ArrayList<>();
+            List<Object> input = new ArrayList<Object>();
             input.add(importer);
             input.addAll(importer.getRawValues());
             tableViewer.setInput(input);
@@ -591,7 +648,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
 
     private void doUpdateErrorMessages()
     {
-        Set<Field> fieldsToMap = new HashSet<>(importer.getExtractor().getFields());
+        Set<Field> fieldsToMap = new HashSet<Field>(importer.getExtractor().getFields());
         for (Column column : importer.getColumns())
             fieldsToMap.remove(column.getField());
 
@@ -755,7 +812,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
 
             ComboViewer mappedTo = new ComboViewer(composite, SWT.READ_ONLY);
             mappedTo.setContentProvider(ArrayContentProvider.getInstance());
-            List<Field> fields = new ArrayList<>();
+            List<Field> fields = new ArrayList<Field>();
             fields.add(EMPTY);
             fields.addAll(definition.getFields());
             mappedTo.setInput(fields);
@@ -963,5 +1020,20 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
         {
             // nothing to do
         }
+    }
+
+    public void setAccount(Account account)
+    {
+        this.account = account;
+    }
+
+    @Override
+    public void beforePage()
+    {
+        if (account == null)
+            return;
+        CSVExtractor e = importer.setExtractor(account.getExtractor());
+        if (e != null)
+            changeExtractor(e);
     }
 }

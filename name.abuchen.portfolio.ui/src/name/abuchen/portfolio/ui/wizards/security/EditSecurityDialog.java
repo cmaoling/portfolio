@@ -201,6 +201,7 @@ public class EditSecurityDialog extends Dialog
         addPage(new SecurityTaxonomyPage(model, bindings), null);
         addPage(new HistoricalQuoteProviderPage(model, bindings), null);
         addPage(new LatestQuoteProviderPage(model, bindings), null);
+        addPage(new EventProviderPage(model, bindings), null);
 
         tabFolder.setSelection(showQuoteConfigurationInitially ? 3 : 0);
 
@@ -242,11 +243,18 @@ public class EditSecurityDialog extends Dialog
 
         boolean quotesCanChange = feedChanged || tickerChanged || feedURLChanged || currencyChanged;
 
+        boolean hasEvents = !security.getEvents().isEmpty();
+
+        boolean eventsFeedChanged = !Objects.equals(model.getEventFeed(), security.getEventFeed());
+        boolean eventsfeedURLChanged = !Objects.equals(model.getEventFeedURL(), security.getEventFeedURL());
+
+        boolean eventsCanChange = eventsFeedChanged || eventsfeedURLChanged;
+
         model.applyChanges();
 
         eventBroker.post(ChangeEventConstants.Security.EDITED, new SecurityChangeEvent(model.getClient(), security));
 
-        if (hasQuotes && quotesCanChange)
+        if (hasQuotes && quotesCanChange  || (hasEvents && eventsCanChange))
         {
             MessageDialog dialog = new MessageDialog(getShell(), //
                             Messages.MessageDialogProviderChanged, null, //
@@ -256,7 +264,10 @@ public class EditSecurityDialog extends Dialog
                                             Messages.MessageDialogProviderAnswerReplace },
                             0);
             if (dialog.open() == 1)
-                security.removeAllPrices();
+                if (quotesCanChange)
+                    security.removeAllPrices();
+                if (eventsCanChange)
+                    security.removeAllEvents();
         }
 
         super.okPressed();

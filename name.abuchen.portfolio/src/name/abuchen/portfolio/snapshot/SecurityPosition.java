@@ -107,44 +107,43 @@ public class SecurityPosition
 
         private void calculatePurchaseValuePriceFIFO(CurrencyConverter converter, List<PortfolioTransaction> input)
         {
-            long sharesSold = input.stream().filter(t -> t.getType().isLiquidation())
-                            .mapToLong(PortfolioTransaction::getShares).sum();
+            //System.err.println("SecurityPosition.calculatePurchaseValuePrice    ========== START ===========");
+            Collections.sort(input, new Transaction.ByDate());
 
-            long sharesBought = 0;
             long grossInvestment = 0;
             long netInvestment = 0;
-
+            long sharesBought = 0;
+            long sharesSold = 0;
             for (PortfolioTransaction t : input)
             {
-                if (t.getType().isLiquidation())
-                    continue;
+                long grossAmount;
+                long netAmount;
 
-                long bought = t.getShares();
+                grossAmount = t.getMonetaryAmount(converter).getAmount();
+                netAmount = t.getGrossValue(converter).getAmount();
 
-                if (sharesSold > 0)
+                //System.err.println("SecurityPosition.calculatePurchaseValuePrice t: " + t.toString());
+                if (t.getType() == Type.TRANSFER_OUT || t.getType() == Type.SELL
+                                || t.getType() == Type.DELIVERY_OUTBOUND)
                 {
-                    sharesSold -= bought;
+                    sharesSold += t.getShares();
+                    grossInvestment -= grossAmount;
+                    netInvestment -= netAmount;
 
-                    if (sharesSold < 0)
-                        bought = -sharesSold;
-                    else
-                        bought = 0;
                 }
-
-                if (bought > 0)
+                else if (t.getType() == Type.TRANSFER_IN || t.getType() == Type.BUY || t.getType() == Type.DELIVERY_INBOUND)
                 {
-                    sharesBought += bought;
-                    grossInvestment += Math.round(
-                                    t.getMonetaryAmount(converter).getAmount() / (double) t.getShares() * bought);
-                    netInvestment += Math
-                                    .round(t.getGrossValue(converter).getAmount() / (double) t.getShares() * bought);
+                    sharesBought += t.getShares();
+                    grossInvestment += grossAmount;
+                    netInvestment += netAmount;
                 }
+                //System.err.println("SecurityPosition.calculatePurchaseValuePrice sharesBought: " + sharesSold + " grossInvestment: " + grossInvestment + " netInvestment: " + netInvestment);
             }
 
-            this.purchasePrice = Money.of(converter.getTermCurrency(), sharesBought > 0
-                            ? Math.round((netInvestment / (double) sharesBought * Values.Share.factor()))
-                            : 0);
+            this.purchasePrice = Money.of(converter.getTermCurrency(), (sharesBought - sharesSold) > 0
+                            ? Math.round((netInvestment * Values.Share.factor()) / (double) (sharesBought - sharesSold)) : 0);
             this.purchaseValue = Money.of(converter.getTermCurrency(), grossInvestment);
+            //System.err.println("SecurityPosition.calculatePurchaseValuePrice purchasePrice: " + this.purchasePrice + " purchaseValue: " + this.purchaseValue + "  \n ========== END ===========");
         }
 
         private void calculatePurchaseValuePriceMvgAvg(CurrencyConverter converter, List<PortfolioTransaction> input)

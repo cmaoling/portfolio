@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.ui.views;
 
+import java.io.File;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -17,7 +18,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.layout.TableColumnLayout;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
@@ -25,6 +28,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.ToolTip;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -35,12 +39,15 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Shell;
 
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransaction.Type;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.BuySellEntry;
+import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Money;
@@ -72,6 +79,8 @@ import name.abuchen.portfolio.ui.views.columns.CurrencyColumn.CurrencyEditingSup
 import name.abuchen.portfolio.ui.views.columns.NameColumn;
 import name.abuchen.portfolio.ui.views.columns.NameColumn.NameColumnLabelProvider;
 import name.abuchen.portfolio.ui.views.columns.NoteColumn;
+import name.abuchen.portfolio.ui.views.columns.IbanColumn;
+import name.abuchen.portfolio.ui.wizards.datatransfer.CSVImportWizard;
 
 public class AccountListView extends AbstractListView implements ModificationListener
 {
@@ -270,6 +279,10 @@ public class AccountListView extends AbstractListView implements ModificationLis
         });
         accountColumns.addColumn(column);
 
+        column = new IbanColumn();
+        column.getEditingSupport().addListener(this);
+        accountColumns.addColumn(column);
+
         column = new NoteColumn();
         column.getEditingSupport().addListener(this);
         accountColumns.addColumn(column);
@@ -294,6 +307,37 @@ public class AccountListView extends AbstractListView implements ModificationLis
 
         accountMenu.menuAboutToShow(manager, account, null);
         manager.add(new Separator());
+
+        manager.add(new Action(Messages.AccountMenuImportCSV)
+        {
+            @Override
+            public void run()
+            {
+                Client client = getClient();
+                Shell shell  = Display.getDefault().getActiveShell();
+                String filterPath = (getClientFileName() == null?System.getProperty("user.dir"):getClientFileName().getParent().toString()); //$NON-NLS-1$
+
+                FileDialog fileDialog = new FileDialog(shell, SWT.OPEN);
+                fileDialog.setFilterPath(filterPath);
+                fileDialog.setFilterNames(new String[] { Messages.CSVImportLabelFileCSV, Messages.CSVImportLabelFileAll });
+                fileDialog.setFilterExtensions(new String[] { "*.csv", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+                String fileName = fileDialog.open();
+
+                if (fileName == null)
+                    return;
+
+                IPreferenceStore preferences = getPreferenceStore();
+                CSVImportWizard wizard = new CSVImportWizard(client, preferences, new File(fileName));
+                wizard.setTarget(account);
+                Dialog wizwardDialog = new WizardDialog(shell, wizard);
+                if (wizwardDialog.open() != Dialog.OK)
+                    return;
+
+                markDirty();
+                resetInput();
+            }
+
+        });
 
         manager.add(new Action(account.isRetired() ? Messages.AccountMenuActivate : Messages.AccountMenuDeactivate)
         {
@@ -481,7 +525,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
                 {
                     return ((BuySellEntry) t.getCrossEntry()).getPortfolioTransaction().getShares();
                 }
-                else if (t.getType() == Type.DIVIDENDS && t.getShares() != 0)
+                else if ((t.getType() == Type.DIVIDENDS || t.getType() == Type.DIVIDEND_CHARGE) && t.getShares() != 0)
                 {
                     return t.getShares();
                 }
@@ -503,7 +547,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
             public boolean canEdit(Object element)
             {
                 AccountTransaction t = (AccountTransaction) element;
-                return t.getType() == AccountTransaction.Type.DIVIDENDS;
+                return ((t.getType() == AccountTransaction.Type.DIVIDENDS || t.getType() == Type.DIVIDEND_CHARGE) && t.getShares() != 0);
             }
         }.addListener(this).attachTo(column);
         transactionsColumns.addColumn(column);
@@ -521,7 +565,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
                     PortfolioTransaction pt = ((BuySellEntry) t.getCrossEntry()).getPortfolioTransaction();
                     return Values.Quote.format(pt.getGrossPricePerShare(), getClient().getBaseCurrency());
                 }
-                else if (t.getType() == Type.DIVIDENDS && t.getShares() != 0)
+                else if ((t.getType() == Type.DIVIDENDS || t.getType() == Type.DIVIDEND_CHARGE) && t.getShares() != 0)
                 {
                     long perShare = Math.round(t.getGrossValueAmount() * Values.Share.divider()
                                     * Values.Quote.factorToMoney() / t.getShares());
@@ -541,14 +585,19 @@ public class AccountListView extends AbstractListView implements ModificationLis
         });
         transactionsColumns.addColumn(column);
 
-        column = new Column("7", Messages.ColumnOffsetAccount, SWT.None, 120); //$NON-NLS-1$
+        column = new Column("7", MessageFormat.format(Messages.ColumnPeerOrSomething, Messages.ColumnOffsetAccount, Messages.ColumnPeer), SWT.None, 120); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
             public String getText(Object e)
             {
                 AccountTransaction t = (AccountTransaction) e;
-                return t.getCrossEntry() != null ? t.getCrossEntry().getCrossOwner(t).toString() : null;
+                if (t.getCrossEntry() != null)
+                    return MessageFormat.format(Messages.FormatAccount, t.getCrossEntry().getCrossOwner(t).toString());
+                else if (t.getPeer() != null)
+                    return t.getPeer().getName();
+                else
+                    return null;
             }
 
             @Override
@@ -706,6 +755,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
                 case REMOVAL:
                 case FEES:
                 case INTEREST_CHARGE:
+                case DIVIDEND_CHARGE:
                 case TAXES:
                 case BUY:
                 case TRANSFER_OUT:

@@ -34,7 +34,7 @@ import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
 
-public final class EurostatHICPQuoteFeed implements QuoteFeed
+public final class EurostatHICPQuoteFeed extends QuoteFeed
 {
 
     public static final String ID = "EUROSTATHICP"; //$NON-NLS-1$

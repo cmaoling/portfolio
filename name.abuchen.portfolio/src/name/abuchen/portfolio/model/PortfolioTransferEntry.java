@@ -2,12 +2,20 @@ package name.abuchen.portfolio.model;
 
 import java.time.LocalDateTime;
 
+import name.abuchen.portfolio.Messages;
+
 public class PortfolioTransferEntry implements CrossEntry, Annotated
 {
     private Portfolio portfolioFrom;
     private PortfolioTransaction transactionFrom;
     private Portfolio portfolioTo;
     private PortfolioTransaction transactionTo;
+    private Suggestion quoteSuggestion;
+
+    public enum Suggestion
+    {
+        none, purchase, market, goodwill;
+    }
 
     public PortfolioTransferEntry()
     {
@@ -18,6 +26,8 @@ public class PortfolioTransferEntry implements CrossEntry, Annotated
         this.transactionTo = new PortfolioTransaction();
         this.transactionTo.setType(PortfolioTransaction.Type.TRANSFER_IN);
         this.transactionTo.setCrossEntry(this);
+
+        this.quoteSuggestion = Suggestion.none;
     }
 
     public PortfolioTransferEntry(Portfolio portfolioFrom, Portfolio portfolioTo)
@@ -110,6 +120,16 @@ public class PortfolioTransferEntry implements CrossEntry, Annotated
         this.transactionTo.setNote(note);
     }
 
+    public Suggestion getQuoteSuggestion()
+    {
+        return this.quoteSuggestion;
+    }
+
+    public void setQuoteSuggestion(Suggestion suggestion)
+    {
+        this.quoteSuggestion = suggestion;
+    }
+
     @Override
     public void insert()
     {
@@ -181,5 +201,14 @@ public class PortfolioTransferEntry implements CrossEntry, Annotated
             return portfolioFrom;
         else
             throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("FROM: %s \nTO: %s\n Suggestion: %s", //$NON-NLS-1$
+                        transactionFrom.toString(),
+                        transactionTo.toString(),
+                        (quoteSuggestion != null ? quoteSuggestion.toString() : Messages.LabelNullPointer));
     }
 }

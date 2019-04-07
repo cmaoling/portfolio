@@ -418,6 +418,11 @@ public class PortfolioPart implements ClientInputListener
         clientInput.markDirty();
     }
 
+    public File getClientFileName()
+    {
+        return clientInput.getFile();
+    }
+
     public void activateView(String target, String id)
     {
         this.activateView(target, id, null);

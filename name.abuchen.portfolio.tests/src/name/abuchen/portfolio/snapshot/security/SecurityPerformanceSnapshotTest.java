@@ -89,7 +89,7 @@ public class SecurityPerformanceSnapshotTest
                         .create(client, new TestCurrencyConverter(), reportingPeriod.getEnd())
                         .getPositionsByVehicle().get(security).getPosition();
 
-        assertThat(position.getFIFOPurchaseValue(), is(record.getFifoCost()));
+        assertThat(position.getFIFOPurchaseValue(), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(450000 - 0.989))));
         assertThat(position.getFIFOPurchasePrice(), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(0.9))));
 
         assertThat(position.getMovingAveragePurchaseValue(), is(record.getMovingAverageCost()));

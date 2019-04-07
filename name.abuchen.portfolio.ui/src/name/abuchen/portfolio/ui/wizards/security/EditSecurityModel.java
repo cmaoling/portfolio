@@ -179,6 +179,9 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
     private String tickerSymbol;
     private String wkn;
     private String calendar;
+    private String eventFeed;
+    private String eventFeedURL;
+    private int    delayedDividend;
     private String feed;
     private String feedURL;
     private String latestFeed;
@@ -210,6 +213,9 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
         this.tickerSymbol = security.getTickerSymbol();
         this.wkn = security.getWkn();
         this.calendar = security.getCalendar();
+        this.eventFeed = security.getEventFeed();
+        this.eventFeedURL = security.getEventFeedURL();
+        this.delayedDividend = security.getDelayedDividend();
         this.feed = security.getFeed();
         this.feedURL = security.getFeedURL();
         this.latestFeed = security.getLatestFeed();
@@ -320,6 +326,16 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
         firePropertyChange("calendar", this.calendar, this.calendar = calendar); //$NON-NLS-1$ //NOSONAR
     }
 
+    public int getDelayedDividend()
+    {
+        return delayedDividend;
+    }
+
+    public void setDelayedDividend(int delayedDividend)
+    {
+        firePropertyChange("delayedDividend", this.delayedDividend, this.delayedDividend = delayedDividend); //$NON-NLS-1$
+    }
+
     public String getFeed()
     {
         return feed;
@@ -338,6 +354,27 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
     public void setFeedURL(String feedURL)
     {
         firePropertyChange("feedURL", this.feedURL, this.feedURL = feedURL); //$NON-NLS-1$ //NOSONAR
+    }
+
+
+    public String getEventFeed()
+    {
+        return eventFeed;
+    }
+
+    public void setEventFeed(String feed)
+    {
+        firePropertyChange("eventFeed", this.eventFeed, this.eventFeed = feed); //$NON-NLS-1$
+    }
+
+    public String getEventFeedURL()
+    {
+        return eventFeedURL;
+    }
+
+    public void setEventFeedURL(String feedURL)
+    {
+        firePropertyChange("eventFeedURL", this.eventFeedURL, this.eventFeedURL = feedURL); //$NON-NLS-1$
     }
 
     public String getLatestFeed()
@@ -434,6 +471,9 @@ import name.abuchen.portfolio.ui.util.BindingHelper;
         security.setTickerSymbol(tickerSymbol);
         security.setWkn(wkn);
         security.setCalendar(calendar);
+        security.setEventFeed(eventFeed);
+        security.setEventFeedURL(eventFeedURL);
+        security.setDelayedDividend(delayedDividend);
         security.setFeed(feed);
         security.setFeedURL(feedURL);
         security.setLatestFeed(latestFeed);

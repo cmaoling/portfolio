@@ -188,7 +188,8 @@ public class DividendsViewModel
         {
             for (AccountTransaction t : account.getTransactions())
             {
-                if (t.getType() != AccountTransaction.Type.DIVIDENDS)
+                AccountTransaction.Type type = t.getType();
+                if (type != AccountTransaction.Type.DIVIDENDS && type != AccountTransaction.Type.DIVIDEND_CHARGE)
                     continue;
 
                 if (!predicate.test(t))
@@ -197,7 +198,7 @@ public class DividendsViewModel
                 transactions.add(new TransactionPair<>(account, t));
 
                 Money dividendValue = useGrossValue ? t.getGrossValue() : t.getMonetaryAmount();
-                long value = dividendValue.with(converter.at(t.getDateTime())).getAmount();
+                long value = (type == AccountTransaction.Type.DIVIDEND_CHARGE ? -1 : 1) * dividendValue.with(converter.at(t.getDateTime())).getAmount();
                 int index = (t.getDateTime().getYear() - startYear) * 12 + t.getDateTime().getMonthValue() - 1;
 
                 Line line = vehicle2line.computeIfAbsent(t.getSecurity(), s -> new Line(s, noOfmonths));

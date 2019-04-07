@@ -88,6 +88,7 @@ public class SecurityPerformanceSnapshot
             {
                 case DIVIDENDS:
                 case INTEREST:
+                case DIVIDEND_CHARGE:
                     DividendTransaction dt = DividendTransaction.from(t);
                     dt.setAccount(account);
                     records.get(t.getSecurity()).addTransaction(dt);

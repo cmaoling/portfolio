@@ -1,6 +1,7 @@
 package name.abuchen.portfolio.ui.wizards.datatransfer;
 
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +18,7 @@ import name.abuchen.portfolio.datatransfer.actions.InsertAction;
 import name.abuchen.portfolio.datatransfer.csv.CSVConfig;
 import name.abuchen.portfolio.datatransfer.csv.CSVConfigManager;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter;
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
@@ -53,6 +55,13 @@ public class CSVImportWizard extends Wizard
         {
             return this.importer.createItems(errors);
         }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T extends Extractor> T getSubject()
+        {
+            return (T) this.importer.getExtractor();
+        }
     }
 
     /* package */static final String REVIEW_PAGE_ID = "reviewitems"; //$NON-NLS-1$
@@ -68,7 +77,12 @@ public class CSVImportWizard extends Wizard
      * If a target security is given, then only security prices are imported
      * directly into that security.
      */
-    private Security target;
+    private Security security;
+
+    /**
+     * If a target account is given, then account is preselected to be imported
+     */
+    private Account account;
 
     /**
      * If a CSVConfig is given, then this configuration is preset (used when
@@ -85,12 +99,17 @@ public class CSVImportWizard extends Wizard
         this.client = client;
         this.preferences = preferences;
         this.importer = new CSVImporter(client, inputFile);
-        setWindowTitle(Messages.CSVImportWizardTitle);
+        setWindowTitle(MessageFormat.format(Messages.CSVImportWizardTitle + " - {0}", inputFile.toString())); //$NON-NLS-1$
     }
 
     public void setTarget(Security target)
     {
-        this.target = target;
+        this.security = target;
+    }
+
+    public void setTarget(Account target)
+    {
+        this.account = target;
     }
 
     public void setConfiguration(CSVConfig config)
@@ -107,7 +126,8 @@ public class CSVImportWizard extends Wizard
     @Override
     public void addPages()
     {
-        definitionPage = new CSVImportDefinitionPage(client, importer, configManager, target != null);
+        definitionPage = new CSVImportDefinitionPage(client, importer, configManager, security != null);
+        definitionPage.setAccount(account);
         if (initialConfig != null)
             definitionPage.setInitialConfiguration(initialConfig);
         addPage(definitionPage);
@@ -117,6 +137,7 @@ public class CSVImportWizard extends Wizard
 
         reviewPage = new ReviewExtractedItemsPage(client, new ExtractorProxy(importer), preferences,
                         Arrays.asList(new Extractor.InputFile(importer.getInputFile())), REVIEW_PAGE_ID);
+        reviewPage.setAccount(account);
         reviewPage.setDoExtractBeforeEveryPageDisplay(true);
         addPage(reviewPage);
 
@@ -126,7 +147,7 @@ public class CSVImportWizard extends Wizard
     @Override
     public boolean canFinish()
     {
-        return super.canFinish() && (target != null || getContainer().getCurrentPage() != definitionPage);
+        return super.canFinish() && (security != null || getContainer().getCurrentPage() != definitionPage);
     }
 
     @Override
@@ -152,14 +173,14 @@ public class CSVImportWizard extends Wizard
 
     private boolean importSecurityPrices()
     {
-        Security security = target != null ? target : selectSecurityPage.getSelectedSecurity();
+        Security s = security != null ? security : selectSecurityPage.getSelectedSecurity();
 
         List<SecurityPrice> prices = importer.createItems(new ArrayList<>()).get(0).getSecurity().getPrices();
 
         boolean isDirty = false;
         for (SecurityPrice p : prices)
         {
-            if (security.addPrice(p))
+            if (s.addPrice(p))
                 isDirty = true;
         }
         return isDirty;

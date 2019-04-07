@@ -50,9 +50,11 @@ public class PerformanceIndex
     protected long[] outboundTransferals;
     protected long[] taxes;
     protected long[] dividends;
+    protected long[] dividendCharge;
     protected long[] interest;
     protected long[] interestCharge;
     protected double[] accumulated;
+    protected double[] accumulatedNormalized;
     protected double[] delta;
 
     private Drawdown drawdown;
@@ -66,61 +68,115 @@ public class PerformanceIndex
         this.reportInterval = reportInterval;
     }
 
+    @Deprecated
     public static PerformanceIndex forClient(Client client, CurrencyConverter converter, Interval reportInterval,
                     List<Exception> warnings)
     {
-        ClientIndex index = new ClientIndex(client, converter, reportInterval);
+        return forClient(client, converter, reportInterval, warnings, false);
+    }
+
+    public static PerformanceIndex forClient(Client client, CurrencyConverter converter, Interval reportInterval,
+                    List<Exception> warnings, boolean isNormalized)
+    {
+        ClientIndex index = new ClientIndex(client, converter, reportInterval, isNormalized);
         index.calculate(warnings);
         return index;
     }
 
+    @Deprecated
     public static PerformanceIndex forAccount(Client client, CurrencyConverter converter, Account account,
                     Interval reportInterval, List<Exception> warnings)
     {
-        Client pseudoClient = new PortfolioClientFilter(Collections.emptyList(), Arrays.asList(account)).filter(client);
-        return PerformanceIndex.forClient(pseudoClient, converter, reportInterval, warnings);
+        return forAccount(client, converter, account, reportInterval, warnings, false);
     }
 
+    public static PerformanceIndex forAccount(Client client, CurrencyConverter converter, Account account,
+                    Interval reportInterval, List<Exception> warnings, boolean isNormalized)
+    {
+        Client pseudoClient = new PortfolioClientFilter(Collections.emptyList(), Arrays.asList(account)).filter(client);
+        return PerformanceIndex.forClient(pseudoClient, converter, reportInterval, warnings, isNormalized);
+    }
+
+    @Deprecated
     public static PerformanceIndex forPortfolio(Client client, CurrencyConverter converter, Portfolio portfolio,
                     Interval reportInterval, List<Exception> warnings)
     {
+        return forPortfolio(client, converter, portfolio, reportInterval, warnings, false);
+    }
+
+    public static PerformanceIndex forPortfolio(Client client, CurrencyConverter converter, Portfolio portfolio,
+                    Interval reportInterval, List<Exception> warnings, boolean isNormalized)
+    {
         Client pseudoClient = new PortfolioClientFilter(portfolio).filter(client);
-        return PerformanceIndex.forClient(pseudoClient, converter, reportInterval, warnings);
+        return PerformanceIndex.forClient(pseudoClient, converter, reportInterval, warnings, isNormalized);
+    }
+
+    @Deprecated
+    public static PerformanceIndex forPortfolioPlusAccount(Client client, CurrencyConverter converter, Portfolio portfolio,
+                    Interval reportInterval, List<Exception> warnings)
+    {
+        return forPortfolioPlusAccount(client, converter, portfolio, reportInterval, warnings, false);
     }
 
     public static PerformanceIndex forPortfolioPlusAccount(Client client, CurrencyConverter converter,
-                    Portfolio portfolio, Interval reportInterval, List<Exception> warnings)
+                    Portfolio portfolio, Interval reportInterval, List<Exception> warnings, boolean isNormalized)
     {
         Client pseudoClient = new PortfolioClientFilter(portfolio, portfolio.getReferenceAccount()).filter(client);
-        return PerformanceIndex.forClient(pseudoClient, converter, reportInterval, warnings);
+        return PerformanceIndex.forClient(pseudoClient, converter, reportInterval, warnings, isNormalized);
+    }
+
+    @Deprecated
+    public static PerformanceIndex forClassification(Client client, CurrencyConverter converter, 
+                    Classification classification, Interval reportInterval, List<Exception> warnings)
+    {
+        return forClassification(client, converter, classification, reportInterval, warnings, false);
     }
 
     public static PerformanceIndex forClassification(Client client, CurrencyConverter converter,
-                    Classification classification, Interval reportInterval, List<Exception> warnings)
+                    Classification classification, Interval reportInterval, List<Exception> warnings, boolean isNormalized)
     {
         Client filteredClient = new ClientClassificationFilter(classification).filter(client);
-        return PerformanceIndex.forClient(filteredClient, converter, reportInterval, warnings);
+        return PerformanceIndex.forClient(filteredClient, converter, reportInterval, warnings, isNormalized);
     }
 
+    @Deprecated
     public static PerformanceIndex forInvestment(Client client, CurrencyConverter converter, Security security,
                     Interval reportInterval, List<Exception> warnings)
     {
-        Client filteredClient = new ClientSecurityFilter(security).filter(client);
-        return forClient(filteredClient, converter, reportInterval, warnings);
+        return forInvestment(client, converter, security, reportInterval, warnings, false);
     }
 
+    public static PerformanceIndex forInvestment(Client client, CurrencyConverter converter, Security security,
+                    Interval reportInterval, List<Exception> warnings, boolean isNormalized)
+    {
+        Client filteredClient = new ClientSecurityFilter(security).filter(client);
+        return forClient(filteredClient, converter, reportInterval, warnings, isNormalized);
+    }
+
+    @Deprecated
     public static PerformanceIndex forSecurity(PerformanceIndex clientIndex, Security security)
     {
+        return forSecurity(clientIndex, security, false);
+    }
+
+    public static PerformanceIndex forSecurity(PerformanceIndex clientIndex, Security security, boolean isNormalized)
+    {
         SecurityIndex index = new SecurityIndex(clientIndex, security);
-        index.calculate();
+        index.calculate(clientIndex, security, isNormalized);
         return index;
     }
 
+    @Deprecated
     public static PerformanceIndex forConsumerPriceIndex(PerformanceIndex clientIndex)
+    {
+        return forConsumerPriceIndex(clientIndex, false);
+    }
+
+    public static PerformanceIndex forConsumerPriceIndex(PerformanceIndex clientIndex, boolean isNormalized)
     {
         CPIIndex index = new CPIIndex(clientIndex.getClient(), clientIndex.getCurrencyConverter(),
                         clientIndex.getReportInterval());
-        index.calculate(clientIndex);
+        index.calculate(clientIndex, isNormalized);
         return index;
     }
 
@@ -268,6 +324,11 @@ public class PerformanceIndex
     public long[] getDividends()
     {
         return dividends;
+    }
+
+    public long[] getDividendCharge()
+    {
+        return dividendCharge;
     }
 
     public long[] getInterest()

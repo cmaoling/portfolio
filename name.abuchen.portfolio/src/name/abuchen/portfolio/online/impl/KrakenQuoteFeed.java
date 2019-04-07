@@ -28,7 +28,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.online.QuoteFeed;
 
-public final class KrakenQuoteFeed implements QuoteFeed
+public final class KrakenQuoteFeed extends QuoteFeed
 {
 
     public static final String ID = "KRAKEN"; //$NON-NLS-1$

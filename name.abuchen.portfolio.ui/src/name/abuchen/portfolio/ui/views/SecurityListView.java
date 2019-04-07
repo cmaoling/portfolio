@@ -31,6 +31,7 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.ToolTip;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -75,6 +76,7 @@ import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransferDialog;
 import name.abuchen.portfolio.ui.selection.SecuritySelection;
 import name.abuchen.portfolio.ui.selection.SelectionService;
 import name.abuchen.portfolio.ui.util.Colors;
+import name.abuchen.portfolio.ui.util.LabelOnly;
 import name.abuchen.portfolio.ui.util.ConfirmAction;
 import name.abuchen.portfolio.ui.util.DropDown;
 import name.abuchen.portfolio.ui.util.SWTHelper;
@@ -89,7 +91,9 @@ import name.abuchen.portfolio.ui.util.viewers.ColumnViewerSorter;
 import name.abuchen.portfolio.ui.util.viewers.DateEditingSupport;
 import name.abuchen.portfolio.ui.util.viewers.SharesLabelProvider;
 import name.abuchen.portfolio.ui.util.viewers.ShowHideColumnHelper;
+import name.abuchen.portfolio.ui.util.viewers.StringEditingSupport;
 import name.abuchen.portfolio.ui.util.viewers.TransactionOwnerListEditingSupport;
+import name.abuchen.portfolio.ui.util.viewers.TransactionTypeEditingSupport;
 import name.abuchen.portfolio.ui.util.viewers.ValueEditingSupport;
 import name.abuchen.portfolio.ui.views.actions.ConvertBuySellToDeliveryAction;
 import name.abuchen.portfolio.ui.views.actions.ConvertDeliveryToBuySellAction;
@@ -98,6 +102,7 @@ import name.abuchen.portfolio.ui.wizards.security.EditSecurityDialog;
 import name.abuchen.portfolio.ui.wizards.security.SearchSecurityWizardDialog;
 import name.abuchen.portfolio.util.TradeCalendar;
 import name.abuchen.portfolio.util.TradeCalendarManager;
+import name.abuchen.portfolio.ui.wizards.splits.StockSplitWizard;
 
 public class SecurityListView extends AbstractListView implements ModificationListener
 {
@@ -819,6 +824,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                     return null;
             }
         });
+        new TransactionTypeEditingSupport(getClient()).addListener(this).attachTo(column);
         support.addColumn(column);
 
         column = new Column(Messages.ColumnShares, SWT.RIGHT, 80);
@@ -948,7 +954,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         support.addColumn(column);
 
         column = new NoteColumn();
-        column.setEditingSupport(null);
+        new StringEditingSupport(AccountTransaction.class, "note").addListener(this).attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
         support.createColumns();
@@ -960,11 +966,11 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 
         hookContextMenu(transactions.getControl(), this::transactionMenuAboutToShow);
 
-        hookKeyListener();
+        hookKeyListener2Transactions();
         return container;
     }
 
-    private void hookKeyListener()
+    private void hookKeyListener2Transactions()
     {
         transactions.getControl().addKeyListener(new KeyAdapter()
         {
@@ -1092,6 +1098,10 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         }
     }
 
+    // //////////////////////////////////////////////////////////////
+    // tab item: events
+    // //////////////////////////////////////////////////////////////
+
     protected Composite createEventsTable(Composite parent)
     {
         Composite container = new Composite(parent, SWT.NONE);
@@ -1123,6 +1133,25 @@ public class SecurityListView extends AbstractListView implements ModificationLi
             {
                 return ((SecurityEvent) element).getType().toString();
             }
+
+            @Override
+            public Color getForeground(Object element)
+            {
+                Security security = (Security) prices.getData(Security.class.toString());
+                if (security == null)
+                    return Colors.DARK_RED;
+
+                SecurityEvent event = (SecurityEvent) element;
+
+                LocalDate date = event.getDate().plusDays((long) security.getDelayedDividend());
+                List<TransactionPair<?>> transactions = security.getTransactions(getClient(), date.minusDays(5), date.plusDays(5));
+
+                if (transactions.isEmpty())
+                    return Colors.DARK_GRAY;
+                else
+                    return Colors.DARK_GREEN;
+
+            }
         });
         support.addColumn(column);
 
@@ -1132,7 +1161,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
             @Override
             public String getText(Object element)
             {
-                return ((SecurityEvent) element).getDetails();
+                return ((SecurityEvent) element).getExplaination();
             }
         });
         support.addColumn(column);
@@ -1144,6 +1173,119 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 
         events.setContentProvider(ArrayContentProvider.getInstance());
 
+        hookContextMenu(events.getControl(), this::eventMenuAboutToShow);
+
+        hookKeyListener2Events();
+
         return container;
+    }
+
+    private void hookKeyListener2Events()
+    {
+        events.getControl().addKeyListener(new KeyAdapter()
+        {
+            @Override
+            public void keyPressed(KeyEvent e)
+            {
+//                if (e.keyCode == 'e' && e.stateMask == SWT.MOD1)
+//                {
+//                }
+            }
+        });
+    }
+
+    private void eventMenuAboutToShow(IMenuManager manager) // NOSONAR
+    {
+        Security security = (Security) prices.getData(Security.class.toString());
+        if (security == null)
+            return;
+
+        manager.add(new Separator());
+
+        SecurityEvent event = (SecurityEvent) ((IStructuredSelection) events.getSelection()).getFirstElement();
+        if (event != null)
+        {
+            SecurityEvent.Type eventType = event.getType();
+            if (eventType == SecurityEvent.Type.STOCK_DIVIDEND)
+            {
+                new OpenDialogAction(this, Messages.MenuGenerateTransaction) //
+                .with(security) //
+                .type(AccountTransactionDialog.class, d ->
+                {
+                        d.setSecurity(security);
+                        d.setEvent(event);
+                    }) //
+                .parameters(AccountTransaction.Type.DIVIDENDS) //
+                .addTo(manager);
+            }
+            else if (eventType == SecurityEvent.Type.STOCK_SPLIT)
+            {
+                // More work needed to enable editing of Splits
+                manager.add(new Action(Messages.MenuEditEvent)
+                {
+                    @Override
+                    public void run()
+                    {
+                        StockSplitWizard wizard = new StockSplitWizard(getClient(), security);
+                        Iterator<?> iter = ((IStructuredSelection) events.getSelection()).iterator();
+                        while (iter.hasNext())
+                        {
+                            SecurityEvent event = (SecurityEvent) iter.next();
+                            if (event == null)
+                                continue;
+                            wizard.setEvent(event);
+                        }
+                        WizardDialog dialog = new WizardDialog(getActiveShell(), wizard);
+                        if (dialog.open() == Dialog.OK)
+                        {
+                            markDirty();
+                            notifyModelUpdated();
+                        }
+                    }
+                });
+                manager.add(new LabelOnly(Messages.MenuTransactionRevertSplit));
+            }
+            else if (eventType == SecurityEvent.Type.STOCK_OTHER)
+            {
+                manager.add(new LabelOnly(Messages.MenuEditEvent));
+            }
+            manager.add(new LabelOnly(Messages.MenuTransactionHide));
+
+            manager.add(new Action(Messages.MenuTransactionDelete)
+            {
+                @Override
+                public void run()
+                {
+                    Security security = (Security) prices.getData(Security.class.toString());
+                    if (security == null)
+                        return;
+
+                    Iterator<?> iter = ((IStructuredSelection) events.getSelection()).iterator();
+                    while (iter.hasNext())
+                    {
+                        SecurityEvent event = (SecurityEvent) iter.next();
+                        if (event == null)
+                            continue;
+
+                        security.removeEvent(event);
+                    }
+
+                    markDirty();
+
+                    prices.setInput(security.getPrices());
+                    latest.setInput(security);
+                    transactions.setInput(security.getTransactions(getClient()));
+                    events.setInput(security.getEvents());
+                    chart.updateChart(security);
+                }
+            });
+        }
+
+        manager.add(new Separator());
+
+        new EventContextMenu(SecurityListView.this).menuAboutToShow(manager, security);
+
+        manager.add(new Separator());
+        manager.add(new LabelOnly(Messages.MenuTransactionShowHidden));
     }
 }

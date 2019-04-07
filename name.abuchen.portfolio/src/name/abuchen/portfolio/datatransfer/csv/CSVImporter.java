@@ -3,17 +3,17 @@ package name.abuchen.portfolio.datatransfer.csv;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URI;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.FieldPosition;
@@ -51,7 +51,9 @@ import name.abuchen.portfolio.PortfolioLog;
 import name.abuchen.portfolio.datatransfer.Extractor.Item;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.util.Isin;
+import name.abuchen.portfolio.util.Iban;
 
 public final class CSVImporter
 {
@@ -432,14 +434,25 @@ public final class CSVImporter
         private static final long serialVersionUID = 1L;
 
         private EnumMap<M, String> enumMap;
+        private Class<M> type; 
 
         public EnumMapFormat(Class<M> enumType)
         {
             enumMap = new EnumMap<>(enumType);
             for (M element : enumType.getEnumConstants())
                 enumMap.put(element, element.toString());
+            
+            type = enumType;
         }
 
+        public void put(EnumMap<M, String> enumMap)
+        {
+            if (enumMap != null)
+                for (M element : type.getEnumConstants())
+                    if (enumMap.containsKey(element))
+                        map().put(element, enumMap.get(element).toString());
+        }
+        
         public EnumMap<M, String> map() // NOSONAR
         {
             return enumMap;
@@ -461,7 +474,33 @@ public final class CSVImporter
             if (pos == null)
                 throw new NullPointerException();
 
-            // first: try exact matches (example: "Fees" vs. "Fees Refund")
+            // first: try pattern matching (enables multiple matches for one type)
+
+            for (Map.Entry<M, String> entry : enumMap.entrySet())
+            {
+                Pattern pattern = Pattern.compile("\\b(" + entry.getValue() + ")\\b"); //$NON-NLS-1$ //$NON-NLS-2$
+                Matcher matcher = pattern.matcher(source);
+                if (matcher.find())
+                {
+                    pos.setIndex(source.length());
+                    return entry.getKey();
+                }
+            }
+
+            // second: try pattern matching (enables multiple matches for one type)
+
+            for (Map.Entry<M, String> entry : enumMap.entrySet())
+            {
+                Pattern pattern = Pattern.compile("\\b.*(" + entry.getValue() + ").*\\b"); //$NON-NLS-1$ //$NON-NLS-2$
+                Matcher matcher = pattern.matcher(source);
+                if (matcher.find())
+                {
+                    pos.setIndex(source.length());
+                    return entry.getKey();
+                }
+            }
+
+            // third: try exact matches (example: "Fees" vs. "Fees Refund")
 
             for (Map.Entry<M, String> entry : enumMap.entrySet())
             {
@@ -472,7 +511,7 @@ public final class CSVImporter
                 }
             }
 
-            // second: try partial matches
+            // fourth: try partial matches
 
             for (Map.Entry<M, String> entry : enumMap.entrySet())
             {
@@ -483,8 +522,90 @@ public final class CSVImporter
                     return entry.getKey();
                 }
             }
-
             return null;
+        }
+    }
+
+    public static class IBANField extends CSVImporter.Field
+    {
+
+        /* package */ IBANField(String code, String name)
+        {
+            super(code, name);
+        }
+
+        @Override
+        public FieldFormat guessFormat(Client client, String value)
+        {
+            return new FieldFormat(null, new IBANFormat(client.getAccounts()));
+        }
+
+        @Override
+        public String formatToText(FieldFormat fieldFormat)
+        {
+            return null;
+        }
+
+        @Override
+        public FieldFormat textToFormat(String text)
+        {
+            return null;
+        }
+//
+//        public IBANFormat createFormat(List<Account> accountList)
+//        {
+//            return new IBANFormat(accountList);
+//        }
+    }
+
+    public static class IBANFormat extends Format
+    {
+        private static final long serialVersionUID = 1L;
+
+        private Set<String> existingIBANs;
+
+        public IBANFormat(List<Account> accountList)
+        {
+            existingIBANs = accountList.stream().map(Account::getIban)
+                            .filter(iban -> iban != null && !iban.trim().isEmpty()).collect(Collectors.toSet());
+        }
+
+        @Override
+        public StringBuffer format(Object obj, StringBuffer toAppendTo, FieldPosition pos)
+        {
+            String s = (String) obj;
+            if (s == null)
+                throw new IllegalArgumentException();
+
+            return toAppendTo.append(s);
+        }
+        @Override
+        public Object parseObject(String source, ParsePosition pos)
+        {
+            Objects.requireNonNull(pos);
+
+            String iban = source.trim().toUpperCase();
+
+            // check for a partial match (IBAN maybe only part of the field:
+
+            Pattern pattern = Pattern.compile("\\b(" + Iban.PATTERN + ")\\b"); //$NON-NLS-1$ //$NON-NLS-2$
+            Matcher matcher = pattern.matcher(iban);
+            if (matcher.find())
+                iban = matcher.group(1);
+
+            // return IBAN as valid if a) it is a valid ISIN number, and b) it
+            // is one of the existing IBAN
+            System.err.println(">>>> CSVImporter::IBANFormat::parseObject iban: " + iban + " existing: " + existingIBANs.toArray().toString()); // TODO: still needed for debug? //$NON-NLS-1$ //$NON-NLS-2$
+
+            if (Iban.isValid(iban) && existingIBANs.contains(iban))
+            {
+                pos.setIndex(source.length());
+                return iban;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 
@@ -536,7 +657,6 @@ public final class CSVImporter
 
             return toAppendTo.append(s);
         }
-
         @Override
         public Object parseObject(String source, ParsePosition pos)
         {
@@ -569,6 +689,79 @@ public final class CSVImporter
 
     private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
+    public static final class HeaderSet
+    {
+        private final List<Header> headerset = new ArrayList<Header>();
+
+        public HeaderSet()
+        {
+        }
+
+        public void add(Header.Type type, String label)
+        {
+            headerset.add(new Header (type, label));
+        }
+
+        public Header[] get()
+        {
+            return headerset.toArray(new Header[0]);
+        }
+
+        public Header get(Header.Type type)
+        {
+            if (!headerset.isEmpty())
+            {
+                for (Header header : headerset)
+                {
+                    if (header.type.equals(type))
+                        return header;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public String toString()
+        {
+            return Arrays.toString(this.get());
+        }
+    }
+
+    public static final class Header
+    {
+        private final Type type;
+        private final String label;
+
+        public enum Type
+        {
+            MANUAL,
+            DEFAULT,
+            FIRST
+        }
+
+        public Header(Type type, String label)
+        {
+            this.type = type;
+            this.label = label;
+        }
+
+        public Type getHeaderType()
+        {
+            return type;
+        }
+
+        public String getLabel()
+        {
+            return label;
+        }
+
+        @Override
+        public String toString()
+        {
+            return getLabel();
+        }
+    }
+
     private final Client client;
     private final File inputFile;
     private final List<CSVExtractor> extractors;
@@ -591,7 +784,7 @@ public final class CSVImporter
         this.extractors = Collections.unmodifiableList(Arrays.asList(new CSVAccountTransactionExtractor(client),
                         new CSVPortfolioTransactionExtractor(client), new CSVSecurityExtractor(client),
                         new CSVSecurityPriceExtractor(), new CSVPortfolioExtractor(client)));
-        this.currentExtractor = extractors.get(0);
+        this.setExtractor(extractors.get(0));
     }
 
     public Client getClient()
@@ -613,6 +806,22 @@ public final class CSVImporter
     {
         propertyChangeSupport.firePropertyChange("extractor", this.currentExtractor, //$NON-NLS-1$
                         this.currentExtractor = extractor); // NOSONAR
+//TODO: cmaoling orphan code
+//        this.skipLines = extractor.getDefaultSkipLines();
+//        this.setEncoding(Charset.forName(extractor.getDefaultEncoding()));
+    }
+
+    public CSVExtractor setExtractor(String className)
+    {
+        for (CSVExtractor e : extractors)
+        {
+            if (e.getClass().getName().equals(className))
+            {
+                setExtractor(e);
+                return e;
+            }
+        }
+        return null;
     }
 
     public CSVExtractor getExtractor()
@@ -820,7 +1029,10 @@ public final class CSVImporter
         int index = column.getColumnIndex();
         for (String[] rawValues : values)
         {
-            String value = rawValues[index];
+            String value = null; 
+            // check if Array of Strings has sufficient amount of elemets
+            if (rawValues.length > index)
+                value = rawValues[index];
             // check if value is set and is not empty (ignore whitespace)
             if ((value != null) && (!value.trim().isEmpty()))
                 return value;

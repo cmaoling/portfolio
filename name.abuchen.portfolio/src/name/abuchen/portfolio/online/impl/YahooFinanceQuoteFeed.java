@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+//import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -47,9 +48,42 @@ import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
 import name.abuchen.portfolio.util.Dates;
 
-public class YahooFinanceQuoteFeed implements QuoteFeed
+public class YahooFinanceQuoteFeed extends QuoteFeed
 {
-    public static final String ID = "YAHOO"; //$NON-NLS-1$
+    /* package */ interface CSVColumn // NOSONAR
+    {
+        int Date = 0;
+        int Open = 1;
+        int High = 2;
+        int Low = 3;
+        int Close = 4;
+        int AdjClose = 5;
+        int Volume = 6;
+    }
+
+//    private static class Crumb
+//    {
+//        private final String id;
+//        private final Map<String, String> cookies;
+//
+//        public Crumb(String id, Map<String, String> cookies)
+//        {
+//            this.id = id;
+//            this.cookies = cookies;
+//        }
+//
+//        public String getId()
+//        {
+//            return id;
+//        }
+//
+//        public Map<String, String> getCookies()
+//        {
+//            return cookies;
+//        }
+//    }
+
+    public static final String ID = YAHOO;
 
     private static final String LATEST_URL = "https://query1.finance.yahoo.com/v7/finance/quote?lang=en-US&region=US&corsDomain=finance.yahoo.com&symbols={0}"; //$NON-NLS-1$
 

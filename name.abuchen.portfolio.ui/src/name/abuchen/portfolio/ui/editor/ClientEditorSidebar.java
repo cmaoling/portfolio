@@ -148,6 +148,8 @@ import name.abuchen.portfolio.ui.util.SimpleAction;
         allSecurities = new Entry(section, Messages.LabelAllSecurities,
                         e -> editor.activateView("SecurityList", e.getId()), Images.SECURITY); //$NON-NLS-1$
 
+        new Entry(section, Messages.LabelPeers, e -> editor.activateView("PeerList", e.getId()), Images.PEER); //$NON-NLS-1$
+
         for (Watchlist watchlist : editor.getClient().getWatchlists())
             createWatchlistEntry(section, watchlist);
     }

@@ -2,9 +2,9 @@ package name.abuchen.portfolio.model;
 
 public interface CrossEntry
 {
-    void updateFrom(Transaction t);
+    public abstract void updateFrom(Transaction t);
 
-    TransactionOwner<? extends Transaction> getOwner(Transaction t);
+    public abstract TransactionOwner<? extends Transaction> getOwner(Transaction t);
 
     void setOwner(Transaction t, TransactionOwner<? extends Transaction> owner);
 

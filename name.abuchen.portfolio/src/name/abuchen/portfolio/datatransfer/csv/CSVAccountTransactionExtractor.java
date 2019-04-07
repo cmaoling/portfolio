@@ -13,23 +13,36 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.DateField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.IBANField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransaction.Type;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Transaction.Unit;
 import name.abuchen.portfolio.money.Money;
 
-/* package */ class CSVAccountTransactionExtractor extends BaseCSVExtractor
+/* package */ public class CSVAccountTransactionExtractor extends BaseCSVExtractor
 {
+
     /* package */ CSVAccountTransactionExtractor(Client client)
     {
         super(client, Messages.CSVDefAccountTransactions);
+        addFields();
+    }
 
+    CSVAccountTransactionExtractor(Client client, String label)
+    {
+        super(client, label);
+        addFields();
+    }
+    
+    List<Field> addFields()
+    {
         List<Field> fields = getFields();
         fields.add(new DateField("date", Messages.CSVColumn_Date)); //$NON-NLS-1$
         fields.add(new Field("time", Messages.CSVColumn_Time).setOptional(true)); //$NON-NLS-1$
@@ -44,6 +57,9 @@ import name.abuchen.portfolio.money.Money;
         fields.add(new AmountField("shares", Messages.CSVColumn_Shares).setOptional(true)); //$NON-NLS-1$
         fields.add(new Field("note", Messages.CSVColumn_Note).setOptional(true)); //$NON-NLS-1$
         fields.add(new AmountField("taxes", Messages.CSVColumn_Taxes).setOptional(true)); //$NON-NLS-1$
+        fields.add(new IBANField("iban", Messages.CSVColumn_IBAN).setOptional(true)); //$NON-NLS-1$
+        fields.add(new Field("partner", Messages.CSVColumn_PartnerName).setOptional(true)); //$NON-NLS-1$
+        return fields;
     }
 
     @Override
@@ -73,6 +89,15 @@ import name.abuchen.portfolio.money.Money;
         Long shares = getShares(Messages.CSVColumn_Shares, rawValues, field2column);
         Long taxes = getAmount(Messages.CSVColumn_Taxes, rawValues, field2column);
 
+        Peer peer = getPeer(rawValues, field2column, p -> {});
+        if (peer != null && peer.links2Account())
+        {
+            if (type == Type.DEPOSIT)
+                type = Type.TRANSFER_IN;
+            else if (type == Type.REMOVAL)
+                type = Type.TRANSFER_OUT;
+        }
+
         switch (type)
         {
             case TRANSFER_IN:
@@ -82,6 +107,13 @@ import name.abuchen.portfolio.money.Money;
                 entry.setCurrencyCode(amount.getCurrencyCode());
                 entry.setDate(date.withHour(0).withMinute(0));
                 entry.setNote(note);
+                if (peer != null)
+                {
+                    if (type == Type.TRANSFER_OUT)
+                        entry.getSourceTransaction().setPeer(peer);
+                    else if (type == Type.TRANSFER_IN)
+                        entry.getTargetTransaction().setPeer(peer);
+                }
                 items.add(new AccountTransferItem(entry, type == Type.TRANSFER_OUT));
                 break;
             case BUY:
@@ -93,20 +125,23 @@ import name.abuchen.portfolio.money.Money;
                                                     .toString()),
                                     0);
                 if (shares == null)
-                    throw new ParseException(
-                                    MessageFormat.format(Messages.CSVImportMissingField, Messages.CSVColumn_Shares), 0);
+                    if (!sharesOptional)
+                        throw new ParseException(
+                                   MessageFormat.format(Messages.CSVImportMissingField, Messages.CSVColumn_Shares), 0);
 
                 BuySellEntry buySellEntry = new BuySellEntry();
                 buySellEntry.setType(PortfolioTransaction.Type.valueOf(type.name()));
                 buySellEntry.setAmount(Math.abs(amount.getAmount()));
-                buySellEntry.setShares(Math.abs(shares));
+                if (shares != null)
+                    buySellEntry.setShares(Math.abs(shares));
                 buySellEntry.setCurrencyCode(amount.getCurrencyCode());
                 buySellEntry.setSecurity(security);
                 buySellEntry.setDate(date);
                 buySellEntry.setNote(note);
                 items.add(new BuySellEntryItem(buySellEntry));
                 break;
-            case DIVIDENDS: // NOSONAR
+            case DIVIDENDS:
+            case DIVIDEND_CHARGE:
                 // dividends must have a security
                 if (security == null)
                     throw new ParseException(MessageFormat.format(Messages.CSVImportMissingSecurity,
@@ -122,26 +157,43 @@ import name.abuchen.portfolio.money.Money;
             case INTEREST:
             case INTEREST_CHARGE:
             case REMOVAL:
+                boolean dividendType = (type == Type.DIVIDENDS || type == Type.DIVIDEND_CHARGE);
                 AccountTransaction t = new AccountTransaction();
                 t.setType(type);
                 t.setAmount(Math.abs(amount.getAmount()));
                 t.setCurrencyCode(amount.getCurrencyCode());
-                if (type == Type.DIVIDENDS || type == Type.TAX_REFUND)
+                if (dividendType || type == Type.TAX_REFUND)
                     t.setSecurity(security);
                 t.setDateTime(date.withHour(0).withMinute(0));
-                t.setNote(note);
-                if (shares != null && type == Type.DIVIDENDS)
-                    t.setShares(Math.abs(shares));
-                if (type == Type.DIVIDENDS && taxes != null && taxes.longValue() != 0)
+                String extNote = getText(Messages.CSVColumn_ISIN, rawValues, field2column);
+                if (extNote != null && security.getIsin().equals("")) //$NON-NLS-1$
+                {
+                    if (note == null)
+                        note = Messages.LabelNothing;
+                    else if (!note.equals("")) //$NON-NLS-1$
+                        note += " - "; //$NON-NLS-1$
+                    note += extNote;
+                }
+                if (dividendType)
+                {
+                    if (shares != null)
+                        t.setShares(Math.abs(shares));
+                }
+                if (dividendType && taxes != null && taxes.longValue() != 0)
                     t.addUnit(new Unit(Unit.Type.TAX, Money.of(t.getCurrencyCode(), Math.abs(taxes))));
+                t.setNote(note);
+                if ((type == Type.DEPOSIT || type == Type.REMOVAL) && peer != null)
+                    t.setPeer(peer);
                 items.add(new TransactionItem(t));
                 break;
             default:
                 throw new IllegalArgumentException(type.toString());
         }
+        // TODO: still needed for debug? for (Item item : items)
+        // TODO: still needed for debug?     System.err.println("CSVAccountTransactionExtratctor:extract items: " + item.getClass().toString() + " = " + item.toString() );         //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    private Type inferType(String[] rawValues, Map<String, Column> field2column, Security security, Money amount)
+    protected Type inferType(String[] rawValues, Map<String, Column> field2column, Security security, Money amount)
                     throws ParseException
     {
         Type type = getEnum(Messages.CSVColumn_Type, Type.class, rawValues, field2column);
@@ -154,4 +206,5 @@ import name.abuchen.portfolio.money.Money;
         }
         return type;
     }
+
 }

@@ -120,6 +120,14 @@ public class AccountBuilder
         return this;
     }
 
+    public AccountBuilder dividend_charge(String date, long amount, Security security)
+    {
+        AccountTransaction t = new AccountTransaction(asDateTime(date), account.getCurrencyCode(), amount,
+                        security, Type.DIVIDEND_CHARGE);
+        account.addTransaction(t);
+        return this;
+    }
+
     private AccountBuilder transaction(Type type, String date, long amount)
     {
         return transaction(type, asDateTime(date), amount);

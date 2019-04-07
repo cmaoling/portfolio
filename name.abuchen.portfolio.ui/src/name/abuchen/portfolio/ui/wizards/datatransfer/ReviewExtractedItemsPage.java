@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.ui.wizards.datatransfer;
 
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +42,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Table;
 
+import name.abuchen.portfolio.datatransfer.csv.CSVExtractor;
+import name.abuchen.portfolio.datatransfer.csv.CSVAccountTransactionExtractor;
 import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.ImportAction;
 import name.abuchen.portfolio.datatransfer.ImportAction.Status.Code;
@@ -54,6 +57,7 @@ import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.Annotated;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
@@ -97,6 +101,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
     private final Extractor extractor;
     private final IPreferenceStore preferences;
     private List<Extractor.InputFile> files;
+    private Account account;
 
     private List<ExtractedEntry> allEntries = new ArrayList<>();
 
@@ -257,7 +262,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         List<Account> activeAccounts = client.getActiveAccounts();
         if (!activeAccounts.isEmpty())
         {
-            String uuid = preferences.getString(IMPORT_TARGET_ACCOUNT + extractor.getLabel());
+            String uuid = (account != null?account.getUUID():preferences.getString(IMPORT_TARGET_ACCOUNT + extractor.getLabel()));
 
             // do not trigger selection listener (-> do not user #setSelection)
             primaryAccount.getCombo().select(IntStream.range(0, activeAccounts.size())
@@ -364,6 +369,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                     return Images.ACCOUNT.image();
                 else if (subject instanceof PortfolioTransferEntry)
                     return Images.PORTFOLIO.image();
+                else if (subject instanceof Peer)
+                    return Images.PEER.image();
                 else
                     return null;
             }
@@ -396,14 +403,60 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         layout.setColumnData(column.getColumn(), new ColumnPixelData(80, true));
 
         column = new TableViewerColumn(viewer, SWT.NONE);
-        column.getColumn().setText(Messages.ColumnSecurity);
+        column.getColumn().setText(MessageFormat.format(Messages.ColumnPeerOrSomething, Messages.ColumnSecurity, Messages.ColumnPeer));
         column.setLabelProvider(new FormattedLabelProvider() // NOSONAR
         {
             @Override
             public String getText(ExtractedEntry entry)
             {
                 Security security = entry.getItem().getSecurity();
-                return security != null ? security.getName() : null;
+                Peer     peer     = entry.getItem().getPeer();
+                if (security != null)
+                    return security.getName();
+                else if (peer != null)
+                    return peer.getName();
+                else
+                    return  null;
+            }
+        });
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(250, true));
+
+        column = new TableViewerColumn(viewer, SWT.NONE);
+        column.getColumn().setText(Messages.ColumnIBAN);
+        column.setLabelProvider(new FormattedLabelProvider() // NOSONAR
+        {
+            @Override
+            public String getText(ExtractedEntry entry)
+            {
+                if (entry.getItem() instanceof Extractor.AccountTransferItem
+                     || entry.getItem() instanceof Extractor.TransactionItem
+                     || entry.getItem() instanceof Extractor.PeerItem)
+                {
+                    Peer peer = entry.getItem().getPeer();
+                    if (peer != null)
+                        return peer.getIban();
+                    Security security = entry.getItem().getSecurity();
+                    if (security != null)
+                        return Messages.LabelNotAvailable;
+                    return Messages.MsgMissingPeer;
+                }
+                else if (entry.getItem() instanceof Extractor.BuySellEntryItem)
+                    return Messages.LabelNotAvailable;
+                else
+                    return entry.getItem().toString();
+            }
+        });
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(250, true));
+
+        column = new TableViewerColumn(viewer, SWT.NONE);
+        column.getColumn().setText(Messages.ColumnNote);
+        column.setLabelProvider(new FormattedLabelProvider()
+        {
+            @Override
+            public String getText(ExtractedEntry entry)
+            {
+                String note = entry.getItem().getNote();
+                return note != null ? note : null;
             }
         });
         layout.setColumnData(column.getColumn(), new ColumnPixelData(250, true));
@@ -531,6 +584,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                                         .extract(files, errors).stream() //
                                         .map(ExtractedEntry::new) //
                                         .collect(Collectors.toList());
+                        entries.forEach(ee -> ee.setDefaultImported());
 
                         // Logging them is not a bad idea if the whole method
                         // fails
@@ -558,6 +612,19 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
     {
         preferences.setValue(IMPORT_TARGET_ACCOUNT + extractor.getLabel(), getAccount().getUUID());
         preferences.setValue(IMPORT_TARGET_PORTFOLIO + extractor.getLabel(), getPortfolio().getUUID());
+
+//        Extractor e = (Extractor) comboExtractors.getStructuredSelection().getFirstElement();
+//        if (e != null)
+//            preferences.setValue(IMPORT_TARGET_EXTRACTOR, e.getClass().getName());
+        System.err.println("ReviewExtractedItemsPage.afterPage extractor: " + extractor.getLabel()); //$NON-NLS-1$
+
+        if (extractor.getSubject() instanceof CSVAccountTransactionExtractor)
+            account.setExtractor(extractor.getSubject().getClass().getName());
+    }
+
+    public void setAccount(Account account)
+    {
+        this.account = account;
     }
 
     private void setResults(List<ExtractedEntry> entries, List<Exception> errors)
@@ -600,8 +667,15 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         for (ExtractedEntry entry : entries)
         {
             entry.clearStatus();
+            Extractor.Item item = entry.getItem();
             for (ImportAction action : actions)
-                entry.addStatus(entry.getItem().apply(action, this));
+                entry.addStatus(item.apply(action, this));
+            if (extractor.getSubject() instanceof CSVExtractor)
+                if (((CSVExtractor) extractor.getSubject()).proposeShares(client, getPortfolio(), item))
+                    if (item.getNote() == null)
+                        item.getSubject().setNote("[" + Messages.LabelImportWarning + "]");  //$NON-NLS-1$  //$NON-NLS-2$
+                    else if (!item.getNote().startsWith(Messages.LabelImportWarning.substring(0, Messages.LabelImportWarning.indexOf('{') - 1)))
+                        item.getSubject().setNote("[" + Messages.LabelImportWarning + "]" + item.getNote()); //$NON-NLS-1$  //$NON-NLS-2$
         }
     }
 

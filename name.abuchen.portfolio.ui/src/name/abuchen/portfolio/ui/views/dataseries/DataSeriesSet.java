@@ -114,6 +114,11 @@ public class DataSeriesSet
                         Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA).getRGB());
         availableSeries.add(series);
 
+        series = new DataSeries(DataSeries.Type.CLIENT, ClientDataSeries.DIVIDEND_CHARGE, Messages.LabelDividendCharge,
+                        Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED).getRGB());
+        series.setLineChart(false);
+        availableSeries.add(series);
+
         series = new DataSeries(DataSeries.Type.CLIENT, ClientDataSeries.INTEREST, Messages.LabelInterest,
                         Colors.DARK_GREEN.getRGB());
         series.setLineChart(false);
@@ -245,12 +250,18 @@ public class DataSeriesSet
                 continue;
 
             availableSeries.add(new DataSeries(DataSeries.Type.SECURITY, security, security.getName(), //
-                            wheel.next()));
+                            wheel.next(), false));
+            availableSeries.add(new DataSeries(DataSeries.Type.SECURITY, security, security.getName() + " ("+ Messages.LabelPerformanceNormalizedPerYear + ")",   //$NON-NLS-1$  //$NON-NLS-2$
+                            wheel.next(), true));
         }
 
         for (Portfolio portfolio : client.getPortfolios())
+        {
             availableSeries.add(new DataSeries(DataSeries.Type.PORTFOLIO, portfolio, portfolio.getName(), //
-                            wheel.next()));
+                            wheel.next(), false));
+            availableSeries.add(new DataSeries(DataSeries.Type.PORTFOLIO, portfolio, portfolio.getName() + " ("+ Messages.LabelPerformanceNormalizedPerYear + ")",   //$NON-NLS-1$  //$NON-NLS-2$
+                        wheel.next(), true));
+        }
 
         // portfolio + reference account
         for (Portfolio portfolio : client.getPortfolios())
@@ -264,7 +275,12 @@ public class DataSeriesSet
         addCustomClientFilters(client, preferences, false, wheel);
 
         for (Account account : client.getAccounts())
-            availableSeries.add(new DataSeries(DataSeries.Type.ACCOUNT, account, account.getName(), wheel.next()));
+        {
+            availableSeries.add(
+                            new DataSeries(DataSeries.Type.ACCOUNT, account, account.getName(), wheel.next(), false));
+            availableSeries.add(
+                            new DataSeries(DataSeries.Type.ACCOUNT, account, account.getName() + " ("+ Messages.LabelPerformanceNormalizedPerYear + ")", wheel.next(), true));  //$NON-NLS-1$  //$NON-NLS-2$
+        }
 
         for (Taxonomy taxonomy : client.getTaxonomies())
         {

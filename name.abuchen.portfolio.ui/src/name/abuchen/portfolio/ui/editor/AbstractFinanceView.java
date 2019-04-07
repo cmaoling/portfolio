@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.ui.editor;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,6 +94,11 @@ public abstract class AbstractFinanceView
     public Client getClient()
     {
         return part.getClient();
+    }
+
+    public File getClientFileName()
+    {
+        return part.getClientFileName();
     }
 
     public void markDirty()

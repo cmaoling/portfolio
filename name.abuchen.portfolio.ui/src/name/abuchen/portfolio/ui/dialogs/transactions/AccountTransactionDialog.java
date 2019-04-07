@@ -36,6 +36,7 @@ import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.model.SecurityEvent;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.CurrencyConverterImpl;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
@@ -108,6 +109,15 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         accounts.value.setInput(including(client.getActiveAccounts(), model().getAccount()));
         accounts.bindValue(Properties.account.name(), Messages.MsgMissingAccount);
         accounts.bindCurrency(Properties.accountCurrencyCode.name());
+
+        final PeerPicker peers = setupPeers(editArea, model().supportsPeer());
+        if (peers != null) 
+        {
+            peers.bindPartner(Properties.partner.name());
+            peers.bindIban(Properties.iban.name(), Messages.MsgInvalidIBAN);
+            peers.bindPeer(Properties.peer.name());
+            peers.setVisible(model().supportsPeer(), client.getPeers().contains(model().getPeer()));
+        }
 
         // date & time
 
@@ -206,6 +216,9 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         int widest = widest(securities != null ? securities.label : null, accounts.label, lblDate, shares.label,
                         taxes.label, total.label, lblNote);
 
+        int amountWidth = amountWidth(grossAmount.value);
+        int currencyWidth = currencyWidth(fxGrossAmount.currency);
+
         FormDataFactory forms;
         if (securities != null)
         {
@@ -216,11 +229,12 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         else
         {
             forms = startingWith(accounts.value.getControl(), accounts.label).suffix(accounts.currency);
-            startingWith(accounts.label).width(widest);
         }
-
-        int amountWidth = amountWidth(grossAmount.value);
-        int currencyWidth = currencyWidth(fxGrossAmount.currency);
+        if (peers != null)
+        {
+            forms = forms.thenBelow(peers.valuePartner).width(amountWidth*2).label(peers.lblPartner);
+            forms.thenRight(peers.iban.label).thenRight(peers.iban.value).width(amountWidth*3).thenRight(peers.lblPeer).width(amountWidth*2);
+        }
 
         // date
         // shares
@@ -279,7 +293,7 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
             grossAmount.setVisible(isFxVisible);
             forexTaxes.setVisible(isFxVisible && model().supportsShares());
             plusForexTaxes.setVisible(isFxVisible && model().supportsShares());
-            taxes.label.setVisible(!isFxVisible && model().supportsShares());
+            taxes.label.setVisible(!isFxVisible && model().supportsTaxUnits());
 
             // in case fx taxes have been entered
             if (!isFxVisible)
@@ -293,11 +307,23 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
             editArea.layout();
         });
 
+        model.addPropertyChangeListener(Properties.iban.name(), event -> { // NOSONAR
+            System.err.println(">>>> AccountTransactionDialog::addPropertyChangeListener iban: " + event.toString()); //TODO //$NON-NLS-1$
+        });
+
+        model.addPropertyChangeListener(Properties.peer.name(), event -> { // NOSONAR
+            System.err.println(">>>> AccountTransactionDialog::addPropertyChangeListener peer: " + event.toString()); //TODO //$NON-NLS-1$
+            peers.setVisible(model().supportsPeer(), client.getPeers().contains(model().getPeer()));
+            //peers.lblPeer.setText((String) event.getNewValue());
+            // TODO:Update actual Partner field in Dialog?
+        });
+
         WarningMessages warnings = new WarningMessages(this);
         warnings.add(() -> model().getDate().isAfter(LocalDate.now()) ? Messages.MsgDateIsInTheFuture : null);
         model.addPropertyChangeListener(Properties.date.name(), e -> warnings.check());
 
         model.firePropertyChange(Properties.exchangeRateCurrencies.name(), "", model().getExchangeRateCurrencies()); //$NON-NLS-1$
+        model.firePropertyChange(Properties.total.name(), "", model().getTotal()); //$NON-NLS-1$
     }
 
     private ComboInput setupSecurities(Composite editArea)
@@ -322,6 +348,16 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         return securities;
     }
 
+    private PeerPicker setupPeers(Composite editArea, boolean supported)
+    {
+        if (!supported)
+            return null;
+        if (model().getPeer() == null)
+            model().setPeer(AccountTransactionModel.EMPTY_PEER);
+        PeerPicker peerPicker = new PeerPicker(editArea, client.getPeers(), (AccountTransactionModel) this.model);
+        return     peerPicker;
+    }
+
     private void showSharesContextMenu()
     {
         if (contextMenu == null)
@@ -341,7 +377,7 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
 
         CurrencyConverter converter = new CurrencyConverterImpl(model.getExchangeRateProviderFactory(),
                         client.getBaseCurrency());
-        ClientSnapshot snapshot = ClientSnapshot.create(client, converter, model().getDate());
+        ClientSnapshot snapshot = ClientSnapshot.create(client, converter, model().getDate().minusDays((long) model().getSecurity().getDelayedDividend()));
 
         if (snapshot != null && model().getSecurity() != null)
         {
@@ -397,6 +433,7 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
             case TAXES:
             case FEES:
             case INTEREST_CHARGE:
+            case DIVIDEND_CHARGE:
             case REMOVAL:
                 return Messages.ColumnDebitNote;
             case INTEREST:
@@ -429,6 +466,11 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
     public void setTransaction(Account account, AccountTransaction transaction)
     {
         model().setSource(account, transaction);
+    }
+
+    public void setEvent(SecurityEvent event)
+    {
+        model().setEvent(event);
     }
 
 }

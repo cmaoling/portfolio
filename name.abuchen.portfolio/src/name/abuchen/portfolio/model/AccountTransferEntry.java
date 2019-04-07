@@ -67,6 +67,44 @@ public class AccountTransferEntry implements CrossEntry, Annotated
         return accountTo;
     }
 
+    public void setPrimaryTransactionOwner(TransactionOwner<Transaction> owner)
+    {
+        Object subject = (Object) owner;
+        if (subject instanceof Account)
+        {
+            if (!this.accountFrom.equals((Account) subject))
+                this.accountTo = (Account) subject;
+        }
+        else
+            throw new IllegalArgumentException();
+    }
+
+    public void setSecondaryTransactionOwner(TransactionOwner<Transaction> owner)
+    {
+        Object subject = (Object) owner;
+        if (subject instanceof Account)
+        {
+            if (!this.accountTo.equals((Account) subject))
+                this.accountFrom = (Account) subject;
+        }
+        else
+            throw new IllegalArgumentException();
+    }
+
+    public TransactionOwner<Transaction> getPrimaryTransactionOwner()
+    {
+        @SuppressWarnings("unchecked")
+        TransactionOwner<Transaction> owner = (TransactionOwner<Transaction>) this.getOwner(transactionTo);
+        return owner;
+    }
+
+    public TransactionOwner<Transaction> getSecondaryTransactionOwner()
+    {
+        @SuppressWarnings("unchecked")
+        TransactionOwner<Transaction> owner = (TransactionOwner<Transaction>) this.getOwner(transactionFrom);
+        return owner;
+    }
+
     public void setDate(LocalDateTime date)
     {
         this.transactionFrom.setDateTime(date);

@@ -22,6 +22,7 @@ import org.junit.Test;
 import name.abuchen.portfolio.datatransfer.ImportAction.Status.Code;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
+import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.Security;
@@ -35,8 +36,9 @@ public class DetectDuplicatesActionTest
     {
         DetectDuplicatesAction action = new DetectDuplicatesAction();
 
-        new PropertyChecker<AccountTransaction>(AccountTransaction.class, "note", "forex", "monetaryAmount").before(
+        new PropertyChecker<AccountTransaction>(AccountTransaction.class, "note", "peer", "forex", "monetaryAmount").before(
                         (name, o, c) -> assertThat(name, action.process(o, account(c)).getCode(), is(Code.WARNING)))
+                        .intermediate((name, o, c) -> assertThat(name, action.process(o, account(c)).getCode(), is(Code.WARNING)))
                         .after((name, o, c) -> assertThat(name, action.process(o, account(c)).getCode(), is(Code.OK)))
                         .run();
     }
@@ -85,6 +87,7 @@ public class DetectDuplicatesActionTest
         private List<PropertyDescriptor> properties = new ArrayList<PropertyDescriptor>();
 
         private Consumer<T> before;
+        private Consumer<T> intermediate;
         private Consumer<T> after;
 
         public PropertyChecker(Class<T> type, String... excludes) throws IntrospectionException
@@ -111,6 +114,12 @@ public class DetectDuplicatesActionTest
             return this;
         }
 
+        public PropertyChecker<T> intermediate(Consumer<T> intermediate)
+        {
+            this.intermediate = intermediate;
+            return this;
+        }
+
         public PropertyChecker<T> after(Consumer<T> after)
         {
             this.after = after;
@@ -126,19 +135,44 @@ public class DetectDuplicatesActionTest
         private void check(PropertyDescriptor change) throws Exception
         {
             T instance = type.getDeclaredConstructor().newInstance();
-            T other = type.getDeclaredConstructor().newInstance();
+            T other    = type.getDeclaredConstructor().newInstance();
+            T similar  = type.getDeclaredConstructor().newInstance();
 
             for (PropertyDescriptor p : properties)
             {
                 Object argument = arg(p.getPropertyType());
                 p.getWriteMethod().invoke(instance, argument);
                 p.getWriteMethod().invoke(other, argument);
+                p.getWriteMethod().invoke(similar, argument);
             }
 
             before.accept(change.getName(), instance, other);
 
-            change.getWriteMethod().invoke(other,
-                            alternative(change.getPropertyType(), change.getReadMethod().invoke(other)));
+            if (other instanceof AccountTransaction && change.getName().equals("type")) //$NON-NLS-1$
+            {
+                AccountTransaction beforeTransaction = (AccountTransaction) instance;
+                AccountTransaction afterTransaction;
+                do
+                {
+                    change.getWriteMethod().invoke(similar,
+                                    alternative(change.getPropertyType(), change.getReadMethod().invoke(similar)));
+                    afterTransaction = (AccountTransaction) similar;
+                } while ((beforeTransaction.getType().isCredit() != afterTransaction.getType().isCredit()) || (afterTransaction.getType().toString().equals(beforeTransaction.getType().toString())));
+                intermediate.accept(change.getName(), instance, similar);
+                do
+                {
+                    change.getWriteMethod().invoke(other,
+                                    alternative(change.getPropertyType(), change.getReadMethod().invoke(other)));
+                    afterTransaction = (AccountTransaction) other;
+                } while (beforeTransaction.getType().isCredit() == afterTransaction.getType().isCredit());
+            }
+            else
+            {
+                if (other instanceof AccountTransaction)
+                    intermediate.accept(change.getName(), instance, similar);
+                change.getWriteMethod().invoke(other,
+                                alternative(change.getPropertyType(), change.getReadMethod().invoke(other)));
+            }
 
             after.accept(change.getName(), instance, other);
         }
@@ -156,6 +190,10 @@ public class DetectDuplicatesActionTest
             else if (propertyType == LocalDate.class)
             {
                 return LocalDate.of(1999, 1, 1);
+            }
+            else if (propertyType == Peer.class)
+            {
+                return new Peer();
             }
             else if (propertyType == LocalDateTime.class)
             {
@@ -194,6 +232,10 @@ public class DetectDuplicatesActionTest
             else if (propertyType == LocalDate.class)
             {
                 return LocalDate.of(2000 + random.nextInt(30), 1, 1);
+            }
+            else if (propertyType == Peer.class)
+            {
+                return new Peer();
             }
             else if (propertyType == LocalDateTime.class)
             {

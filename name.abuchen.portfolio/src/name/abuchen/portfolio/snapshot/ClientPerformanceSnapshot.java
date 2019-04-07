@@ -114,6 +114,8 @@ public class ClientPerformanceSnapshot
     private final List<TransactionPair<?>> earnings = new ArrayList<>();
     private final List<TransactionPair<?>> fees = new ArrayList<>();
     private final List<TransactionPair<?>> taxes = new ArrayList<>();
+    private final List<TransactionPair<?>> dividends = new ArrayList<>();
+    private final List<TransactionPair<?>> interests = new ArrayList<>();
     private double irr;
 
     public ClientPerformanceSnapshot(Client client, CurrencyConverter converter, LocalDate startDate, LocalDate endDate)
@@ -167,9 +169,19 @@ public class ClientPerformanceSnapshot
         return earnings;
     }
 
+    public List<TransactionPair<?>> getDividends()
+    {
+        return dividends;
+    }
+
     public List<TransactionPair<?>> getFees()
     {
         return fees;
+    }
+
+    public List<TransactionPair<?>> getInterests()
+    {
+        return interests;
     }
 
     public List<TransactionPair<?>> getTaxes()
@@ -307,12 +319,18 @@ public class ClientPerformanceSnapshot
                     case DIVIDENDS:
                     case INTEREST:
                         addEarningTransaction(account, t, mEarnings, mOtherEarnings, mTaxes, earningsBySecurity);
+                        if (AccountTransaction.Type.DIVIDENDS.equals(t.getType()))
+                            dividends.add(new TransactionPair<AccountTransaction>(account, t));
+                        else if (AccountTransaction.Type.INTEREST.equals(t.getType()))
+                            interests.add(new TransactionPair<AccountTransaction>(account, t));
                         break;
+                    case DIVIDEND_CHARGE:
                     case INTEREST_CHARGE:
-                        Money charged = t.getMonetaryAmount().with(converter.at(t.getDateTime()));
-                        mEarnings.subtract(t.getMonetaryAmount().with(converter.at(t.getDateTime())));
-                        earnings.add(new TransactionPair<AccountTransaction>(account, t));
-                        mOtherEarnings.subtract(charged);
+                        addExpenseTransaction(account, t, mEarnings, mOtherEarnings, mTaxes, earningsBySecurity);
+                        if (AccountTransaction.Type.DIVIDEND_CHARGE.equals(t.getType()))
+                            dividends.add(new TransactionPair<AccountTransaction>(account, t));
+                        else if (AccountTransaction.Type.INTEREST_CHARGE.equals(t.getType()))
+                            interests.add(new TransactionPair<AccountTransaction>(account, t));
                         break;
                     case DEPOSIT:
                         mDeposits.add(t.getMonetaryAmount().with(converter.at(t.getDateTime())));
@@ -432,6 +450,28 @@ public class ClientPerformanceSnapshot
             mOtherEarnings.add(earned);
     }
 
+    private void addExpenseTransaction(Account account, AccountTransaction transaction, MutableMoney mEarnings,
+                    MutableMoney mOtherEarnings, MutableMoney mTaxes, Map<Security, MutableMoney> earningsBySecurity)
+    {
+        this.earnings.add(new TransactionPair<AccountTransaction>(account, transaction));
+
+        Money tax = transaction.getUnitSum(Unit.Type.TAX, converter).with(converter.at(transaction.getDateTime()));
+        Money charged = transaction.getMonetaryAmount().with(converter.at(transaction.getDateTime()));
+
+        mEarnings.subtract(charged);
+        if (!tax.isZero())
+        {
+            mTaxes.add(tax);
+            taxes.add(new TransactionPair<AccountTransaction>(account, transaction));
+        }
+
+        if (transaction.getSecurity() != null)
+            earningsBySecurity.computeIfAbsent(transaction.getSecurity(),
+                            k -> MutableMoney.of(converter.getTermCurrency())).subtract(charged);
+        else
+            mOtherEarnings.subtract(charged);
+    }
+
     private void addCurrencyGains()
     {
         Map<String, MutableMoney> currency2money = new HashMap<>();
@@ -463,6 +503,7 @@ public class ClientPerformanceSnapshot
                     case FEES_REFUND:
                         value.subtract(t.getMonetaryAmount().with(converter.at(t.getDateTime())));
                         break;
+                    case DIVIDEND_CHARGE:
                     case REMOVAL:
                     case FEES:
                     case INTEREST_CHARGE:

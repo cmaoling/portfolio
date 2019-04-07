@@ -13,7 +13,10 @@ import com.ibm.icu.text.MessageFormat;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.Peer;
+import name.abuchen.portfolio.model.PeerList;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.model.SecurityEvent;
 import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.CurrencyConverterImpl;
@@ -29,12 +32,13 @@ public class AccountTransactionModel extends AbstractModel
 {
     public enum Properties
     {
-        security, account, date, shares, fxGrossAmount, dividendAmount, exchangeRate, inverseExchangeRate, grossAmount, // NOSONAR
+        security, account, date, peer, partner, iban, shares, fxGrossAmount, dividendAmount, exchangeRate, inverseExchangeRate, grossAmount, // NOSONAR
         fxTaxes, taxes, total, note, exchangeRateCurrencies, inverseExchangeRateCurrencies, // NOSONAR
         accountCurrencyCode, securityCurrencyCode, fxCurrencyCode, calculationStatus; // NOSONAR
     }
 
     public static final Security EMPTY_SECURITY = new Security("-----", ""); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Peer     EMPTY_PEER     = new Peer().voidAccount();
 
     private final Client client;
     private AccountTransaction.Type type;
@@ -44,7 +48,12 @@ public class AccountTransactionModel extends AbstractModel
 
     private Security security;
     private Account account;
+    private Peer peer;
+    private String partner;
+    private String iban;
+
     private LocalDate date = LocalDate.now();
+    private LocalDate cutoffDate = LocalDate.now();
     private long shares;
 
     private long fxGrossAmount;
@@ -87,6 +96,7 @@ public class AccountTransactionModel extends AbstractModel
             case INTEREST:
             case INTEREST_CHARGE:
             case DIVIDENDS:
+            case DIVIDEND_CHARGE:
                 return;
             case BUY:
             case SELL:
@@ -104,6 +114,8 @@ public class AccountTransactionModel extends AbstractModel
             throw new UnsupportedOperationException(Messages.MsgMissingSecurity);
         if (account == null)
             throw new UnsupportedOperationException(Messages.MsgMissingAccount);
+        if (peer == null && supportsPeer())
+            throw new UnsupportedOperationException(Messages.MsgMissingPeer);
 
         AccountTransaction t;
 
@@ -133,6 +145,9 @@ public class AccountTransactionModel extends AbstractModel
         t.setType(type);
         t.setNote(note);
 
+        if (supportsPeer())
+            t.setPeer(EMPTY_PEER.equals(peer) ? null : peer);
+
         t.clearUnits();
 
         if (taxes != 0)
@@ -153,6 +168,11 @@ public class AccountTransactionModel extends AbstractModel
                                 Money.of(getSecurityCurrencyCode(), fxTaxes), //
                                 exchangeRate));
         }
+        if (type == AccountTransaction.Type.DIVIDENDS)
+        {
+                security.addEvent((new SecurityEvent(cutoffDate, SecurityEvent.Type.STOCK_DIVIDEND)).setAmount(getFxCurrencyCode(), dividendAmount));
+        }
+
     }
 
     @Override
@@ -169,15 +189,38 @@ public class AccountTransactionModel extends AbstractModel
         setNote(null);
     }
 
+
+    public boolean supportsPeer()
+    {
+        switch (type)
+        {
+            case REMOVAL:
+            case DEPOSIT:
+            case INTEREST:
+            case INTEREST_CHARGE:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     public boolean supportsShares()
     {
-        return type == AccountTransaction.Type.DIVIDENDS;
+        switch (type)
+        {
+            case DIVIDEND_CHARGE:
+            case DIVIDENDS:
+                return true;
+            default:
+                return false;
+        }
     }
 
     public boolean supportsSecurity()
     {
         switch (type)
         {
+            case DIVIDEND_CHARGE:
             case DIVIDENDS:
             case TAXES:
             case TAX_REFUND:
@@ -205,7 +248,16 @@ public class AccountTransactionModel extends AbstractModel
 
     public boolean supportsTaxUnits()
     {
-        return type == AccountTransaction.Type.DIVIDENDS;
+        switch (type)
+        {
+            case DIVIDEND_CHARGE:
+            case DIVIDENDS:
+            case INTEREST:
+            case INTEREST_CHARGE:
+                return true;
+            default:
+                return false;
+        }
     }
 
     public void setSource(Account account, AccountTransaction transaction)
@@ -219,9 +271,26 @@ public class AccountTransactionModel extends AbstractModel
 
         this.account = account;
         LocalDateTime transactionDate = transaction.getDateTime();
-        this.date = transactionDate.toLocalDate();
-        this.shares = transaction.getShares();
-        this.total = transaction.getAmount();
+        this.date    = transactionDate.toLocalDate();
+        this.cutoffDate = this.date.minusDays((long) (EMPTY_SECURITY.equals(this.security) || !supportsShares()? 0 : this.security.getDelayedDividend()));
+        this.shares  = transaction.getShares();
+        this.total   = transaction.getAmount();
+        this.peer    = transaction.getPeer();
+        if (supportsPeer())
+        {
+            if (this.peer == null)
+                this.peer = EMPTY_PEER;
+            if (peer != EMPTY_PEER)
+            {
+                this.partner = this.peer.getName();
+                this.iban    = this.peer.getIban();
+            }
+            else
+            {
+                this.partner = Messages.LabelNothing;
+                this.iban    = Messages.LabelNothing;
+            }
+        }
 
         // both will be overwritten if forex data exists
         this.exchangeRate = BigDecimal.ONE;
@@ -256,6 +325,14 @@ public class AccountTransactionModel extends AbstractModel
         this.dividendAmount = calculateDividendAmount();
 
         this.note = transaction.getNote();
+
+    }
+
+    public void setEvent(SecurityEvent event)
+    {
+        this.dividendAmount = event.getAmount().getValue();
+        setDate(event.getDate().plusDays((long) this.security.getDelayedDividend()));
+        triggerTotal(calculateTotal());
     }
 
     @Override
@@ -352,7 +429,7 @@ public class AccountTransactionModel extends AbstractModel
                             .getTimeSeries(getSecurityCurrencyCode(), getAccountCurrencyCode());
 
             if (series != null)
-                setExchangeRate(series.lookupRate(date).orElse(new ExchangeRate(date, BigDecimal.ONE)).getValue());
+                setExchangeRate(series.lookupRate(cutoffDate).orElse(new ExchangeRate(cutoffDate, BigDecimal.ONE)).getValue());
             else
                 setExchangeRate(BigDecimal.ONE);
         }
@@ -370,7 +447,7 @@ public class AccountTransactionModel extends AbstractModel
 
         CurrencyConverter converter = new CurrencyConverterImpl(getExchangeRateProviderFactory(),
                         client.getBaseCurrency());
-        ClientSnapshot snapshot = ClientSnapshot.create(client, converter, date);
+        ClientSnapshot snapshot = ClientSnapshot.create(client, converter, cutoffDate);
         SecurityPosition p = snapshot.getJointPortfolio().getPositionsBySecurity().get(security);
         setShares(p != null ? p.getShares() : 0);
     }
@@ -380,12 +457,111 @@ public class AccountTransactionModel extends AbstractModel
         return date;
     }
 
+    @SuppressWarnings("nls")
     public void setDate(LocalDate date)
     {
         firePropertyChange(Properties.date.name(), this.date, this.date = date);
+        cutoffDate = date.minusDays((long) (EMPTY_SECURITY.equals(this.security) || !supportsShares()? 0 : this.security.getDelayedDividend()));
+        System.err.println(">>>> AccountTransactionModel::setDate() date : " + date + " cutoff: " + cutoffDate);
         updateShares();
         updateExchangeRate();
     }
+
+    /// ==== CONSTRUCTION AREA ===== START ====
+
+    public String getPartner()
+    {
+     // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::getPartner() partner   : " + (peer != null ? peer.toString() : "<null>") + "> Name: " + (peer != null ? peer.getName(): "=/="));
+     // TODO: still needed for debug? new Exception().printStackTrace(System.err);
+        if (peer == null || EMPTY_PEER.equals(peer))
+            return Messages.LabelNothing;
+        else
+            return peer.getName();
+    }
+
+    public void setPartner(String partner)
+    {
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::setPartner() PRE  partner   : " + partner + "  this.partner: " + (this.partner != null ? this.partner.toString() : "<null>"));
+        // TODO: still needed for debug? new Exception().printStackTrace(System.err);
+        firePropertyChange(Properties.partner.name(), this.partner, this.partner = partner); //this.peer.setName(peerStr)
+    }
+
+    public String getIban()
+    {
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::getIban() peer : " + (peer != null ? peer.toString() : "<null>") + "> IBAN: " + (peer != null ? peer.getIban() : "=/="));
+        // TODO: still needed for debug? new Exception().printStackTrace(System.err);
+        if (peer == null || EMPTY_PEER.equals(peer))
+            return Messages.LabelNothing;
+        else
+            return peer.getIban();
+    }
+
+    public void setIban(String iban)
+    {
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::setIban() iban PRE   : " + (iban != null ? iban : "<null>")); // TODO: still needed for debug?
+        // TODO: still needed for debug? new Exception().printStackTrace(System.err);
+        firePropertyChange(Properties.iban.name(), this.iban, this.iban = iban); // this.peer.setIban(iban)
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::setIban() iban POST  : " + (this.iban != null ? this.iban : "<null>")); // TODO: still needed for debug?
+    }
+
+    public Peer getPeer()
+    {
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::getPeer() peer : " + (peer != null ? peer.toString() : "<null>")); // TODO: still needed for debug?
+        // TODO: still needed for debug? new Exception().printStackTrace(System.err);
+        return peer;
+    }
+
+    public void setPeer(Peer peer)
+    {
+        if (peer == null)
+        {
+            this.peer = peer;
+            return;
+        }
+        // TODO: still needed for debug? 
+        //        new Exception().printStackTrace(System.err);
+        //        if (this.peer != null)
+        //            System.err.println(">PRE AccountTransactionModel::setPeer() OLD peer : " + this.peer.toString());
+        //        if (peer != null)
+        //            System.err.println(">PRE AccountTransactionModel::setPeer() NEW peer : " + peer.toString());
+        //        if (partner != null)
+        //            System.err.println(">PRE AccountTransactionModel::setPeer() partner : " + partner.toString());
+        //        if (iban != null)
+        //            System.err.println(">PRE AccountTransactionModel::setPeer() iban : " + iban.toString());
+        firePropertyChange(Properties.peer.name(), this.peer, this.peer = peer); //this.peer.setName(peerStr)
+        //        System.err.println(">A AccountTransactionModel::setPeer()");
+        //        new Exception().printStackTrace(System.err);
+        //        if (peer != null)
+        //            System.err.println("POST AccountTransactionModel::setPeer() peer : " + peer.toString());
+        //        if (partner != null)
+        //            System.err.println("POST AccountTransactionModel::setPeer() partner : " + partner.toString());
+        //        if (iban != null)
+        //            System.err.println("POST AccountTransactionModel::setPeer() iban : " + iban.toString());
+    }
+
+    public boolean matchPeer(String matchStr)
+    {
+        PeerList peerList = client.getPeers().findPeer(matchStr, true);
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::matchPeer() POST matchStr : " + matchStr + "  this.partner: " + (this.partner != null ? this.partner.toString() : "<null>") + "  this.iban: " + (this.iban != null ? this.iban.toString() : "<null>")); // TODO: still needed for debug?
+        // TODO: still needed for debug? new Exception().printStackTrace(System.err);
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::matchPeer() peerList   : " + (peerList != null ? peerList.toString()  : "<null>"));
+        if (peerList == null)
+            return false;
+        if (peerList.size() == 1 && matchStr.length() >= 3)
+        {
+           this.peer = peerList.get(0);
+           firePropertyChange(Properties.peer.name(), Messages.LabelNothing, this.peer);
+           firePropertyChange(Properties.iban.name(), Messages.LabelNothing, this.peer.getIban());
+           firePropertyChange(Properties.partner.name(), Messages.LabelNothing, this.peer.getName());
+           return true;
+        }
+        else if (peerList.size() > 1)
+            System.err.println(">>>> AccountTransactionModel::matchPeer() peerList   : " + peerList.toString() + " peer : " + (peer != null ? peer.toString() : Messages.LabelNullPointer) ); // TODO: still needed for debug?  //$NON-NLS-1$ //$NON-NLS-2$
+        // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::matchPeer() peer : " + (peer != null ? peer.toString() : "<null>") ); // TODO: still needed for debug?
+        return false;
+    }
+
+    /// ==== CONSTRUCTION AREA ====== END =====
 
     public long getShares()
     {
@@ -396,8 +572,10 @@ public class AccountTransactionModel extends AbstractModel
     {
         firePropertyChange(Properties.shares.name(), this.shares, this.shares = shares);
 
-        firePropertyChange(Properties.dividendAmount.name(), this.dividendAmount,
-                        this.dividendAmount = calculateDividendAmount());
+        if (this.dividendAmount.equals(BigDecimal.ZERO))
+            firePropertyChange(Properties.dividendAmount.name(), this.dividendAmount,this.dividendAmount = calculateDividendAmount());
+        else
+            firePropertyChange(Properties.fxGrossAmount.name(), this.fxGrossAmount,this.fxGrossAmount = calculateGrossAmount4Dividend());
     }
 
     public long getFxGrossAmount()
@@ -427,8 +605,11 @@ public class AccountTransactionModel extends AbstractModel
     public void setDividendAmount(BigDecimal amount)
     {
         triggerDividendAmount(amount);
-        long myGrossAmount = calculateGrossAmount4Dividend();
-        setFxGrossAmount(myGrossAmount);
+        if (getShares() > 0 || getFxGrossAmount() > 0)
+        {
+            long myGrossAmount = calculateGrossAmount4Dividend();
+            setFxGrossAmount(myGrossAmount);
+        }
     }
 
     public void triggerDividendAmount(BigDecimal amount)
@@ -560,7 +741,7 @@ public class AccountTransactionModel extends AbstractModel
     protected long calculateGrossAmount4Total()
     {
         long totalTaxes = taxes + Math.round(exchangeRate.doubleValue() * fxTaxes);
-        return total + totalTaxes;
+        return total + (type == AccountTransaction.Type.INTEREST_CHARGE ||  type == AccountTransaction.Type.DIVIDEND_CHARGE ? -1 : 1) * totalTaxes;
     }
 
     protected long calculateGrossAmount4Dividend()
@@ -572,7 +753,7 @@ public class AccountTransactionModel extends AbstractModel
     private long calculateTotal()
     {
         long totalTaxes = taxes + Math.round(exchangeRate.doubleValue() * fxTaxes);
-        return Math.max(0, grossAmount - totalTaxes);
+        return Math.max(0, grossAmount + (type == AccountTransaction.Type.INTEREST_CHARGE || type == AccountTransaction.Type.DIVIDEND_CHARGE ? 1 : -1) * totalTaxes);
     }
 
     public String getNote()

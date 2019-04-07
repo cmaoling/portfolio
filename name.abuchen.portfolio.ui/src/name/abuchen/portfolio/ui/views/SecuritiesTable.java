@@ -795,6 +795,8 @@ public final class SecuritiesTable implements ModificationListener
         }
 
         manager.add(new Separator());
+
+        manager.add(new HideSecurityAction(selection));
         if (watchlist == null)
         {
             manager.add(new ConfirmActionWithSelection(Messages.SecurityMenuDeleteSecurity,
@@ -837,6 +839,12 @@ public final class SecuritiesTable implements ModificationListener
         new OpenDialogAction(view, Messages.SecurityMenuDividends + "...") //$NON-NLS-1$
                         .type(AccountTransactionDialog.class) //
                         .parameters(AccountTransaction.Type.DIVIDENDS) //
+                        .with(security) //
+                        .addTo(manager);
+
+        new OpenDialogAction(view, Messages.SecurityMenuDividendCharge + "...") //$NON-NLS-1$
+                        .type(AccountTransactionDialog.class) //
+                        .parameters(AccountTransaction.Type.DIVIDEND_CHARGE) //
                         .with(security) //
                         .addTo(manager);
 
@@ -915,6 +923,39 @@ public final class SecuritiesTable implements ModificationListener
         {
             markDirty();
             securities.setInput(getClient().getSecurities());
+        }
+    }
+
+    private final class HideSecurityAction extends Action
+    {
+        private IStructuredSelection selection;
+
+        private HideSecurityAction(IStructuredSelection selection)
+        {
+            super(Messages.SecurityMenuHideSecurity);
+
+            this.selection = selection;
+        }
+
+        @Override
+        public void run()
+        {
+            boolean isDirty = false;
+
+            for (Object obj : selection.toArray())
+            {
+                Security security = (Security) obj;
+
+                security.setRetired(!security.isRetired());
+                isDirty = true;
+            }
+
+            if (isDirty)
+            {
+                markDirty();
+                securities.setInput(getClient().getSecurities());
+            }
+
         }
     }
 

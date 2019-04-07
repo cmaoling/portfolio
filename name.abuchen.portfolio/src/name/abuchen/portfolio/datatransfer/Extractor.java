@@ -12,11 +12,13 @@ import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.ImportAction.Context;
 import name.abuchen.portfolio.datatransfer.ImportAction.Status;
 import name.abuchen.portfolio.datatransfer.pdf.AbstractPDFExtractor;
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.Annotated;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
@@ -49,6 +51,10 @@ public interface Extractor
 
     public abstract static class Item
     {
+        private boolean proposedShares = false;
+
+        public abstract Peer getPeer();
+
         public abstract Annotated getSubject();
 
         public abstract Security getSecurity();
@@ -56,6 +62,13 @@ public interface Extractor
         public abstract String getTypeInformation();
 
         public abstract LocalDateTime getDate();
+
+        public abstract String getNote();
+
+        public boolean getDefaultImported()
+        {
+            return true;
+        }
 
         public Money getAmount()
         {
@@ -68,6 +81,16 @@ public interface Extractor
         }
 
         public abstract Status apply(ImportAction action, Context context);
+
+        public void setProposedShares(boolean value)
+        {
+            proposedShares = value;
+        }
+
+        public boolean hasProposedShares()
+        {
+            return proposedShares;
+        }
     }
 
     /**
@@ -85,6 +108,12 @@ public interface Extractor
         public NonImportableItem(String typeInformation)
         {
             this.typeInformation = typeInformation;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            return null;
         }
 
         @Override
@@ -157,7 +186,20 @@ public interface Extractor
         }
 
         @Override
+        public Peer getPeer()
+        {
+            if (transaction instanceof AccountTransaction)
+                return ((AccountTransaction) transaction).getPeer();
+            return null;
+        }
+
+        @Override
         public Annotated getSubject()
+        {
+            return transaction;
+        }
+
+        public Transaction getTransaction()
         {
             return transaction;
         }
@@ -198,6 +240,12 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return transaction.getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             if (transaction instanceof AccountTransaction)
@@ -207,19 +255,39 @@ public interface Extractor
             else
                 throw new UnsupportedOperationException();
         }
+
+        @Override
+        public String toString()
+        {
+            return transaction.toString();
+        }
     }
 
     static class BuySellEntryItem extends Item
     {
         private final BuySellEntry entry;
 
+        private boolean proposedFees;
+
         public BuySellEntryItem(BuySellEntry entry)
         {
             this.entry = entry;
+            proposedFees = false;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            return null;
         }
 
         @Override
         public Annotated getSubject()
+        {
+            return entry;
+        }
+
+        public BuySellEntry getEntry()
         {
             return entry;
         }
@@ -255,9 +323,31 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return entry.getAccountTransaction().getNote();
+        }
+
+        public void setProposedFees(boolean value)
+        {
+            proposedFees = value;
+        }
+
+        public boolean hasProposedFees()
+        {
+            return proposedFees;
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             return action.process(entry, context.getAccount(), context.getPortfolio());
+        }
+
+        @Override
+        public String toString()
+        {
+            return entry.getAccountTransaction().toString() + " / " + entry.getPortfolioTransaction().toString(); //$NON-NLS-1$
         }
     }
 
@@ -270,6 +360,15 @@ public interface Extractor
         {
             this.entry = entry;
             this.isOutbound = isOutbound;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            if (isOutbound)
+                return entry.getSourceTransaction().getPeer();
+            else
+                return entry.getTargetTransaction().getPeer();
         }
 
         @Override
@@ -304,12 +403,37 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return entry.getSourceTransaction().getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
+            Account source;
+            Account target;
             if (isOutbound)
-                return action.process(entry, context.getAccount(), context.getSecondaryAccount());
+            {
+                source = context.getAccount();
+                target = context.getSecondaryAccount();
+            }
             else
-                return action.process(entry, context.getSecondaryAccount(), context.getAccount());
+            {
+                source = context.getSecondaryAccount();
+                target = context.getAccount();
+            }
+            if (entry.getSourceTransaction().getPeer() != null && entry.getSourceTransaction().getPeer().links2Account())
+                target = entry.getSourceTransaction().getPeer().getAccount();
+            if (entry.getTargetTransaction().getPeer() != null && entry.getTargetTransaction().getPeer().links2Account())
+                source = entry.getTargetTransaction().getPeer().getAccount();
+            return action.process(entry, source, target);
+        }
+
+        @Override
+        public String toString()
+        {
+            return entry.getSourceTransaction().toString() + " => " + entry.getTargetTransaction().toString(); //$NON-NLS-1$
         }
     }
 
@@ -320,6 +444,12 @@ public interface Extractor
         public PortfolioTransferItem(PortfolioTransferEntry entry)
         {
             this.entry = entry;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            return null;
         }
 
         @Override
@@ -359,6 +489,12 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return entry.getSourceTransaction().getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             return action.process(entry, context.getPortfolio(), context.getSecondaryPortfolio());
@@ -372,6 +508,12 @@ public interface Extractor
         public SecurityItem(Security security)
         {
             this.security = security;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            return null;
         }
 
         @Override
@@ -399,12 +541,18 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return security.getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             return action.process(security);
         }
     }
-
+ 
     static class SecurityPriceItem extends Item
     {
         private Security security;
@@ -414,6 +562,12 @@ public interface Extractor
         {
             this.security = security;
             this.price = price;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            return null;
         }
 
         @Override
@@ -447,9 +601,73 @@ public interface Extractor
         }
 
         @Override
+        public String getNote()
+        {
+            return security.getNote();
+        }
+
+        @Override
         public Status apply(ImportAction action, Context context)
         {
             return action.process(security, price);
+        }
+    }
+
+    static class PeerItem extends Item
+    {
+        private Peer peer;
+
+        public PeerItem(Peer peer)
+        {
+            this.peer = peer;
+        }
+
+        @Override
+        public Peer getPeer()
+        {
+            return peer;
+        }
+
+        @Override
+        public Annotated getSubject()
+        {
+            return peer;
+        }
+
+        @Override
+        public String getTypeInformation()
+        {
+            return Messages.LabelPeer;
+        }
+
+        @Override
+        public LocalDateTime getDate()
+        {
+            return null;
+        }
+
+        @Override
+        public Security getSecurity()
+        {
+            return null;
+        }
+
+        @Override
+        public String getNote()
+        {
+            return peer.getNote();
+        }
+
+        @Override
+        public Status apply(ImportAction action, Context context)
+        {
+            return action.process(peer);
+        }
+
+        @Override
+        public boolean getDefaultImported()
+        {
+            return false;
         }
     }
 
@@ -499,4 +717,9 @@ public interface Extractor
         return result;
     }
 
+    @SuppressWarnings("unchecked")
+    default public <T extends Extractor> T getSubject()
+    {
+        return (T) this;
+    }
 }

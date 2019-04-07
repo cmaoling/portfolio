@@ -102,6 +102,7 @@ public class SecurityMasterDataPage extends AbstractPage
         {
             wkn = bindings.bindStringInput(container, Messages.ColumnWKN, "wkn", SWT.NONE, 12); //$NON-NLS-1$
             wkn.setEnabled(!isSyncedOnline);
+            bindings.bindSpinner(container, Messages.ColumnDelayedDividend, "delayedDividend", 0, 90, SWT.NONE, 2); //$NON-NLS-1$
 
             ComboViewer calendar = bindings.bindCalendarCombo(container, Messages.LabelSecurityCalendar, "calendar"); //$NON-NLS-1$
             calendar.getCombo().setToolTipText(Messages.LabelSecurityCalendarToolTip);

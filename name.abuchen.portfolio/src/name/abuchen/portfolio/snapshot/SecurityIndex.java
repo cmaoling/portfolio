@@ -16,6 +16,7 @@ import name.abuchen.portfolio.util.Interval;
 
 /* package */class SecurityIndex extends PerformanceIndex
 {
+    @SuppressWarnings("unused")
     private final PerformanceIndex clientIndex;
     private final Security security;
 
@@ -27,7 +28,7 @@ import name.abuchen.portfolio.util.Interval;
         this.security = security;
     }
 
-    /* package */void calculate()
+    /* package */void calculate(PerformanceIndex clientIndex, Security security, boolean isNormalized)
     {
         List<SecurityPrice> prices = security.getPrices();
         if (prices.isEmpty())
@@ -110,6 +111,23 @@ import name.abuchen.portfolio.util.Interval;
             index++;
         }
     }
+
+// reported obsolete
+//    private List<SecurityPrice> mergeLatestQuoteIfNecessary(List<SecurityPrice> prices, Security security)
+//    {
+//        LatestSecurityPrice latest = security.getLatest();
+//        if (latest == null)
+//            return prices;
+//
+//        int index = Collections.binarySearch(prices, new SecurityPrice(latest.getDate(), latest.getValue()));
+//
+//        if (index >= 0) // historic quote exists -> use it
+//            return prices;
+//
+//        List<SecurityPrice> copy = new ArrayList<>(prices);
+//        copy.add(~index, latest);
+//        return copy;
+//    }
 
     private long convert(CurrencyConverter converter, Security security, LocalDate date)
     {

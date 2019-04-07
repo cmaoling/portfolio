@@ -162,7 +162,7 @@ public class DashboardData
         }
         else if (type.equals(PerformanceIndex.class))
         {
-            return PerformanceIndex.forClient(client, converter, interval, new ArrayList<Exception>());
+            return PerformanceIndex.forClient(client, converter, interval, new ArrayList<Exception>(), false);
         }
         else
         {
