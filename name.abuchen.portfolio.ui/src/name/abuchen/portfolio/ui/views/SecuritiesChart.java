@@ -99,6 +99,7 @@ public class SecuritiesChart
         SMA_20DAYS(Messages.LabelChartDetailMovingAverage_20days), //
         SMA_30DAYS(Messages.LabelChartDetailMovingAverage_30days), //
         SMA_38DAYS(Messages.LabelChartDetailMovingAverage_38days), //
+        SMA_50DAYS(Messages.LabelChartDetailMovingAverage_50days), //
         SMA_90DAYS(Messages.LabelChartDetailMovingAverage_90days), //
         SMA_100DAYS(Messages.LabelChartDetailMovingAverage_100days), //
         SMA_200DAYS(Messages.LabelChartDetailMovingAverage_200days), //
@@ -403,6 +404,7 @@ public class SecuritiesChart
         subMenuChartMovingAverage.add(addMenuAction(ChartDetails.SMA_20DAYS));
         subMenuChartMovingAverage.add(addMenuAction(ChartDetails.SMA_30DAYS));
         subMenuChartMovingAverage.add(addMenuAction(ChartDetails.SMA_38DAYS));
+        subMenuChartMovingAverage.add(addMenuAction(ChartDetails.SMA_50DAYS));
         subMenuChartMovingAverage.add(addMenuAction(ChartDetails.SMA_90DAYS));
         subMenuChartMovingAverage.add(addMenuAction(ChartDetails.SMA_100DAYS));
         subMenuChartMovingAverage.add(addMenuAction(ChartDetails.SMA_200DAYS));
@@ -719,6 +721,10 @@ public class SecuritiesChart
 
         if (chartConfig.contains(ChartDetails.SMA_38DAYS))
             addSMAMarkerLines(Messages.LabelChartDetailMovingAverage, Messages.LabelChartDetailMovingAverage_38days, 38,
+                            colorSMA4);
+
+        if (chartConfig.contains(ChartDetails.SMA_50DAYS))
+            addSMAMarkerLines(Messages.LabelChartDetailMovingAverage, Messages.LabelChartDetailMovingAverage_50days, 50,
                             colorSMA4);
 
         if (chartConfig.contains(ChartDetails.SMA_90DAYS))
