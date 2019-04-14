@@ -574,6 +574,7 @@ public class ClientFactory
                 // added onlineId to security
                 // added DIVIDEND_CHARGE transaction type
             case 39:
+                // removed consumer price indices
                 // Introducing Peers
                 introducePeers(client);
                 // ...

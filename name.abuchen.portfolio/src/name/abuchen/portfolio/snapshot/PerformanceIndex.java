@@ -166,20 +166,6 @@ public class PerformanceIndex
         return index;
     }
 
-    @Deprecated
-    public static PerformanceIndex forConsumerPriceIndex(PerformanceIndex clientIndex)
-    {
-        return forConsumerPriceIndex(clientIndex, false);
-    }
-
-    public static PerformanceIndex forConsumerPriceIndex(PerformanceIndex clientIndex, boolean isNormalized)
-    {
-        CPIIndex index = new CPIIndex(clientIndex.getClient(), clientIndex.getCurrencyConverter(),
-                        clientIndex.getReportInterval());
-        index.calculate(clientIndex, isNormalized);
-        return index;
-    }
-
     /* package */
     Client getClient()
     {
