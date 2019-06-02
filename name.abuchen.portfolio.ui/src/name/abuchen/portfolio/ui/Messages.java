@@ -490,6 +490,7 @@ public class Messages extends NLS
     public static String LabelClientFilterDialogMessage;
     public static String LabelClientFilterDialogTitle;
     public static String LabelClientFilterNew;
+    public static String LabelClose;
     public static String LabelColorSchema;
     public static String LabelColumns;
     public static String LabelCommon;
@@ -622,6 +623,7 @@ public class Messages extends NLS
     public static String LabelMaxDrawdownDuration;
     public static String LabelPerformanceNormalizedPerYear;
     public static String LabelMetricCheckInterval;
+    public static String LabelStartTyping;
     public static String LabelStatementOfAssets;
     public static String LabelStatementOfAssetsHistory;
     public static String LabelStatementOfAssetsHoldings;
