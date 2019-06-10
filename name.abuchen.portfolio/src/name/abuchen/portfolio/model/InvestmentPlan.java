@@ -173,6 +173,56 @@ public class InvestmentPlan implements Named, Adaptable
         return this.transactions;
     }
 
+    /**
+     * Returns a list of transaction pairs, i.e. transaction and the owner
+     * (account or portfolio). As the list of transactions is part of the XML
+     * format, we cannot change the InvestmentPlan class.
+     */
+    public List<TransactionPair<?>> getTransactions(Client client)
+    {
+        List<TransactionPair<?>> answer = new ArrayList<>();
+
+        for (Transaction t : transactions)
+        {
+            if (t instanceof AccountTransaction)
+                answer.add(new TransactionPair<AccountTransaction>(lookupOwner(client, (AccountTransaction) t),
+                                (AccountTransaction) t));
+            else
+                answer.add(new TransactionPair<PortfolioTransaction>(lookupOwner(client, (PortfolioTransaction) t),
+                                (PortfolioTransaction) t));
+        }
+
+        return answer;
+    }
+
+    /**
+     * Returns the owner of the transaction. Because an investment plan can be
+     * updated, older transactions do not necessarily belong to the account that
+     * is currently configured for by the plan.
+     */
+    private Account lookupOwner(Client client, AccountTransaction t)
+    {
+        if (account != null && account.getTransactions().contains(t))
+            return account;
+
+        return client.getAccounts().stream().filter(a -> a.getTransactions().contains(t)).findAny()
+                        .orElseThrow(IllegalArgumentException::new);
+    }
+
+    /**
+     * Returns the owner of the transaction. Because an investment plan can be
+     * updated, older transactions do not necessarily belong to the portfolio
+     * that is currently configured for the plan.
+     */
+    private Portfolio lookupOwner(Client client, PortfolioTransaction t)
+    {
+        if (portfolio != null && portfolio.getTransactions().contains(t))
+            return portfolio;
+
+        return client.getPortfolios().stream().filter(a -> a.getTransactions().contains(t)).findAny()
+                        .orElseThrow(IllegalArgumentException::new);
+    }
+
     @Deprecated
     public void removeTransaction(Transaction transaction)
     {
@@ -293,18 +343,18 @@ public class InvestmentPlan implements Named, Adaptable
         return lastDate != null ? next(lastDate) : startDate;
     }
 
-    public List<Transaction> generateTransactions(CurrencyConverter converter)
+    public List<TransactionPair<?>> generateTransactions(CurrencyConverter converter)
     {
         LocalDate transactionDate = getDateOfNextTransactionToBeGenerated();
-        List<Transaction> newlyCreated = new ArrayList<>();
+        List<TransactionPair<?>> newlyCreated = new ArrayList<>();
 
         LocalDate now = LocalDate.now();
 
         while (!transactionDate.isAfter(now))
         {
-            Transaction transaction = createTransaction(converter, transactionDate);
+            TransactionPair<?> transaction = createTransaction(converter, transactionDate);
 
-            transactions.add(transaction);
+            transactions.add(transaction.getTransaction());
             newlyCreated.add(transaction);
 
             transactionDate = next(transactionDate);
@@ -313,7 +363,7 @@ public class InvestmentPlan implements Named, Adaptable
         return newlyCreated;
     }
 
-    private Transaction createTransaction(CurrencyConverter converter, LocalDate tDate)
+    private TransactionPair<?> createTransaction(CurrencyConverter converter, LocalDate tDate)
     {
         Class<? extends Transaction> planType = getPlanType();
 
@@ -325,7 +375,7 @@ public class InvestmentPlan implements Named, Adaptable
             throw new IllegalArgumentException();
     }
 
-    private Transaction createSecurityTx(CurrencyConverter converter, LocalDate tDate)
+    private TransactionPair<?> createSecurityTx(CurrencyConverter converter, LocalDate tDate)
     {
         if (account == null && portfolio == null)
             return null;
@@ -382,7 +432,7 @@ public class InvestmentPlan implements Named, Adaptable
                     entry.getPortfolioTransaction().addUnit(forex);
 
                 entry.insert();
-                return (Transaction) entry.getPortfolioTransaction();
+                return new TransactionPair<>(portfolio, entry.getPortfolioTransaction());
             }
             else
             {
@@ -400,7 +450,7 @@ public class InvestmentPlan implements Named, Adaptable
                 if (forex != null)
                     transaction.addUnit(forex);
                 account.addTransaction(transaction);
-                return (Transaction) transaction;
+                return new TransactionPair<>(account, transaction);
             }
         }
         else
@@ -422,11 +472,11 @@ public class InvestmentPlan implements Named, Adaptable
                 transaction.addUnit(forex);
 
             portfolio.addTransaction(transaction);
-            return (Transaction) transaction;
+            return new TransactionPair<>(portfolio, transaction);
         }
     }
 
-    private Transaction createDepositTx(CurrencyConverter converter, LocalDate tDate)
+    private TransactionPair<?> createDepositTx(CurrencyConverter converter, LocalDate tDate)
     {
         Money deposit = Money.of(getCurrencyCode(), amount);
 
@@ -443,6 +493,6 @@ public class InvestmentPlan implements Named, Adaptable
                         Values.DateTime.format(LocalDateTime.now()), name));
 
         account.addTransaction(transaction);
-        return transaction;
+        return new TransactionPair<>(account, transaction);
     }
 }
