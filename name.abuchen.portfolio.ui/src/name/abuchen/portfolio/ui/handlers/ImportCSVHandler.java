@@ -1,6 +1,7 @@
 package name.abuchen.portfolio.ui.handlers;
 
 import java.io.File;
+import java.util.Optional;
 
 import javax.inject.Named;
 
@@ -32,8 +33,8 @@ public class ImportCSVHandler
     public void execute(@Named(IServiceConstants.ACTIVE_PART) MPart part,
                     @Named(IServiceConstants.ACTIVE_SHELL) Shell shell)
     {
-        Client client = MenuHelper.getActiveClient(part);
-        if (client == null)
+        Optional<Client> client = MenuHelper.getActiveClient(part);
+        if (!client.isPresent())
             return;
 
         PortfolioPart object = (PortfolioPart) part.getObject();
@@ -49,7 +50,7 @@ public class ImportCSVHandler
             return;
 
         IPreferenceStore preferences = ((PortfolioPart) part.getObject()).getPreferenceStore();
-        Dialog wizwardDialog = new WizardDialog(shell, new CSVImportWizard(client, preferences, new File(fileName)));
+        Dialog wizwardDialog = new WizardDialog(shell, new CSVImportWizard(client.get(), preferences, new File(fileName)));
         wizwardDialog.open();
     }
 }
