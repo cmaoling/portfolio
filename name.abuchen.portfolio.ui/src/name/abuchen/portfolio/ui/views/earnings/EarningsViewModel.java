@@ -20,6 +20,7 @@ import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.model.TransactionPair;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.Money;
+import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.ClientFilterMenu;
 import name.abuchen.portfolio.util.Interval;
 
@@ -27,16 +28,23 @@ public class EarningsViewModel
 {
     public enum Mode
     {
-        DIVIDENDS(AccountTransaction.Type.DIVIDENDS, AccountTransaction.Type.DIVIDEND_CHARGE), //
-        INTEREST(AccountTransaction.Type.INTEREST, AccountTransaction.Type.INTEREST_CHARGE), //
-        ALL(AccountTransaction.Type.DIVIDENDS, AccountTransaction.Type.DIVIDEND_CHARGE, //
+        DIVIDENDS(Messages.LabelDividends, AccountTransaction.Type.DIVIDENDS, AccountTransaction.Type.DIVIDEND_CHARGE), //
+        INTEREST(Messages.LabelInterest, AccountTransaction.Type.INTEREST, AccountTransaction.Type.INTEREST_CHARGE), //
+        ALL(Messages.LabelEarnings, AccountTransaction.Type.DIVIDENDS, AccountTransaction.Type.DIVIDEND_CHARGE, //
             AccountTransaction.Type.INTEREST, AccountTransaction.Type.INTEREST_CHARGE);
 
+        private String label;
         private Set<AccountTransaction.Type> types;
 
-        private Mode(AccountTransaction.Type first, AccountTransaction.Type... rest)
+        private Mode(String label, AccountTransaction.Type first, AccountTransaction.Type... rest)
         {
+            this.label = label;
             this.types = EnumSet.of(first, rest);
+        }
+
+        public String getLabel()
+        {
+            return label;
         }
 
         public boolean isIncluded(AccountTransaction transaction)
