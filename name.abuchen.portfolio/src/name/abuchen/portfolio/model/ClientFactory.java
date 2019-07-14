@@ -577,7 +577,8 @@ public class ClientFactory
                 // removed consumer price indices
                 // Introducing Peers
                 introducePeers(client);
-                // ...
+            case 40:
+                // added attributes to account and portfolio
 
                 client.setVersion(Client.CURRENT_VERSION);
                 break;

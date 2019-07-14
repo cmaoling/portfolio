@@ -9,7 +9,7 @@ import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.money.CurrencyUnit;
 import name.abuchen.portfolio.util.Iban;
 
-public class Account implements TransactionOwner<AccountTransaction>, InvestmentVehicle
+public class Account implements TransactionOwner<AccountTransaction>, InvestmentVehicle, Attributable
 {
     private String  uuid;
     private String  name;
@@ -21,6 +21,8 @@ public class Account implements TransactionOwner<AccountTransaction>, Investment
     private String  csvExtractor;
 
     private List<AccountTransaction> transactions = new ArrayList<>();
+
+    private Attributes attributes;
 
     public Account()
     {
@@ -132,6 +134,20 @@ public class Account implements TransactionOwner<AccountTransaction>, Investment
     public void setRetired(boolean isRetired)
     {
         this.isRetired = isRetired;
+    }
+
+    @Override
+    public Attributes getAttributes()
+    {
+        if (attributes == null)
+            attributes = new Attributes();
+        return attributes;
+    }
+
+    @Override
+    public void setAttributes(Attributes attributes)
+    {
+        this.attributes = attributes;
     }
 
     @Override
