@@ -209,7 +209,7 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         //
 
         int widest = widest(securities != null ? securities.label : null, accounts.label, dateTime.label, shares.label,
-                        taxes.label, total.label, lblNote);
+                        taxes.label, total.label, lblNote, fxGrossAmount.label);
 
         int amountWidth = amountWidth(grossAmount.value);
         int currencyWidth = currencyWidth(fxGrossAmount.currency);
