@@ -54,6 +54,11 @@ public interface Extractor
         private boolean proposedShares = false;
 
         public abstract Peer getPeer();
+        /**
+         * Store arbitrary data with the extracted item. Currently to pass the
+         * JSON structure of the transaction to the test cases
+         */
+        private Object data;
 
         public abstract Annotated getSubject();
 
@@ -90,6 +95,16 @@ public interface Extractor
         public boolean hasProposedShares()
         {
             return proposedShares;
+        }
+
+        public Object getData()
+        {
+            return data;
+        }
+
+        public void setData(Object data)
+        {
+            this.data = data;
         }
     }
 
