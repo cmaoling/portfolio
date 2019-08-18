@@ -29,7 +29,8 @@ public class CheckSecurityRelatedValuesAction implements ImportAction
         if (!hasSecurity && (transaction.getType() == Type.DIVIDENDS || transaction.getType() == Type.DIVIDEND_CHARGE))
             return new Status(Status.Code.ERROR, Messages.MsgCheckDividendsMustHaveASecurity);
 
-        if (hasSecurity && transaction.getType() != Type.DIVIDENDS && transaction.getType() != Type.DIVIDEND_CHARGE && transaction.getShares() != 0)
+        if (transaction.getShares() != 0
+                        && (!hasSecurity || !typesWithOptionalSecurity.contains(transaction.getType())))
             return new Status(Status.Code.ERROR, MessageFormat.format(Messages.MsgCheckTransactionTypeCannotHaveShares,
                             transaction.getType(), Values.Share.format(transaction.getShares())));
 
