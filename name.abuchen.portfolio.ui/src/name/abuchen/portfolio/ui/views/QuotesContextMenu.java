@@ -16,6 +16,9 @@ import org.eclipse.swt.widgets.FileDialog;
 
 import name.abuchen.portfolio.datatransfer.csv.CSVExporter;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.money.CurrencyConverter;
+import name.abuchen.portfolio.money.CurrencyConverterImpl;
+import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.online.EventFeed;
 import name.abuchen.portfolio.online.QuoteFeed;
 import name.abuchen.portfolio.ui.Messages;
@@ -145,21 +148,25 @@ public class QuotesContextMenu
                 owner.notifyModelUpdated();
             }
         });
-        
-        manager.add(new Action(Messages.SecurityMenuCreateQuotesFromTransactions)
+
+        if (security.getCurrencyCode() != null)
         {
-            @Override
-            public void run()
+            manager.add(new Action(Messages.SecurityMenuCreateQuotesFromTransactions)
             {
-                QuoteFromTransactionExtractor qte = new QuoteFromTransactionExtractor(owner.getClient());
-                if (qte.extractQuotes(security))
+                @Override
+                public void run()
                 {
-                    owner.markDirty();
-                    owner.notifyModelUpdated();
+                    ExchangeRateProviderFactory factory = owner.getFromContext(ExchangeRateProviderFactory.class);
+                    CurrencyConverter converter = new CurrencyConverterImpl(factory, security.getCurrencyCode());
+                    QuoteFromTransactionExtractor qte = new QuoteFromTransactionExtractor(owner.getClient(), converter);
+                    if (qte.extractQuotes(security))
+                    {
+                        owner.markDirty();
+                        owner.notifyModelUpdated();
+                    }
                 }
-            }
-        });
-        
+            });
+        }
 
         manager.add(new Separator());
 
