@@ -251,6 +251,19 @@ public class HTMLTableQuoteFeed extends QuoteFeed
         }
     }
 
+    private static class HeaderInfo
+    {
+        private final int rowIndex;
+        private final int numberOfHeaderColumns;
+
+        public HeaderInfo(int rowIndex, int numberOfHeaderColumns)
+        {
+            super();
+            this.rowIndex = rowIndex;
+            this.numberOfHeaderColumns = numberOfHeaderColumns;
+        }
+    }
+
     public static final String ID = "GENERIC_HTML_TABLE"; //$NON-NLS-1$
 
     private static final Column[] COLUMNS = new Column[] { new DateColumn(), new CloseColumn(), new HighColumn(),
@@ -383,7 +396,8 @@ public class HTMLTableQuoteFeed extends QuoteFeed
         {
             List<Spec> specs = new ArrayList<>();
 
-            int rowIndex = buildSpecFromTable(table, specs);
+            HeaderInfo headerInfo = buildSpecFromTable(table, specs);
+            int rowIndex = headerInfo.rowIndex;
 
             if (isSpecValid(specs))
             {
@@ -396,7 +410,8 @@ public class HTMLTableQuoteFeed extends QuoteFeed
 
                     try
                     {
-                        LatestSecurityPrice price = extractPrice(row, specs, language);
+                        LatestSecurityPrice price = extractPrice(row, specs, language,
+                                        headerInfo.numberOfHeaderColumns);
                         if (price != null)
                             prices.add(price);
                     }
@@ -419,21 +434,21 @@ public class HTMLTableQuoteFeed extends QuoteFeed
     }
 
     @SuppressWarnings("nls")
-    private int buildSpecFromTable(Element table, List<Spec> specs)
+    private HeaderInfo buildSpecFromTable(Element table, List<Spec> specs)
     {
         // check if thead exists
         Elements header = table.select("> thead > tr > th");
         if (!header.isEmpty())
         {
             buildSpecFromRow(header, specs);
-            return 0;
+            return new HeaderInfo(0, header.size());
         }
 
         header = table.select("> thead > tr > td");
         if (!header.isEmpty())
         {
             buildSpecFromRow(header, specs);
-            return 0;
+            return new HeaderInfo(0, header.size());
         }
 
         // check if th exist in body
@@ -441,28 +456,32 @@ public class HTMLTableQuoteFeed extends QuoteFeed
         if (!header.isEmpty())
         {
             buildSpecFromRow(header, specs);
-            return 0;
+            return new HeaderInfo(0, header.size());
         }
 
         // then check first two regular rows
         int rowIndex = 0;
 
         Elements rows = table.select("> tbody > tr");
+        Elements headerRow = null;
+
         if (!rows.isEmpty())
         {
             Element firstRow = rows.get(0);
-            buildSpecFromRow(firstRow.select("> td"), specs);
+            headerRow = firstRow.select("> td");
+            buildSpecFromRow(headerRow, specs);
             rowIndex++;
         }
 
         if (specs.isEmpty() && rows.size() > 1)
         {
             Element secondRow = rows.get(1);
-            buildSpecFromRow(secondRow.select("> td"), specs);
+            headerRow = secondRow.select("> td");
+            buildSpecFromRow(headerRow, specs);
             rowIndex++;
         }
 
-        return rowIndex;
+        return new HeaderInfo(rowIndex, headerRow != null ? headerRow.size() : 0);
     }
 
     protected Column[] getColumns()
@@ -509,12 +528,13 @@ public class HTMLTableQuoteFeed extends QuoteFeed
         return hasDate && hasClose;
     }
 
-    private LatestSecurityPrice extractPrice(Element row, List<Spec> specs, String languageHint) throws ParseException
+    private LatestSecurityPrice extractPrice(Element row, List<Spec> specs, String languageHint,
+                    int numberOfHeaderColumns) throws ParseException
     {
         Elements cells = row.select("> td"); //$NON-NLS-1$
 
-        // row can be empty if it contains only 'th' elements
-        if (cells.size() <= 1)
+        // we're only looking at rows having the same size as the header row
+        if (cells.size() != numberOfHeaderColumns)
             return null;
 
         LatestSecurityPrice price = new LatestSecurityPrice();
