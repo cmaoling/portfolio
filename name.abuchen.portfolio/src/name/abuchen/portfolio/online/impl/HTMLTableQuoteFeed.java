@@ -258,7 +258,6 @@ public class HTMLTableQuoteFeed extends QuoteFeed
 
         public HeaderInfo(int rowIndex, int numberOfHeaderColumns)
         {
-            super();
             this.rowIndex = rowIndex;
             this.numberOfHeaderColumns = numberOfHeaderColumns;
         }
