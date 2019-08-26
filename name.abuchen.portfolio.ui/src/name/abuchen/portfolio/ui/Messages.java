@@ -516,6 +516,8 @@ public class Messages extends NLS
     public static String LabelEarningsPerQuarter;
     public static String LabelEarningsPerYear;
     public static String LabelEarningsSelectStartYear;
+    public static String LabelEarningsExpenses;
+    public static String LabelExpenses;
     public static String LabelError;
     public static String LabelEvent;
     public static String LabelEventFeed;
@@ -529,6 +531,7 @@ public class Messages extends NLS
     public static String LabelExchangeRates;
     public static String LabelExport;
     public static String LabelFeedProvider;
+    public static String LabelFees;
     public static String LabelFullClassification;
     public static String LabelImportWarning;
     public static String LabelIncludeSecuritiesInPieChart;
@@ -637,6 +640,7 @@ public class Messages extends NLS
     public static String LabelStatementOfAssetsHoldings;
     public static String LabelSuffix_HICP;
     public static String LabelSuffix_PreTax;
+    public static String LabelTaxes;
     public static String LabelTaxonomies;
     public static String LabelTaxonomyTemplates;
     public static String LabelToday;
@@ -993,5 +997,6 @@ public class Messages extends NLS
     }
 
     private Messages()
-    {}
+    {
+    }
 }
