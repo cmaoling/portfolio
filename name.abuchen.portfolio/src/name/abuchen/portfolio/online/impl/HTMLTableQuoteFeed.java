@@ -361,14 +361,23 @@ public class HTMLTableQuoteFeed extends QuoteFeed
         return Collections.emptyList();
     }
 
+    protected String getUserAgent()
+    {
+        return OnlineHelper.getUserAgent();
+    }
+
+    protected boolean isIgnoreContentType()
+    {
+        return false;
+    }
+
     protected List<LatestSecurityPrice> parseFromURL(String url, List<Exception> errors)
     {
         try
         {
             String escapedUrl = new URI(url).toASCIIString();
-            return parse(escapedUrl,
-                            Jsoup.connect(escapedUrl).userAgent(OnlineHelper.getUserAgent()).timeout(30000).get(),
-                            errors);
+            return parse(escapedUrl, Jsoup.connect(escapedUrl).userAgent(getUserAgent())
+                            .ignoreContentType(isIgnoreContentType()).timeout(30000).get(), errors);
         }
         catch (URISyntaxException | IOException e)
         {
