@@ -579,6 +579,8 @@ public class ClientFactory
                 introducePeers(client);
             case 40:
                 // added attributes to account and portfolio
+            case 41:
+                // added tax units to interest transaction
 
                 client.setVersion(Client.CURRENT_VERSION);
                 break;
