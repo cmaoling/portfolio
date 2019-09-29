@@ -518,6 +518,10 @@ public class Messages extends NLS
     public static String LabelEvent;
     public static String LabelEventFeed;
     public static String LabelEurostatRegion;
+    public static String LabelExcessReturnBaselineDataSeries;
+    public static String LabelExcessReturnOperator;
+    public static String LabelExcessReturnOperatorAlpha;
+    public static String LabelExcessReturnOperatorRelative;
     public static String LabelExchange;
     public static String LabelExchangeRate;
     public static String LabelExchangeRates;
