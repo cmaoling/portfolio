@@ -597,6 +597,7 @@ public class Messages extends NLS
     public static String LabelRiskMetric;
     public static String LabelSave;
     public static String LabelSaveAndNew;
+    public static String LabelSaveInFile;
     public static String LabelSearch;
     public static String LabelSecurities;
     public static String LabelSecurityPerformance;
@@ -653,6 +654,7 @@ public class Messages extends NLS
     public static String LabelTTWROR;
     public static String LabelTTWROROneDay;
     public static String LabelUnknownVersion;
+    public static String LabelUnnamedFile;
     public static String LabelUnnamedXml;
     public static String LabelUpdatesAvailable;
     public static String LabelUseGrossDividends;
