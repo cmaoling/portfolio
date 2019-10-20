@@ -940,6 +940,7 @@ public class Messages extends NLS
     public static String SecurityTabChart6M;
     public static String SecurityTabChartYTD;
     public static String SecurityTabChartAll;
+    public static String SecurityTabChartHoldingPeriod;
     public static String SecurityTabEvents;
     public static String SecurityTabHistoricalQuotes;
     public static String SecurityTabTrades;
