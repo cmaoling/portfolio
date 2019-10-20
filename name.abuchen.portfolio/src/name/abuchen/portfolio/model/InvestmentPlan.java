@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.model.Transaction.Unit;
@@ -276,7 +277,7 @@ public class InvestmentPlan implements Named, Adaptable, Attributable
     /**
      * Returns the date of the last transaction generated
      */
-    public LocalDate getLastDate()
+    public Optional<LocalDate> getLastDate()
     {
         LocalDate last = null;
         for (Transaction t : transactions)
@@ -286,7 +287,7 @@ public class InvestmentPlan implements Named, Adaptable, Attributable
                 last = date;
         }
 
-        return last;
+        return Optional.ofNullable(last);
     }
 
     /**
@@ -345,18 +346,24 @@ public class InvestmentPlan implements Named, Adaptable, Attributable
 
     public LocalDate getDateOfNextTransactionToBeGenerated()
     {
-        LocalDate lastDate = getLastDate();
-        LocalDate startDate = start.toLocalDate();
-        if (lastDate == null)
+        Optional<LocalDate> lastDate = getLastDate();
+
+        if (lastDate.isPresent())
         {
+            return next(lastDate.get());
+        }
+        else
+        {
+            LocalDate startDate = start.toLocalDate();
+
             // do not generate a investment plan transaction on a public holiday
             TradeCalendar tradeCalendar = security != null ? TradeCalendarManager.getInstance(security)
                             : TradeCalendarManager.getDefaultInstance();
             while (tradeCalendar.isHoliday(startDate))
                 startDate = startDate.plusDays(1);
-        }
 
-        return lastDate != null ? next(lastDate) : startDate;
+            return startDate;
+        }
     }
 
     public List<TransactionPair<?>> generateTransactions(CurrencyConverter converter)
