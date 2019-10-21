@@ -1150,7 +1150,7 @@ public class SecuritiesChart
                         .filter(t -> t.getSecurity().equals(security))
                         .filter(t -> !(t.getType() == PortfolioTransaction.Type.TRANSFER_IN
                                         || t.getType() == PortfolioTransaction.Type.TRANSFER_OUT))
-                        .filter(t -> t.getDateTime().toLocalDate().isBefore(chartInterval.getEnd()))
+                        .filter(t -> !t.getDateTime().toLocalDate().isAfter(chartInterval.getEnd()))
                         .map(t -> chartInterval.contains(t.getDateTime()) ? t.getDateTime().toLocalDate()
                                         : chartInterval.getStart())
                         .distinct() //
@@ -1243,7 +1243,7 @@ public class SecuritiesChart
                         .filter(t -> t.getSecurity().equals(security))
                         .filter(t -> !(t.getType() == PortfolioTransaction.Type.TRANSFER_IN
                                         || t.getType() == PortfolioTransaction.Type.TRANSFER_OUT))
-                        .filter(t -> t.getDateTime().toLocalDate().isBefore(chartInterval.getEnd()))
+                        .filter(t -> !t.getDateTime().toLocalDate().isAfter(chartInterval.getEnd()))
                         .map(t -> chartInterval.contains(t.getDateTime()) ? t.getDateTime().toLocalDate()
                                         : chartInterval.getStart())
                         .distinct() //
