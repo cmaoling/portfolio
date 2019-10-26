@@ -19,6 +19,7 @@ import name.abuchen.portfolio.model.Annotated;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
@@ -59,6 +60,14 @@ public interface Extractor
          * JSON structure of the transaction to the test cases
          */
         private Object data;
+
+        private Account accountPrimary;
+
+        private Account accountSecondary;
+
+        private Portfolio portfolioPrimary;
+
+        private Portfolio portfolioSecondary;
 
         public abstract Annotated getSubject();
 
@@ -106,6 +115,47 @@ public interface Extractor
         {
             this.data = data;
         }
+
+        public Account getAccountPrimary()
+        {
+            return accountPrimary;
+        }
+
+        public void setAccountPrimary(Account account)
+        {
+            accountPrimary = account;
+        }
+
+        public Account getAccountSecondary()
+        {
+            return accountSecondary;
+        }
+
+        public void setAccountSecondary(Account account)
+        {
+            accountSecondary = account;
+        }
+
+        public Portfolio getPortfolioPrimary()
+        {
+            return portfolioPrimary;
+        }
+
+        public void setPortfolioPrimary(Portfolio portfolio)
+        {
+            portfolioPrimary = portfolio;
+        }
+
+        public Portfolio getPortfolioSecondary()
+        {
+            return portfolioSecondary;
+        }
+
+        public void setPortfolioSecondary(Portfolio portfolio)
+        {
+            portfolioSecondary = portfolio;
+        }
+
     }
 
     /**
@@ -264,11 +314,23 @@ public interface Extractor
         public Status apply(ImportAction action, Context context)
         {
             if (transaction instanceof AccountTransaction)
-                return action.process((AccountTransaction) transaction, context.getAccount());
+            {
+                Account account = getAccountPrimary();
+                if (account == null)
+                    account = context.getAccount();
+                return action.process((AccountTransaction) transaction, account);
+            }
             else if (transaction instanceof PortfolioTransaction)
-                return action.process((PortfolioTransaction) transaction, context.getPortfolio());
+            {
+                Portfolio portfolio = getPortfolioPrimary();
+                if (portfolio == null)
+                    portfolio = context.getPortfolio();
+                return action.process((PortfolioTransaction) transaction, portfolio);
+            }
             else
+            {
                 throw new UnsupportedOperationException();
+            }
         }
 
         @Override
@@ -356,7 +418,15 @@ public interface Extractor
         @Override
         public Status apply(ImportAction action, Context context)
         {
-            return action.process(entry, context.getAccount(), context.getPortfolio());
+            Account account = getAccountPrimary();
+            if (account == null)
+                account = context.getAccount();
+
+            Portfolio portfolio = getPortfolioPrimary();
+            if (portfolio == null)
+                portfolio = context.getPortfolio();
+
+            return action.process(entry, account, portfolio);
         }
 
         @Override
@@ -426,17 +496,25 @@ public interface Extractor
         @Override
         public Status apply(ImportAction action, Context context)
         {
+            Account account = getAccountPrimary();
+            if (account == null)
+                account = context.getAccount();
+
+            Account accountSecondary = getAccountSecondary();
+            if (accountSecondary == null)
+                accountSecondary = context.getSecondaryAccount();
+
             Account source;
             Account target;
             if (isOutbound)
             {
-                source = context.getAccount();
-                target = context.getSecondaryAccount();
+                source = account;
+                target = accountSecondary;
             }
             else
             {
-                source = context.getSecondaryAccount();
-                target = context.getAccount();
+                source = accountSecondary;
+                target = account;
             }
             if (entry.getSourceTransaction().getPeer() != null && entry.getSourceTransaction().getPeer().links2Account())
                 target = entry.getSourceTransaction().getPeer().getAccount();

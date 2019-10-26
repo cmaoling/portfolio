@@ -10,14 +10,18 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import name.abuchen.portfolio.Messages;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.AccountNameField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.AmountField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.DateField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.PortfolioNameField;
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.PortfolioTransaction.Type;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
@@ -49,6 +53,8 @@ import name.abuchen.portfolio.money.Money;
         fields.add(new AmountField(Messages.CSVColumn_Shares));
         fields.add(new EnumField<PortfolioTransaction.Type>(Messages.CSVColumn_Type, Type.class).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_Note).setOptional(true));
+        fields.add(new AccountNameField(Messages.CSVColumn_AccountName).setOptional(true)); //$NON-NLS-1$
+        fields.add(new PortfolioNameField(Messages.CSVColumn_PortfolioName).setOptional(true)); //$NON-NLS-1$
     }
 
     @Override
@@ -94,6 +100,11 @@ import name.abuchen.portfolio.money.Money;
         String note = getText(Messages.CSVColumn_Note, rawValues, field2column);
 
         Unit grossAmount = extractGrossAmount(rawValues, field2column, amount);
+
+        Account account = getAccount(getClient(), rawValues, field2column);
+        Account account2nd = getAccount(getClient(), rawValues, field2column, true);
+
+        Portfolio portfolio = getPortfolio(getClient(), rawValues, field2column);
 
         switch (type)
         {

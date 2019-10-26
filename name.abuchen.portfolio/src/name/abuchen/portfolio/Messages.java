@@ -40,6 +40,10 @@ public class Messages extends NLS
     public static String CSVColumn_Type;
     public static String CSVColumn_Value;
     public static String CSVColumn_WKN;
+    public static String CSVColumn_AccountName;
+    public static String CSVColumn_AccountName2nd;
+    public static String CSVColumn_PortfolioName;
+    public static String CSVColumn_PortfolioName2nd;
     public static String CSVColumn_CumulatedPerformanceInPercent;
     public static String CSVColumn_Currency;
     public static String CSVColumn_CurrencyGrossAmount;
@@ -55,6 +59,7 @@ public class Messages extends NLS
     public static String CSVDefConsorsAccountTransactions;
     public static String CSVDefDibaAccountTransactions;
     public static String CSVDefHistoricalQuotes;
+    public static String CSVDefPortfolio;
     public static String CSVDefPortfolioTransactions;
     public static String CSVDefSecurities;
     public static String CSVFormatApostrophe;
@@ -76,6 +81,8 @@ public class Messages extends NLS
     public static String CSVImportSecurityExists;
     public static String CSVImportMissingField;
     public static String CSVImportMissingSecurity;
+    public static String CSVImportMissingAccount;
+    public static String CSVImportMissingPortfolio;
     public static String CSVLineXwithMsgY;
     public static String EventFeedManual;
     public static String FixAssignCurrencyCode;

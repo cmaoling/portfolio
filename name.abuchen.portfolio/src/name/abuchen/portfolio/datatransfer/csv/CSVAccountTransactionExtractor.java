@@ -15,12 +15,16 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.IBANField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.AccountNameField;
+import name.abuchen.portfolio.datatransfer.csv.CSVImporter.PortfolioNameField;
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransaction.Type;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Peer;
+import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Transaction.Unit;
@@ -60,6 +64,10 @@ import name.abuchen.portfolio.money.Money;
         fields.add(new AmountField(Messages.CSVColumn_Taxes).setOptional(true));
         fields.add(new IBANField(Messages.CSVColumn_IBAN).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_PartnerName).setOptional(true));
+        fields.add(new AccountNameField(Messages.CSVColumn_AccountName).setOptional(true)); //$NON-NLS-1$
+        fields.add(new AccountNameField(Messages.CSVColumn_AccountName2nd).setOptional(true)); //$NON-NLS-1$
+        fields.add(new PortfolioNameField(Messages.CSVColumn_PortfolioName).setOptional(true)); //$NON-NLS-1$
+
         return fields;
     }
 
@@ -83,6 +91,10 @@ import name.abuchen.portfolio.money.Money;
         String note = getText(Messages.CSVColumn_Note, rawValues, field2column);
         Long shares = getShares(Messages.CSVColumn_Shares, rawValues, field2column);
         Long taxes = getAmount(Messages.CSVColumn_Taxes, rawValues, field2column);
+        Account account = getAccount(getClient(), rawValues, field2column);
+        Account account2nd = getAccount(getClient(), rawValues, field2column, true);
+
+        Portfolio portfolio = getPortfolio(getClient(), rawValues, field2column);
 
         Peer peer = getPeer(rawValues, field2column, p -> {});
         if (peer != null && peer.links2Account())
@@ -109,7 +121,10 @@ import name.abuchen.portfolio.money.Money;
                     else if (type == Type.TRANSFER_IN)
                         entry.getTargetTransaction().setPeer(peer);
                 }
-                items.add(new AccountTransferItem(entry, type == Type.TRANSFER_OUT));
+                Item i = new AccountTransferItem(entry, type == Type.TRANSFER_OUT);
+                i.setAccountPrimary(account);
+                i.setAccountSecondary(account2nd);
+                items.add(i);
                 break;
             case BUY:
             case SELL:
@@ -133,7 +148,11 @@ import name.abuchen.portfolio.money.Money;
                 buySellEntry.setSecurity(security);
                 buySellEntry.setDate(date);
                 buySellEntry.setNote(note);
-                items.add(new BuySellEntryItem(buySellEntry));
+
+                Item bsi = new BuySellEntryItem(buySellEntry);
+                bsi.setAccountPrimary(account);
+                bsi.setPortfolioPrimary(portfolio);
+                items.add(bsi);
                 break;
             case DIVIDENDS:
             case DIVIDEND_CHARGE:
@@ -179,7 +198,10 @@ import name.abuchen.portfolio.money.Money;
                 t.setNote(note);
                 if ((type == Type.DEPOSIT || type == Type.REMOVAL) && peer != null)
                     t.setPeer(peer);
-                items.add(new TransactionItem(t));
+
+                TransactionItem ti = new TransactionItem(t);
+                ti.setAccountPrimary(account);
+                items.add(ti);
                 break;
             default:
                 throw new IllegalArgumentException(type.toString());

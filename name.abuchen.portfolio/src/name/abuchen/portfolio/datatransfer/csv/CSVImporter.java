@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.datatransfer.csv;
 
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Files;
@@ -161,6 +162,35 @@ public class CSVImporter
         public boolean isOptional()
         {
             return isOptional;
+        }
+
+        public List<FieldFormat> getAvailableFieldFormats()
+        {
+            return Collections.emptyList();
+        }
+
+        /**
+         * Returns the initial format - optionally using Client and one value to
+         * guess the best fitting format
+         *
+         * @param client
+         *            target Client into which data will be imported
+         * @param value
+         *            example value from the current file; can be null
+         */
+        public FieldFormat guessFormat(Client client, String value) // NOSONAR
+        {
+            return null;
+        }
+
+        public String formatToText(FieldFormat fieldFormat)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public FieldFormat textToFormat(String text)
+        {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -557,6 +587,62 @@ public class CSVImporter
             return getLabel();
         }
     }
+
+    public static class AccountNameField extends CSVImporter.Field
+    {
+    
+        /* package */ AccountNameField(String name)
+        {
+            super(name);
+        }
+    
+        @Override
+        public FieldFormat guessFormat(Client client, String value)
+        {
+            return new FieldFormat(null, new ISINFormat(client.getSecurities()));
+        }
+    
+        @Override
+        public String formatToText(FieldFormat fieldFormat)
+        {
+            return null;
+        }
+
+        @Override
+        public FieldFormat textToFormat(String text)
+        {
+            return null;
+        }
+    }
+    
+    public static class PortfolioNameField extends CSVImporter.Field
+    {
+
+        /* package */ PortfolioNameField(String name)
+        {
+            super(name);
+        }
+
+        @Override
+        public FieldFormat guessFormat(Client client, String value)
+        {
+            return new FieldFormat(null, new ISINFormat(client.getSecurities()));
+        }
+
+        @Override
+        public String formatToText(FieldFormat fieldFormat)
+        {
+            return null;
+        }
+
+        @Override
+        public FieldFormat textToFormat(String text)
+        {
+            return null;
+        }
+    }
+    
+    private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
     private final Client client;
     private final File inputFile;
