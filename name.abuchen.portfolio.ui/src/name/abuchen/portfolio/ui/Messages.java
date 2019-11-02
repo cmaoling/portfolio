@@ -640,7 +640,6 @@ public class Messages extends NLS
     public static String LabelStatementOfAssetsHoldings;
     public static String LabelSuffix_HICP;
     public static String LabelSuffix_PreTax;
-    public static String LabelTaxes;
     public static String LabelTaxonomies;
     public static String LabelTaxonomyTemplates;
     public static String LabelToday;
@@ -663,7 +662,7 @@ public class Messages extends NLS
     public static String LabelUnnamedFile;
     public static String LabelUnnamedXml;
     public static String LabelUpdatesAvailable;
-    public static String LabelUseGrossDividends;
+    public static String LabelUseGrossValue;
     public static String LabelUsingDashboardDefaultReportingPeriod;
     public static String LabelValueInboundDelivery;
     public static String LabelValueOutboundDelivery;
