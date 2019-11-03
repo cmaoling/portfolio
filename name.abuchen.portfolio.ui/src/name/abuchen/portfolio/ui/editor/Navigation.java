@@ -353,6 +353,10 @@ public final class Navigation
             int size = list.size();
             int index = list.indexOf(watchlist);
 
+            // section has one more element: all securities. Therefore the index
+            // into the children needs an offset
+            int offset = (int) section.getChildren().filter(i -> !(i.getParameter() instanceof Watchlist)).count();
+
             if (index > 0)
             {
                 manager.add(new SimpleAction(Messages.MenuMoveUp, a -> {
@@ -360,7 +364,7 @@ public final class Navigation
                     watchlists.remove(watchlist);
                     watchlists.add(index - 1, watchlist);
                     section.children.remove(item);
-                    section.children.add(index - 1, item);
+                    section.children.add(index - 1 + offset, item);
 
                     this.listeners.forEach(l -> l.changed(item));
                     client.touch();
@@ -374,7 +378,7 @@ public final class Navigation
                     watchlists.remove(watchlist);
                     watchlists.add(index + 1, watchlist);
                     section.children.remove(item);
-                    section.children.add(index + 1, item);
+                    section.children.add(index + 1 + offset, item);
 
                     this.listeners.forEach(l -> l.changed(item));
                     client.touch();
