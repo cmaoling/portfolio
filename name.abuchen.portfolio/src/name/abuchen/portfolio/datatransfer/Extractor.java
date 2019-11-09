@@ -91,7 +91,7 @@ public interface Extractor
 
         public long getShares()
         {
-            return 0;
+            return 0; // NOSONAR
         }
 
         public abstract Status apply(ImportAction action, Context context);
@@ -590,7 +590,15 @@ public interface Extractor
         @Override
         public Status apply(ImportAction action, Context context)
         {
-            return action.process(entry, context.getPortfolio(), context.getSecondaryPortfolio());
+            Portfolio portfolio = getPortfolioPrimary();
+            if (portfolio == null)
+                portfolio = context.getPortfolio();
+
+            Portfolio portfolioSecondary = getPortfolioSecondary();
+            if (portfolioSecondary == null)
+                portfolioSecondary = context.getSecondaryPortfolio();
+
+            return action.process(entry, portfolio, portfolioSecondary);
         }
     }
 

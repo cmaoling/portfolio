@@ -10,14 +10,13 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import name.abuchen.portfolio.Messages;
-import name.abuchen.portfolio.datatransfer.csv.CSVImporter.AccountNameField;
+import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.AmountField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.DateField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
-import name.abuchen.portfolio.datatransfer.csv.CSVImporter.PortfolioNameField;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.Client;
@@ -53,8 +52,9 @@ import name.abuchen.portfolio.money.Money;
         fields.add(new AmountField(Messages.CSVColumn_Shares));
         fields.add(new EnumField<PortfolioTransaction.Type>(Messages.CSVColumn_Type, Type.class).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_Note).setOptional(true));
-        fields.add(new AccountNameField(Messages.CSVColumn_AccountName).setOptional(true)); //$NON-NLS-1$
-        fields.add(new PortfolioNameField(Messages.CSVColumn_PortfolioName).setOptional(true)); //$NON-NLS-1$
+        fields.add(new Field(Messages.CSVColumn_AccountName).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_PortfolioName).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_PortfolioName2nd).setOptional(true));
     }
 
     @Override
@@ -102,30 +102,36 @@ import name.abuchen.portfolio.money.Money;
         Unit grossAmount = extractGrossAmount(rawValues, field2column, amount);
 
         Account account = getAccount(getClient(), rawValues, field2column);
-        Account account2nd = getAccount(getClient(), rawValues, field2column, true);
-
         Portfolio portfolio = getPortfolio(getClient(), rawValues, field2column);
+        Portfolio portfolio2nd = getPortfolio(getClient(), rawValues, field2column, true);
+
+        Extractor.Item item = null;
 
         switch (type)
         {
             case BUY:
             case SELL:
-                items.add(createBuySell(rawValues, field2column, type, security, amount, fees, taxes, date, note,
-                                shares, grossAmount));
+                item = createBuySell(rawValues, field2column, type, security, amount, fees, taxes, date, note, shares,
+                                grossAmount);
                 break;
             case TRANSFER_IN:
             case TRANSFER_OUT:
-                items.add(createTransfer(security, amount, fees, taxes, date, note, shares, grossAmount));
+                item = createTransfer(security, amount, fees, taxes, date, note, shares, grossAmount);
                 break;
             case DELIVERY_INBOUND:
             case DELIVERY_OUTBOUND:
-                items.add(createDelivery(rawValues, field2column, type, security, amount, fees, taxes, date, note,
-                                shares, grossAmount));
+                item = createDelivery(rawValues, field2column, type, security, amount, fees, taxes, date, note, shares,
+                                grossAmount);
                 break;
             default:
                 throw new IllegalArgumentException(type.toString());
         }
 
+        item.setAccountPrimary(account);
+        item.setPortfolioPrimary(portfolio);
+        item.setPortfolioSecondary(portfolio2nd);
+
+        items.add(item);
     }
 
     private Item createBuySell(String[] rawValues, Map<String, Column> field2column, Type type, Security security,

@@ -588,60 +588,6 @@ public class CSVImporter
         }
     }
 
-    public static class AccountNameField extends CSVImporter.Field
-    {
-    
-        /* package */ AccountNameField(String name)
-        {
-            super(name);
-        }
-    
-        @Override
-        public FieldFormat guessFormat(Client client, String value)
-        {
-            return new FieldFormat(null, new ISINFormat(client.getSecurities()));
-        }
-    
-        @Override
-        public String formatToText(FieldFormat fieldFormat)
-        {
-            return null;
-        }
-
-        @Override
-        public FieldFormat textToFormat(String text)
-        {
-            return null;
-        }
-    }
-    
-    public static class PortfolioNameField extends CSVImporter.Field
-    {
-
-        /* package */ PortfolioNameField(String name)
-        {
-            super(name);
-        }
-
-        @Override
-        public FieldFormat guessFormat(Client client, String value)
-        {
-            return new FieldFormat(null, new ISINFormat(client.getSecurities()));
-        }
-
-        @Override
-        public String formatToText(FieldFormat fieldFormat)
-        {
-            return null;
-        }
-
-        @Override
-        public FieldFormat textToFormat(String text)
-        {
-            return null;
-        }
-    }
-    
     private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
     private final Client client;

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import name.abuchen.portfolio.Messages;
+import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.AmountField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.DateField;
@@ -15,8 +16,6 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.IBANField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
-import name.abuchen.portfolio.datatransfer.csv.CSVImporter.AccountNameField;
-import name.abuchen.portfolio.datatransfer.csv.CSVImporter.PortfolioNameField;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.AccountTransaction.Type;
@@ -37,6 +36,7 @@ import name.abuchen.portfolio.money.Money;
     /* package */ CSVAccountTransactionExtractor(Client client)
     {
         super(client, Messages.CSVDefAccountTransactions);
+
         addFields();
         sharesOptional = false;
     }
@@ -64,9 +64,9 @@ import name.abuchen.portfolio.money.Money;
         fields.add(new AmountField(Messages.CSVColumn_Taxes).setOptional(true));
         fields.add(new IBANField(Messages.CSVColumn_IBAN).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_PartnerName).setOptional(true));
-        fields.add(new AccountNameField(Messages.CSVColumn_AccountName).setOptional(true)); //$NON-NLS-1$
-        fields.add(new AccountNameField(Messages.CSVColumn_AccountName2nd).setOptional(true)); //$NON-NLS-1$
-        fields.add(new PortfolioNameField(Messages.CSVColumn_PortfolioName).setOptional(true)); //$NON-NLS-1$
+        fields.add(new Field(Messages.CSVColumn_AccountName).setOptional(true)); //$NON-NLS-1$
+        fields.add(new Field(Messages.CSVColumn_AccountName2nd).setOptional(true)); //$NON-NLS-1$
+        fields.add(new Field(Messages.CSVColumn_PortfolioName).setOptional(true)); //$NON-NLS-1$
 
         return fields;
     }
@@ -91,10 +91,12 @@ import name.abuchen.portfolio.money.Money;
         String note = getText(Messages.CSVColumn_Note, rawValues, field2column);
         Long shares = getShares(Messages.CSVColumn_Shares, rawValues, field2column);
         Long taxes = getAmount(Messages.CSVColumn_Taxes, rawValues, field2column);
+
         Account account = getAccount(getClient(), rawValues, field2column);
         Account account2nd = getAccount(getClient(), rawValues, field2column, true);
-
         Portfolio portfolio = getPortfolio(getClient(), rawValues, field2column);
+
+        Extractor.Item item = null;
 
         Peer peer = getPeer(rawValues, field2column, p -> {});
         if (peer != null && peer.links2Account())
@@ -114,6 +116,7 @@ import name.abuchen.portfolio.money.Money;
                 entry.setCurrencyCode(amount.getCurrencyCode());
                 entry.setDate(date.withHour(0).withMinute(0));
                 entry.setNote(note);
+
                 if (peer != null)
                 {
                     if (type == Type.TRANSFER_OUT)
@@ -121,10 +124,7 @@ import name.abuchen.portfolio.money.Money;
                     else if (type == Type.TRANSFER_IN)
                         entry.getTargetTransaction().setPeer(peer);
                 }
-                Item i = new AccountTransferItem(entry, type == Type.TRANSFER_OUT);
-                i.setAccountPrimary(account);
-                i.setAccountSecondary(account2nd);
-                items.add(i);
+                item = new AccountTransferItem(entry, type == Type.TRANSFER_OUT);
                 break;
             case BUY:
             case SELL:
@@ -148,11 +148,7 @@ import name.abuchen.portfolio.money.Money;
                 buySellEntry.setSecurity(security);
                 buySellEntry.setDate(date);
                 buySellEntry.setNote(note);
-
-                Item bsi = new BuySellEntryItem(buySellEntry);
-                bsi.setAccountPrimary(account);
-                bsi.setPortfolioPrimary(portfolio);
-                items.add(bsi);
+                item = new BuySellEntryItem(buySellEntry);
                 break;
             case DIVIDENDS:
             case DIVIDEND_CHARGE:
@@ -195,17 +191,22 @@ import name.abuchen.portfolio.money.Money;
                 }
                 if (dividendType && taxes != null && taxes.longValue() != 0)
                     t.addUnit(new Unit(Unit.Type.TAX, Money.of(t.getCurrencyCode(), Math.abs(taxes))));
+
                 t.setNote(note);
                 if ((type == Type.DEPOSIT || type == Type.REMOVAL) && peer != null)
                     t.setPeer(peer);
 
-                TransactionItem ti = new TransactionItem(t);
-                ti.setAccountPrimary(account);
-                items.add(ti);
+                item = new TransactionItem(t);
                 break;
             default:
                 throw new IllegalArgumentException(type.toString());
         }
+        item.setAccountPrimary(account);
+        item.setAccountSecondary(account2nd);
+        item.setPortfolioPrimary(portfolio);
+
+        items.add(item);
+
         // TODO: still needed for debug? for (Item item : items)
         // TODO: still needed for debug?     System.err.println("CSVAccountTransactionExtratctor:extract items: " + item.getClass().toString() + " = " + item.toString() );         //$NON-NLS-1$ //$NON-NLS-2$
     }
