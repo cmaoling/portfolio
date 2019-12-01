@@ -57,6 +57,7 @@ public class LatestSecurityPrice extends SecurityPrice
         this.volume = volume;
     }
 
+    @Deprecated
     public long getPreviousClose()
     {
         return previousClose;
