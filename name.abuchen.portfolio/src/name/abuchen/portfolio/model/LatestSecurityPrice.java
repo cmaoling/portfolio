@@ -9,9 +9,10 @@ public class LatestSecurityPrice extends SecurityPrice
     private long volume;
 
     private long previousClose;
-    
+
     public LatestSecurityPrice()
-    {}
+    {
+    }
 
     public LatestSecurityPrice(LocalDate date, long price)
     {

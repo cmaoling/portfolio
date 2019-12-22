@@ -21,7 +21,8 @@ public class SecurityPrice extends SecurityElement implements Comparable<Securit
     //private long value;
 
     public SecurityPrice()
-    {}
+    {
+    }
 
     public SecurityPrice(LocalDate date, long price)
     {
