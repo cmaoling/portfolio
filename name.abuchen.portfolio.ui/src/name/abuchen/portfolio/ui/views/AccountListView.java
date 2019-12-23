@@ -311,12 +311,8 @@ public class AccountListView extends AbstractListView implements ModificationLis
 
     private void addAttributeColumns(ShowHideColumnHelper support)
     {
-        getClient().getSettings() //
-                        .getAttributeTypes() //
-                        .filter(a -> a.supports(Account.class)) //
-                        .forEach(attribute -> {
-                            Column column = new AttributeColumn(attribute);
-                            column.setVisible(false);
+        AttributeColumn.createFor(getClient(), Account.class) //
+                        .forEach(column -> {
                             column.getEditingSupport().addListener(this);
                             support.addColumn(column);
                         });
