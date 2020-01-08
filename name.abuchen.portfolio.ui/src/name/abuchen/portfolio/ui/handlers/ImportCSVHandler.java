@@ -62,7 +62,9 @@ public class ImportCSVHandler
         IPreferenceStore preferences = portfolioPart.getPreferenceStore();
 
         CSVImportWizard wizard = new CSVImportWizard(client, preferences, new File(fileName));
+        System.err.println(">>>> ImportCSVHandler::execute inject");  //$NON-NLS-1$
         ContextInjectionFactory.inject(wizard, context);
+        System.err.println(">>>> ImportCSVHandler::execute index " + index);  //$NON-NLS-1$
 
         if (index != null)
         {
@@ -74,9 +76,11 @@ public class ImportCSVHandler
             all.addAll(configManager.getBuiltInConfigurations());
             all.addAll(configManager.getUserSpecificConfigurations());
 
+            System.err.println(">>>> ImportCSVHandler::execute ii " + ii);  //$NON-NLS-1$
             if (ii >= 0 && ii < all.size())
                 wizard.setConfiguration(all.get(ii));
         }
+        System.err.println(">>>> ImportCSVHandler::execute dialog");  //$NON-NLS-1$
 
         Dialog wizwardDialog = new WizardDialog(shell, wizard);
         wizwardDialog.open();

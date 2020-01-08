@@ -32,6 +32,8 @@ public class CSVConfig
         String SKIP_LINES = "skipLines";
         String IS_FIRST_LINE_HEADER = "isFirstLineHeader";
         String COLUMNS = "columns";
+        String KEY = "key";
+        String VALUE = "value";
     }
 
     private static class CSVColumnConfig
@@ -255,7 +257,26 @@ public class CSVConfig
             column.setLabel(Objects.requireNonNull((String) col.get(Key.LABEL),
                             MessageFormat.format(Messages.MsgErrorMissingKeyValueInJSON, Key.LABEL)));
             column.setCode((String) col.get(Key.FIELD));
-            column.setFormat((String) col.get(Key.FORMAT));
+            if (col.get(Key.FORMAT) instanceof String)
+                column.setFormat((String) col.get(Key.FORMAT));
+            else if (col.get(Key.FORMAT) instanceof JSONArray)
+            {
+                JSONArray formats = (JSONArray) json.get(Key.FORMAT);
+                if (formats == null || formats.isEmpty())
+                    throw new IllegalArgumentException(
+                                    MessageFormat.format(Messages.MsgErrorMissingKeyValueInJSON, Key.FORMAT)); // $NON-NLS-1$
+                String format = "";
+                for (int jj = 0; jj < formats.size(); jj++)
+                {
+                    JSONObject form = (JSONObject) formats.get(jj);
+                    String key   = Objects.requireNonNull((String) form.get(Key.KEY),
+                                    MessageFormat.format(Messages.MsgErrorMissingKeyValueInJSON, Key.KEY));
+                    String value = Objects.requireNonNull((String) form.get(Key.VALUE),
+                                    MessageFormat.format(Messages.MsgErrorMissingKeyValueInJSON, Key.VALUE));
+                    format = format + key + "=" + value + ";" ;  //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                System.err.println(">>>> CSVConfig::fromJSON index " + format);   //$NON-NLS-1$
+            }
 
             this.columns.add(column);
         }

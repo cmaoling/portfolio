@@ -378,6 +378,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
     private void changeExtractor(CSVExtractor def)
     {
             importer.setExtractor(def);
+            System.err.println(">>>> CSVImportDefinitionPage::changeExtractor() CSVExtractor   : " + def.toString());  //$NON-NLS-1$
 //            importer.setEncoding(Charset.forName(def.getDefaultEncoding()));
 //            importer.setSkipLines(def.getDefaultSkipLines());
 //            importer.setHeader(headerset.get(def.getDefaultHeadering()));
@@ -440,6 +441,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage
                 }
 
                 manager.add(new LabelOnly(Messages.CSVConfigLabelBuiltIn));
+                System.err.println(">>>> CSVImportDefinitionPage::onConfigurationDropDown() ");  //$NON-NLS-1$
                 configManager.getBuiltInConfigurations().forEach(config -> manager
                                 .add(new SimpleAction(labelFor(config), a -> onConfigSelected(config))));
 

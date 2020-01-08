@@ -41,11 +41,13 @@ public class CSVConfigManager
     @PostConstruct
     private void loadConfigurations() throws IOException
     {
+        System.err.println(">>>> CSVConfigManager::loadConfigurations()");  //$NON-NLS-1$
         try (Scanner scanner = new Scanner(getClass().getResourceAsStream("csv-config.json"), //$NON-NLS-1$
                         StandardCharsets.UTF_8.name()))
         {
             String json = scanner.useDelimiter("\\A").next(); //$NON-NLS-1$
             builtIn.addAll(fromJSON(json));
+            System.err.println(">>>> CSVConfigManager::loadConfigurations() builtIn   : " + builtIn.toString());  //$NON-NLS-1$
 
             String saved = preferences.get(CSVConfigManager.class.getName(), null);
             if (saved != null)
@@ -101,6 +103,7 @@ public class CSVConfigManager
 
     public List<CSVConfig> getBuiltInConfigurations()
     {
+        System.err.println(">>>> CSVConfigManager::getBuiltInConfigurations() builtIn   : " + builtIn.toString());  //$NON-NLS-1$
         return Collections.unmodifiableList(builtIn);
     }
 

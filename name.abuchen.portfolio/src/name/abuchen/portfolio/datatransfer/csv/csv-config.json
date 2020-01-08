@@ -79,6 +79,78 @@
     ]
 },
 {
+    "label": "Consorsbank Umsatzuebersicht",
+    "target": "account",
+    "delimiter":";",
+    "encoding": "UTF-8",
+    "isFirstLineHeader": false,
+    "skipLines": 1,
+    "columns":[
+		{
+			"label":"Buchungsdatum"
+		},
+		{
+			"field":"date",
+            "format": "dd.MM.yyyy",
+            "label": "Kaufdatum"
+		},
+		{
+			"field":"partner",
+			"label":"Partner"
+		},
+		{
+			"field":"iban",
+			"label":"IBAN"
+		},
+		{
+			"label":"BIC"
+		},
+		{
+			"label":"Aktion",
+			"field":"type",
+			"format":[
+				{
+					"key"   : "BUY",
+					"value" : "Wertpapierkauf"
+				},
+				{
+					"key"   : "SELL",
+					"value" : "Wertpapiergutschrift|Wertpapierverkauf"
+				},
+				{
+					"key"   : "DEPOSIT",
+					"value" : "Gutschrift|Gehalt/Rente|Überweisung"
+				},
+				{
+					"key"   : "INTEREST",
+					"value" :"Abschluss"
+				},
+				{
+					"key"   : "REMOVAL",
+					"value" : "Lastschrift|Dauerauftrag"
+				},
+				{
+					"key"   : "INTEREST_CHARGE",
+					"value" : "Zinsen"
+				},
+				{
+					"key"   : "FEES",
+					"value" : "Gebühren"
+				}
+			]
+		},
+		{
+			"field":"isin",
+			"label":"ISIN"
+		},
+        {
+            "field": "value",
+            "format": "0.000,00",
+            "label": "Betrag"
+        }
+    ]
+},
+{
     "label": "Consorsbank Watchlist",
     "target": "portfolio",
     "delimiter": ";",
