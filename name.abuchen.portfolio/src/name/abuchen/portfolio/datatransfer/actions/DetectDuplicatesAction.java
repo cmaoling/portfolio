@@ -99,7 +99,7 @@ public class DetectDuplicatesAction implements ImportAction
         if (other.getShares() != subject.getShares() && subject.getShares() != 0)
             return false;
 
-        if (!Objects.equals(other.getSecurity(), subject.getSecurity()) && (subject.getSecurity() != null))
+        if (!Objects.equals(other.getSecurity(), subject.getSecurity()) && (subject.getSecurity() != null))  // NOSONAR
             return false;
 
         return true;
