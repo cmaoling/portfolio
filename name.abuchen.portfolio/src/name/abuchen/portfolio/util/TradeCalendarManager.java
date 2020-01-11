@@ -23,31 +23,40 @@ public class TradeCalendarManager
 
     static
     {
-        // load default trading calendars
-
-        Set<HolidayCalendar> calendars = EnumSet.of(HolidayCalendar.NYSE, HolidayCalendar.LONDON_METAL_EXCHANGE,
-                        HolidayCalendar.DOW_JONES_STOXX);
-
-        for (HolidayCalendar calendar : calendars)
+        try
         {
-            HolidayManager tradingDayManager = HolidayManager.getInstance(ManagerParameters.create(calendar));
-            String calendarCode = calendar.toString();
-            CACHE.put(calendarCode, new TradeCalendar(calendar.toString(),
-                            tradingDayManager.getCalendarHierarchy().getDescription(), tradingDayManager));
+    
+              // load default trading calendars
+    
+            Set<HolidayCalendar> calendars = EnumSet.of(HolidayCalendar.NYSE, HolidayCalendar.LONDON_METAL_EXCHANGE,
+                            HolidayCalendar.DOW_JONES_STOXX);
+    
+            for (HolidayCalendar calendar : calendars)
+            {
+                HolidayManager tradingDayManager = HolidayManager.getInstance(ManagerParameters.create(calendar));
+                String calendarCode = calendar.toString();
+                CACHE.put(calendarCode, new TradeCalendar(calendar.toString(),
+                                tradingDayManager.getCalendarHierarchy().getDescription(), tradingDayManager));
+            }
+    
+            // load custom calendars
+    
+            Map<String, String> customCalendars = new HashMap<>();
+            customCalendars.put("trade-calendar-default.xml", Messages.LabelTradeCalendarDefault); //$NON-NLS-1$
+            customCalendars.put("trade-calendar-de.xml", Messages.LabelTradeCalendarGermany); //$NON-NLS-1$
+    
+            customCalendars.forEach((code, description) -> {
+                URL url = TradeCalendarManager.class.getResource(code);
+                HolidayManager m = HolidayManager.getInstance(ManagerParameters.create(url));
+                CACHE.put(m.getCalendarHierarchy().getId(),
+                                new TradeCalendar(m.getCalendarHierarchy().getId(), description, m));
+                });
+        } 
+        catch (Throwable t)
+        {
+            t.printStackTrace();
+            throw t;
         }
-
-        // load custom calendars
-
-        Map<String, String> customCalendars = new HashMap<>();
-        customCalendars.put("trade-calendar-default.xml", Messages.LabelTradeCalendarDefault); //$NON-NLS-1$
-        customCalendars.put("trade-calendar-de.xml", Messages.LabelTradeCalendarGermany); //$NON-NLS-1$
-
-        customCalendars.forEach((code, description) -> {
-            URL url = TradeCalendarManager.class.getResource(code);
-            HolidayManager m = HolidayManager.getInstance(ManagerParameters.create(url));
-            CACHE.put(m.getCalendarHierarchy().getId(),
-                            new TradeCalendar(m.getCalendarHierarchy().getId(), description, m));
-        });
     }
 
     private TradeCalendarManager()
