@@ -203,6 +203,7 @@ public class Messages extends NLS
     public static String MsgErrorDuplicateWKN;
     public static String MsgErrorEncrypting;
     public static String MsgErrorIllegalForexUnit;
+    public static String MsgErrorInvalidURL;
     public static String MsgErrorMissingDate;
     public static String MsgErrorMissingValueMatches;
     public static String MsgErrorNoCrumbFound;
