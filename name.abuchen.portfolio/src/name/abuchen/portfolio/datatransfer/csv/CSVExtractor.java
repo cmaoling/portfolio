@@ -211,19 +211,25 @@ public abstract class CSVExtractor implements Extractor
         if (value == null)
             return null;
 
-        Number num;
         try
         {
-            num = (Number) field2column.get(name).getFormat().getFormat().parseObject(value);
+            Number num = (Number) field2column.get(name).getFormat().getFormat().parseObject(value);
+            return BigDecimal.valueOf(num.doubleValue());
         }
         catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
         {
             if (e instanceof ParseException)
-                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber()); //$NON-NLS-1$
+                throw new ParseException(
+                                // abuchen: Improve error message by adding context
+                                MessageFormat.format(Messages.MsgErrorParseErrorWithGivenPattern, value, field2column.get(name).getFormat().toPattern()) +
+                                // cmaoling:  error message by 02575ab commit
+                                "\n " +   //$NON-NLS-1$
+                                e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), //$NON-NLS-1$
+                                new Exception().getStackTrace()[0].getLineNumber() // abuchen:  ((ParseException) e).getErrorOffset()
+                                );
             else
                 throw e;
         }
-        return BigDecimal.valueOf(num.doubleValue());
     }
 
     protected final Long getShares(String name, String[] rawValues, Map<String, Column> field2column)
@@ -257,24 +263,27 @@ public abstract class CSVExtractor implements Extractor
             return null;
         FieldFormat ff = field2column.get(name).getFormat();
 
-        if (ff != null && ff.getFormat() != null)
+        try
         {
-            E parsedEnum;
-            try
-            {
-                parsedEnum = (E) ff.getFormat().parseObject(value);
-            }
-            catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
-            {
-                if (e instanceof ParseException)
-                    throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber()); //$NON-NLS-1$
-                else
-                    throw e;
-            }
-            return parsedEnum;
+            if (ff != null && ff.getFormat() != null)
+                return (E) ff.getFormat().parseObject(value);
+            else
+                return Enum.valueOf(type, value);
         }
-        else
-            return Enum.valueOf(type, value);
+        catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
+        {
+            if (e instanceof ParseException)
+                throw new ParseException(
+                                // abuchen: Improve error message by adding context
+                                MessageFormat.format(Messages.MsgErrorParseErrorWithGivenPattern, value, field2column.get(name).getFormat().toPattern()) +
+                                // cmaoling:  error message by 02575ab commit
+                                "\n " + //$NON-NLS-1$
+                                e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), //$NON-NLS-1$
+                                new Exception().getStackTrace()[0].getLineNumber() // abuchen:  ((ParseException) e).getErrorOffset()                                
+                                );
+            else
+                throw e;
+        }
     }
 
     public boolean proposeShares(Client client, Portfolio portfolio, Item item)

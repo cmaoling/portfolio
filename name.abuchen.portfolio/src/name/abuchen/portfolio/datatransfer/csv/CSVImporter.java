@@ -124,6 +124,22 @@ public class CSVImporter
         {
             return format;
         }
+
+        public String toPattern()
+        {
+            if (format instanceof SimpleDateFormat)
+                return ((SimpleDateFormat) format).toPattern();
+            else if (format instanceof DecimalFormat)
+                return ((DecimalFormat) format).toPattern();
+            else if (format instanceof IBANFormat)
+                return Iban.PATTERN;
+            else if (format instanceof ISINFormat)
+                return Isin.PATTERN;
+            else if (format instanceof EnumMapFormat)
+                return ((EnumMapFormat<?>) format).map().toString();
+
+            return null;
+        }
     }
 
     public static class Field
