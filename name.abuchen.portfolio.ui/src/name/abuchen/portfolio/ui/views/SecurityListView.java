@@ -1069,13 +1069,10 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         }
     }
 
-<<<<<<< HEAD
     // //////////////////////////////////////////////////////////////
     // tab item: events
     // //////////////////////////////////////////////////////////////
 
-=======
->>>>>>> 55a2594f... Added some metrics for the data quality of historic quotes
     protected Composite createEventsTable(Composite parent)
     {
         Composite container = new Composite(parent, SWT.NONE);
