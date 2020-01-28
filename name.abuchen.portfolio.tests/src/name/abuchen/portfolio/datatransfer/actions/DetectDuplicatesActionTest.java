@@ -134,14 +134,9 @@ public class DetectDuplicatesActionTest
 
         private void check(PropertyDescriptor change) throws Exception
         {
-<<<<<<< HEAD
-            T instance = type.newInstance();
-            T other    = type.newInstance();
-            T similar  = type.newInstance();
-=======
             T instance = type.getDeclaredConstructor().newInstance();
-            T other = type.getDeclaredConstructor().newInstance();
->>>>>>> e6ee742b... Java 11 deprecated features
+            T other    = type.getDeclaredConstructor().newInstance();
+            T similar  = type.getDeclaredConstructor().newInstance();
 
             for (PropertyDescriptor p : properties)
             {
