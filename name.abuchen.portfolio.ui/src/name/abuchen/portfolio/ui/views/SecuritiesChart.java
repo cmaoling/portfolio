@@ -79,21 +79,17 @@ public class SecuritiesChart
 {
     private enum ChartDetails
     {
-        SHOW_MARKER_LINES(Messages.LabelChartDetailShowMarkerLines), //
-        SHOW_DATA_LABELS(Messages.LabelChartDetailShowDataLabel + SEPERATOR), //
-        CLOSING(Messages.LabelChartDetailClosingIndicator), //
-        PURCHASEPRICE(Messages.LabelChartDetailPurchaseIndicator + SEPERATOR), //
-        INVESTMENT(Messages.LabelChartDetailInvestments), //
-        DIVIDENDS(Messages.LabelChartDetailDividends), //
-        EVENTS(Messages.LabelChartDetailEvents), //
-        SPLITS(Messages.LabelChartDetailSplits), //
-        RIGHTS(Messages.LabelChartDetailRights), //
-        FIFOPURCHASE(Messages.LabelChartDetailFIFOpurchase), //
-        FLOATINGAVGPURCHASE(Messages.LabelChartDetailMovingAveragePurchase + SEPERATOR), //
-        SMA50(Messages.LabelChartDetailSMA50), //
-        SMA200(Messages.LabelChartDetailSMA200), //
         SCALING_LINEAR(Messages.LabelChartDetailChartScalingLinear), //
         SCALING_LOG(Messages.LabelChartDetailChartScalingLog), //
+        CLOSING(Messages.LabelChartDetailChartDevelopmentClosing), //
+        PURCHASEPRICE(Messages.LabelChartDetailChartDevelopmentClosingFIFO), //
+        INVESTMENT(Messages.LabelChartDetailMarkerInvestments), //
+        DIVIDENDS(Messages.LabelChartDetailMarkerDividends), //
+        EVENTS(Messages.LabelChartDetailMarkerEvents), //
+        SPLITS(Messages.LabelChartDetailMarkerSplits), //
+        RIGHTS(Messages.LabelChartDetailMarkerRights), //
+        FIFOPURCHASE(Messages.LabelChartDetailMarkerPurchaseFIFO), //
+        FLOATINGAVGPURCHASE(Messages.LabelChartDetailMarkerPurchaseMovingAverage), //
         BOLLINGERBANDS(Messages.LabelChartDetailIndicatorBollingerBands), //
         SMA_5DAYS(Messages.LabelChartDetailMovingAverage_5days), //
         SMA_20DAYS(Messages.LabelChartDetailMovingAverage_20days), //
@@ -103,6 +99,8 @@ public class SecuritiesChart
         SMA_90DAYS(Messages.LabelChartDetailMovingAverage_90days), //
         SMA_100DAYS(Messages.LabelChartDetailMovingAverage_100days), //
         SMA_200DAYS(Messages.LabelChartDetailMovingAverage_200days), //
+        SHOW_MARKER_LINES(Messages.LabelChartDetailSettingsShowMarkerLines), //
+        SHOW_DATA_LABELS(Messages.LabelChartDetailSettingsShowDataLabel), //
         SHOW_MISSING_TRADING_DAYS(Messages.LabelChartDetailSettingsShowMissingTradingDays);
 
         private final String label;
