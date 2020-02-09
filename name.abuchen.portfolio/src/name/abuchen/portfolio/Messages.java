@@ -205,12 +205,15 @@ public class Messages extends NLS
     public static String MsgErrorIllegalForexUnit;
     public static String MsgErrorInvalidURL;
     public static String MsgErrorMissingDate;
+    public static String MsgErrorMissingKeyValueInJSON;
     public static String MsgErrorMissingValueMatches;
     public static String MsgErrorNoCrumbFound;
     public static String MsgErrorNoneOfSubSectionsMatched;
     public static String MsgErrorNotAllPatternMatched;
     public static String MsgErrorNotAValidDate;
     public static String MsgErrorParseErrorWithGivenPattern;
+    public static String MsgErrorQuandlMissingAPIKey;
+    public static String MsgErrorQuandlMissingCode;
     public static String MsgErrorsConvertingValue;
     public static String MsgErrorTradeCollector_MissingHoldingsForSell;
     public static String MsgErrorTradeCollector_MissingHoldingsForTransfer;

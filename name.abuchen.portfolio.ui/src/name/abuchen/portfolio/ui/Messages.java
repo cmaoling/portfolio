@@ -596,6 +596,7 @@ public class Messages extends NLS
     public static String LabelPortfolios;
     public static String LabelPortfolioTimeMachine;
     public static String LabelPreTax;
+    public static String LabelQuandlCode;
     public static String LabelQuote;
     public static String LabelQuoteFeed;
     public static String LabelQuoteFeedProvider;
@@ -807,6 +808,7 @@ public class Messages extends NLS
     public static String MsgErrorDividendsYearBetween1900AndNow;
     public static String MsgErrorExchangeMissing;
     public static String MsgErrorMinimumHeightRequired;
+    public static String MsgErrorMissingQuandlCode;
     public static String MsgErrorNotAValidDate;
     public static String MsgErrorOpeningFile;
     public static String MsgErrorSavingIniFile;
@@ -896,6 +898,7 @@ public class Messages extends NLS
     public static String PrefCreateBackupBeforeSaving;
     public static String PrefDescriptionAlphaVantage;
     public static String PrefDescriptionProxy;
+    public static String PrefDescriptionQuandl;
     public static String PrefLabelNote;
     public static String PrefLabelProxyHost;
     public static String PrefLabelProxyPort;
@@ -905,6 +908,7 @@ public class Messages extends NLS
     public static String PrefMsgCalendar;
     public static String PrefNoteIndirectQuotation;
     public static String PrefNoteStoreSettingsNextToFile;
+    public static String PrefQuandlAPIKey;
     public static String PrefStoreSettingsNextToFile;
     public static String PrefUpdateQuotesAfterFileOpen;
     public static String PrefUpdateSite;
@@ -915,6 +919,7 @@ public class Messages extends NLS
     public static String PrefTitlePresentation;
     public static String PrefTitleProxy;
     public static String PrefTitleCalendar;
+    public static String PrefTitleQuandl;
     public static String SecurityFilter;
     public static String SecurityFilterSharesHeldEqualZero;
     public static String SecurityFilterSharesHeldGreaterZero;

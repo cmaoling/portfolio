@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.databinding.beans.BeanProperties;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
@@ -42,6 +43,7 @@ import name.abuchen.portfolio.online.impl.CSQuoteFeed;
 import name.abuchen.portfolio.online.impl.EurostatHICPQuoteFeed;
 import name.abuchen.portfolio.online.impl.HTMLTableQuoteFeed;
 import name.abuchen.portfolio.online.impl.OldHTMLTableQuoteFeed;
+import name.abuchen.portfolio.online.impl.QuandlQuoteFeed;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
 import name.abuchen.portfolio.ui.util.BindingHelper;
@@ -135,6 +137,7 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
     private ComboViewer comboExchange;
     private Text textFeedURL;
     private Text textTicker;
+    private Text textQuandlCode;
 
     private PropertyChangeListener tickerSymbolPropertyChangeListener = e -> onTickerSymbolChanged();
 
@@ -201,6 +204,14 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
                 else
                     showSampleQuotes(feed, null);
             }
+        }
+
+        if (textQuandlCode != null && !textQuandlCode.getText()
+                        .equals(model.getFeedProperty(QuandlQuoteFeed.QUANDL_CODE_PROPERTY_NAME)))
+        {
+            String code = model.getFeedProperty(QuandlQuoteFeed.QUANDL_CODE_PROPERTY_NAME);
+            if (code != null)
+                textQuandlCode.setText(code);
         }
     }
 
@@ -304,6 +315,8 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
 
         boolean needsTicker = feed != null && feed.getId() != null && feed.getId().equals(AlphavantageQuoteFeed.ID);
 
+        boolean needsQuandlCode = feed != null && feed.getId() != null && feed.getId().equals(QuandlQuoteFeed.ID);
+
         if (textFeedURL != null)
         {
             textFeedURL.dispose();
@@ -322,6 +335,12 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
             textTicker = null;
 
             model.removePropertyChangeListener("tickerSymbol", tickerSymbolPropertyChangeListener); //$NON-NLS-1$
+        }
+
+        if (textQuandlCode != null)
+        {
+            textQuandlCode.dispose();
+            textQuandlCode = null;
         }
 
         if (dropDown)
@@ -365,6 +384,15 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
 
             model.addPropertyChangeListener("tickerSymbol", tickerSymbolPropertyChangeListener); //$NON-NLS-1$
         }
+        else if (needsQuandlCode)
+        {
+            labelDetailData.setText(Messages.LabelQuandlCode);
+
+            textQuandlCode = new Text(grpQuoteFeed, SWT.BORDER);
+            GridDataFactory.fillDefaults().hint(100, SWT.DEFAULT).applyTo(textQuandlCode);
+
+            textQuandlCode.addModifyListener(e -> onQuandlCodeChanged());
+        }
         else
         {
             labelDetailData.setText(""); //$NON-NLS-1$
@@ -397,6 +425,12 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
         else if (textFeedURL != null)
         {
             textFeedURL.setText(getFeedURL());
+        }
+        else if (textQuandlCode != null)
+        {
+            String code = model.getFeedProperty(QuandlQuoteFeed.QUANDL_CODE_PROPERTY_NAME);
+            if (code != null)
+                textQuandlCode.setText(code);
         }
     }
 
@@ -453,6 +487,12 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
                 textFeedURL.setText(getFeedURL());
 
             setStatus(hasURL ? null : MessageFormat.format(Messages.EditWizardQuoteFeedMsgErrorMissingURL, getTitle()));
+        }
+        else if (textQuandlCode != null)
+        {
+            String code = model.getFeedProperty(QuandlQuoteFeed.QUANDL_CODE_PROPERTY_NAME);
+            if (code != null)
+                textQuandlCode.setText(code);
         }
         else
         {
@@ -521,4 +561,23 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
         }
     }
 
+    private void onQuandlCodeChanged()
+    {
+        String quandlCode = textQuandlCode.getText();
+
+        boolean hasCode = quandlCode != null && Pattern.matches("^.+/.+$", quandlCode); //$NON-NLS-1$
+
+        if (!hasCode)
+        {
+            clearSampleQuotes();
+            setStatus(Messages.MsgErrorMissingQuandlCode);
+        }
+        else
+        {
+            model.setFeedProperty(QuandlQuoteFeed.QUANDL_CODE_PROPERTY_NAME, quandlCode);
+            QuoteFeed feed = (QuoteFeed) ((IStructuredSelection) comboProvider.getSelection()).getFirstElement();
+            showSampleQuotes(feed, null);
+            setStatus(null);
+        }
+    }
 }

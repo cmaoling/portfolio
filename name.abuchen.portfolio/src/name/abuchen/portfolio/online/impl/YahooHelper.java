@@ -26,7 +26,7 @@ public /* package */class YahooHelper
 
     static boolean isNotApplicable(String s)
     {
-        if ("\"N/A\"".equals(s) || "N/A".equals(s)) //$NON-NLS-1$ //$NON-NLS-2$
+        if ("\"N/A\"".equals(s) || "N/A".equals(s) || "null".equals(s)) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             return true;
         return false;
     }
