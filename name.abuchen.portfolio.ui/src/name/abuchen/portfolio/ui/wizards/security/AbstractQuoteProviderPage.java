@@ -44,6 +44,7 @@ import name.abuchen.portfolio.online.QuoteFeed;
 import name.abuchen.portfolio.online.impl.AlphavantageQuoteFeed;
 import name.abuchen.portfolio.online.impl.CSQuoteFeed;
 import name.abuchen.portfolio.online.impl.EurostatHICPQuoteFeed;
+import name.abuchen.portfolio.online.impl.FinnhubQuoteFeed;
 import name.abuchen.portfolio.online.impl.HTMLTableQuoteFeed;
 import name.abuchen.portfolio.online.impl.OldHTMLTableQuoteFeed;
 import name.abuchen.portfolio.online.impl.QuandlQuoteFeed;
@@ -321,10 +322,12 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
 
     private void createDetailDataWidgets(QuoteFeed feed)
     {
-        boolean dropDown = feed != null && feed.getId() != null && (feed.getId().startsWith(YAHOO) || feed.getId().equals(EurostatHICPQuoteFeed.ID));
-        boolean feedURL = feed != null && feed.getId() != null && (feed.getId().equals(HTMLTableQuoteFeed.ID) || feed.getId().equals(OldHTMLTableQuoteFeed.ID)  || feed.getId().equals(CSQuoteFeed.ID));
-
-        boolean needsTicker = feed != null && feed.getId() != null && feed.getId().equals(AlphavantageQuoteFeed.ID);
+        boolean dropDown = feed != null && feed.getId() != null
+                        && (feed.getId().startsWith(YAHOO) || feed.getId().equals(EurostatHICPQuoteFeed.ID));
+        boolean feedURL = feed != null && feed.getId() != null
+                        && (feed.getId().equals(HTMLTableQuoteFeed.ID) || feed.getId().equals(OldHTMLTableQuoteFeed.ID) || feed.getId().equals(CSQuoteFeed.ID));
+        boolean needsTicker = feed != null && feed.getId() != null
+                        && (feed.getId().equals(AlphavantageQuoteFeed.ID) || feed.getId().equals(FinnhubQuoteFeed.ID));
 
         boolean needsQuandlCode = feed != null && feed.getId() != null && feed.getId().equals(QuandlQuoteFeed.ID);
 
@@ -493,6 +496,8 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
         QuoteFeed feed = (QuoteFeed) ((IStructuredSelection) event.getSelection()).getFirstElement();
 
         createDetailDataWidgets(feed);
+
+        clearSampleQuotes();
 
         if (comboExchange != null)
         {
