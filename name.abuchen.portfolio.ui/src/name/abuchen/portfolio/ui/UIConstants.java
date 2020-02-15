@@ -66,11 +66,8 @@ public interface UIConstants
     interface Command // NOSONAR
     {
         String OPEN_RECENT_FILE = "name.abuchen.portfolio.ui.command.openRecentFile"; //$NON-NLS-1$
-<<<<<<< HEAD
-=======
         String IMPORT_CSV = "name.abuchen.portfolio.ui.command.import"; //$NON-NLS-1$
         String PREFERENCES = "org.eclipse.ui.window.preferences"; //$NON-NLS-1$
->>>>>>> 8ae5d382... Added info about translations to Welcome part
     }
 
     /**
