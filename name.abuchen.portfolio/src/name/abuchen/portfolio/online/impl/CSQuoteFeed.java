@@ -83,12 +83,12 @@ public class CSQuoteFeed extends HTMLTableQuoteFeed
      * @param args
      *            list of URLs and/or local files
      */
-    public static void main(String[] args) throws IOException
-    {
-        PrintWriter writer = new PrintWriter(System.out); // NOSONAR
-        for (String arg : args)
-            if (arg.charAt(0) != '#')
-                new CSQuoteFeed().doLoad(arg, writer);
-        writer.flush();
-    }
+//    public static void main(String[] args) throws IOException
+//    {
+//        PrintWriter writer = new PrintWriter(System.out); // NOSONAR
+//        for (String arg : args)
+//            if (arg.charAt(0) != '#')
+//                new CSQuoteFeed().doLoad(arg, writer);
+//        writer.flush();
+//    }
 }
