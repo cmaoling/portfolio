@@ -253,7 +253,7 @@ public class HTMLTableQuoteFeed extends QuoteFeed
     private static final Column[] COLUMNS = new Column[] { new DateColumn(), new CloseColumn(), new HighColumn(),
                     new LowColumn() };
 
-    private final PageCache cache = new PageCache();
+    private final PageCache<List<LatestSecurityPrice>> cache = new PageCache<>();
 
     @Override
     public String getId()
