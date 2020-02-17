@@ -67,6 +67,13 @@ public /* package */class YahooHelper
         return LocalDate.parse(s, DateTimeFormatter.ofPattern("\"M/d/yyyy\"")); //$NON-NLS-1$
     }
 
+    static LocalDate fromISODate(String s)
+    {
+        if (s == null || "\"N/A\"".equals(s) || "null".equals(s)) //$NON-NLS-1$ //$NON-NLS-2$
+            return null;
+        return LocalDate.parse(s);
+    }
+
     static String stripQuotes(String s)
     {
         int firstIndex = 0;

@@ -145,6 +145,7 @@ public class Messages extends NLS
     public static String LabelRemovals;
     public static String LabelReportingPeriodCurrentMonth;
     public static String LabelPeer;
+    public static String LabelPortfolioReport;
     public static String LabelPotentialDuplicate;
     public static String LabelReportingPeriodFromXtoY;
     public static String LabelReportingPeriodLastXDays;
@@ -175,6 +176,7 @@ public class Messages extends NLS
     public static String LabelYahooFinanceAdjustedClose;
     public static String LabelEurostatHICP;
     public static String LabelExchangeRateSeriesBasedOnSecurity;
+    public static String LabelXwithCurrencyY;
     public static String MsgAlphaVantageAPIKeyMissing;
     public static String MsgAlphaVantageRateLimitExceeded;
     public static String MsgCheckDividendsMustHaveASecurity;
@@ -206,6 +208,8 @@ public class Messages extends NLS
     public static String MsgErrorInvalidURL;
     public static String MsgErrorMissingDate;
     public static String MsgErrorMissingKeyValueInJSON;
+    public static String MsgErrorMissingOnlineId;
+    public static String MsgErrorMissingPortfolioReportMarket;
     public static String MsgErrorMissingValueMatches;
     public static String MsgErrorNoCrumbFound;
     public static String MsgErrorNoneOfSubSectionsMatched;
