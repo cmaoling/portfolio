@@ -139,6 +139,9 @@ public class CSVAccountTransactionExtractorTest
                         Arrays.<String[]>asList(new String[] {"2015-03-11", "", "DE0123456781", "Anleihe", "", "-200", "EUR", "DIVIDEND_CHARGE", "", "100", "Notiz"}),
                         buildField2Column(extractor), errors);
 
+        System.err.println("testDividendChargeTransaction errors: " +  errors.toString());
+        System.err.println("testDividendChargeTransaction results: " +  results.toString());
+
         assertThat(errors, empty());
         assertThat(results.size(), is(1));
         new AssertImportActions().check(results, CurrencyUnit.EUR);
