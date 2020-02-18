@@ -20,7 +20,7 @@ import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.online.QuoteFeed;
 import name.abuchen.portfolio.util.WebAccess;
 
-public final class BitfinexQuoteFeed implements QuoteFeed
+public final class BitfinexQuoteFeed extends QuoteFeed
 {
     public static final String ID = "BITFINEX"; //$NON-NLS-1$
 
