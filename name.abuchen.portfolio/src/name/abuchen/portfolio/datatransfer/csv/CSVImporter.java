@@ -40,8 +40,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVStrategy;
+import org.apache.commons.csv.CSVRecord;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.Extractor.Item;
@@ -729,53 +730,82 @@ public class CSVImporter
         return columns;
     }
 
-    public void processStream(InputStream stream) throws IOException
+    public void processStream(InputStream stream, boolean remap) throws IOException
     {
         Reader reader = new InputStreamReader(stream, encoding);
 
-        CSVStrategy strategy = new CSVStrategy(delimiter, '"', CSVStrategy.COMMENTS_DISABLED,
-                        CSVStrategy.ESCAPE_DISABLED, false, false, false, false);
+        CSVFormat strategy = CSVFormat.newFormat(delimiter).withQuote('"').withRecordSeparator("\r\n"); //$NON-NLS-1$
 
-        CSVParser parser = new CSVParser(reader, strategy);
-
-        for (int ii = 0; ii < skipLines; ii++)
-            parser.getLine();
-
-        List<String[]> input = new ArrayList<>();
-        String[] header = null;
-        String[] line = parser.getLine();
-        if (this.header.getHeaderType().equals(Header.Type.FIRST))
+        try
         {
-            header = line;
+            CSVParser parser = CSVParser.parse(reader, strategy);
+            Iterator<CSVRecord> records = parser.iterator();
+            for (int ii = 0; ii < skipLines && records.hasNext(); ii++)
+                records.next();
+            List<String[]> input = new ArrayList<>();
+            String[] header = null;
+            CSVRecord line = records.hasNext() ? records.next() : null;
+            // no more data available after skipping lines
+            if (line == null)
+            {
+                this.values = Collections.emptyList();
+                if (remap)
+                    this.columns = new Column[0];
+                return;
+            }
+            if (this.header.getHeaderType().equals(Header.Type.FIRST))
+            {
+                header = toStringArray(line);
+            }
+            else if (this.header.getHeaderType().equals(Header.Type.DEFAULT))
+            {
+                header = this.currentExtractor.getDefaultHeader();
+                // Backup, if no default header defined, but selected return same as first
+                if (header == null)
+                    header = toStringArray(line);
+            }
+            else
+            {
+                header = new String[line.size()];
+                for (int ii = 0; ii < header.length; ii++)
+                    header[ii] = MessageFormat.format(Messages.CSVImportGenericColumnLabel, ii + 1);
+                input.add(toStringArray(line));
+            }
+            while (records.hasNext())
+                input.add(toStringArray(records.next()));
+            this.values = input;
+            if (this.columns == null || remap)
+            {
+                this.columns = new CSVImporter.Column[header.length];
+                for (int ii = 0; ii < header.length; ii++)
+                    this.columns[ii] = new Column(ii, header[ii]);
+
+                mapToImportDefinition();
+            }
         }
-        else if (this.header.getHeaderType().equals(Header.Type.DEFAULT))
+        catch (IllegalStateException e)
         {
-            header = this.currentExtractor.getDefaultHeader();
-            // Backup, if no default header defined, but selected return same as first
-            if (header == null)
-                header = line;
+            PortfolioLog.error(e);
+
+            if (remap)
+                this.columns = new Column[] { new Column(0, Messages.LabelError) };
+
+                List<String[]> reply = new ArrayList<>();
+                reply.add(new String[] { e.getMessage() });
+                this.values = reply;
+            }
         }
-        else
-        {
-            header = new String[line.length];
-            for (int ii = 0; ii < header.length; ii++)
-                header[ii] = MessageFormat.format(Messages.CSVImportGenericColumnLabel, ii + 1);
-            input.add(line);
-        }
-
-        while ((line = parser.getLine()) != null)
-            input.add(line);
-
-        this.columns = new CSVImporter.Column[header.length];
-        for (int ii = 0; ii < header.length; ii++)
-            this.columns[ii] = new Column(ii, header[ii]);
-
-        this.values = input;
-
-        mapToImportDefinition();
     }
 
-    public void processFile() throws IOException
+    private String[] toStringArray(CSVRecord line)
+    {
+        String[] answer = new String[line.size()];
+        for (int ii = 0; ii < answer.length; ii++)
+            answer[ii] = line.get(ii);
+        return answer;
+    }
+
+    public void processFile(boolean remap) throws IOException
     {
         try (FileInputStream stream = new FileInputStream(inputFile))
         {
