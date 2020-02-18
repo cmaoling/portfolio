@@ -123,7 +123,7 @@ public class SecurityTest
         Optional<Pair<SecurityPrice, SecurityPrice>> latestTwo = security.getLatestTwoSecurityPrices();
         assertThat(latestTwo.orElseThrow(IllegalArgumentException::new), is(new Pair<>(pToday, pYesterday)));
 
-        security.setLatest(null);
+        security.setLatest((LatestSecurityPrice) null);
         assertThat(security.getLatestTwoSecurityPrices().isPresent(), is(false));
 
         security.addPrice(pToday);
