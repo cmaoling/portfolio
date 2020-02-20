@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Optional;
 
 import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.SecurityElement;
@@ -18,6 +19,14 @@ import name.abuchen.portfolio.online.impl.HTMLTableQuoteParser;
 public abstract class QuoteFeed extends Feed
 {
     public static String ID = "QUOTE"; //$NON-NLS-1$
+
+    /**
+     * Returns the help URL to be shown to the user.
+     */
+    public Optional<String> getHelpURL()
+    {
+        return Optional.empty();
+    }
 
     abstract public boolean updateLatestQuotes(Security security, List<Exception> errors);
 
