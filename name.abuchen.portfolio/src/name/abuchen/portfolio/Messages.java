@@ -128,6 +128,7 @@ public class Messages extends NLS
     public static String LabelDeposits;
     public static String LabelError;
     public static String LabelEuropeanCentralBank;
+    public static String LabelGenericJSON;
     public static String LabelHTMLTable;
     public static String LabelHTMLTableOld;
     public static String LabelInterest;
@@ -210,12 +211,14 @@ public class Messages extends NLS
     public static String MsgErrorMissingDate;
     public static String MsgErrorMissingKeyValueInJSON;
     public static String MsgErrorMissingOnlineId;
+    public static String MsgErrorMissingPathToDateOrClose;
     public static String MsgErrorMissingPortfolioReportMarket;
     public static String MsgErrorMissingValueMatches;
     public static String MsgErrorNoCrumbFound;
     public static String MsgErrorNoneOfSubSectionsMatched;
     public static String MsgErrorNotAllPatternMatched;
     public static String MsgErrorNotAValidDate;
+    public static String MsgErrorNumberOfDateAndCloseRecordsDoNotMatch;
     public static String MsgErrorParseErrorWithGivenPattern;
     public static String MsgErrorQuandlMissingAPIKey;
     public static String MsgErrorQuandlMissingCode;
