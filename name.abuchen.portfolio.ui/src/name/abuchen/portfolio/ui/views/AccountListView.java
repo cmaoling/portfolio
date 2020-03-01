@@ -112,8 +112,6 @@ public class AccountListView extends AbstractListView implements ModificationLis
 
     private boolean isFiltered = false;
 
-    private PortfolioPart part;
-
     @Override
     protected String getDefaultTitle()
     {
@@ -333,7 +331,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
             {
                 Client client = getClient();
                 Shell shell  = Display.getDefault().getActiveShell();
-                String filterPath = (part.getClientFileName() == null?System.getProperty("user.dir"):part.getClientFileName().getParent().toString()); //$NON-NLS-1$
+                String filterPath = (getPart().getClientFileName() == null?System.getProperty("user.dir"):getPart().getClientFileName().getParent().toString()); //$NON-NLS-1$
 
                 FileDialog fileDialog = new FileDialog(shell, SWT.OPEN);
                 fileDialog.setFilterPath(filterPath);
@@ -344,7 +342,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
                 if (fileName == null)
                     return;
 
-                IPreferenceStore preferences = part.getPreferenceStore();
+                IPreferenceStore preferences = getPart().getPreferenceStore();
                 CSVImportWizard wizard = new CSVImportWizard(client, preferences, new File(fileName));
                 wizard.setTarget(account);
                 Dialog wizwardDialog = new WizardDialog(shell, wizard);
