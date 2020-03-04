@@ -114,7 +114,7 @@ public class SecurityTransferModel extends AbstractModel
             throw new UnsupportedOperationException(Messages.MsgPortfolioFromMissing);
         if (targetPortfolio == null)
             throw new UnsupportedOperationException(Messages.MsgPortfolioToMissing);
-        if (quoteSuggestion.equals(PortfolioTransferEntry.Suggestion.none))
+        if (quoteSuggestion.getSuggestion().equals(Suggestion.none))
             throw new UnsupportedOperationException(Messages.MsgMissingSuggestion);
 
         PortfolioTransferEntry t;

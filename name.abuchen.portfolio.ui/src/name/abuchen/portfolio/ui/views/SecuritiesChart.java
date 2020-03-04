@@ -255,8 +255,6 @@ public class SecuritiesChart
     private Color colorAreaPositive = Colors.getColor(42, 135, 42); // Colors.getColor(90, 114, 226);
     private Color colorAreaNegative = Colors.getColor(226, 91, 90);
 
-    private static final String SEPERATOR = "---"; //$NON-NLS-1$
-
     private Color colorNonTradingDay = Colors.getColor(255, 137, 89);
 
     private static final String PREF_KEY = "security-chart-details"; //$NON-NLS-1$
