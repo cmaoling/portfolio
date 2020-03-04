@@ -5,9 +5,6 @@ import static name.abuchen.portfolio.ui.util.SWTHelper.amountWidth;
 import static name.abuchen.portfolio.ui.util.SWTHelper.currencyWidth;
 import static name.abuchen.portfolio.ui.util.SWTHelper.widest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.time.LocalDateTime;
 
 import javax.inject.Inject;
@@ -23,7 +20,6 @@ import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -38,6 +34,7 @@ import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransferModel.Properties;
+import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransferModel.QuoteSuggestion;
 import name.abuchen.portfolio.ui.util.SWTHelper;
 
 public class SecurityTransferDialog extends AbstractTransactionDialog
@@ -64,87 +61,7 @@ public class SecurityTransferDialog extends AbstractTransactionDialog
         }
     }
 
-    public static final class QuoteSuggestionSet
-    {
-        private final List<QuoteSuggestion> suggestionSet = new ArrayList<QuoteSuggestion>();
-
-        public QuoteSuggestionSet()
-        {
-        }
-
-        public void add(PortfolioTransferEntry.Suggestion suggestion, String label, boolean editable)
-        {
-            suggestionSet.add(new QuoteSuggestion (suggestion, label, editable));
-        }
-
-        public void remove(PortfolioTransferEntry.Suggestion suggestion)
-        {
-            suggestionSet.remove(get(suggestion));
-        }
-
-        public QuoteSuggestion[] get()
-        {
-            return suggestionSet.toArray(new QuoteSuggestion[0]);
-        }
-
-        public QuoteSuggestion get(PortfolioTransferEntry.Suggestion suggestion)
-        {
-            if (!suggestionSet.isEmpty())
-            {
-                for (QuoteSuggestion quoteSuggestion : suggestionSet)
-                {
-                    if (quoteSuggestion.suggestion.equals(suggestion))
-                        return quoteSuggestion;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public String toString()
-        {
-            return Arrays.toString(this.get());
-        }
-    }
-
-    public static final class QuoteSuggestion
-    {
-        private final PortfolioTransferEntry.Suggestion suggestion;
-        private final String label;
-        private final boolean editable;
-
-        public QuoteSuggestion(PortfolioTransferEntry.Suggestion suggestion, String label, boolean editable)
-        {
-            this.suggestion = suggestion;
-            this.label = label;
-            this.editable = editable;
-        }
-
-        public PortfolioTransferEntry.Suggestion getSuggestion()
-        {
-            return suggestion;
-        }
-
-        public String getLabel()
-        {
-            return label;
-        }
-
-        public boolean getEditable()
-        {
-            return editable;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "-> " + getLabel(); // TODO was "x " before //$NON-NLS-1$
-        }
-    }
-
-
     private Client client;
-    private QuoteSuggestionSet quoteSuggestionSet = new QuoteSuggestionSet();
 
     @Inject
     public SecurityTransferDialog(@Named(IServiceConstants.ACTIVE_SHELL) Shell parentShell, Client client,
@@ -155,9 +72,6 @@ public class SecurityTransferDialog extends AbstractTransactionDialog
         SecurityTransferModel m = new SecurityTransferModel(client);
         m.setExchangeRateProviderFactory(factory);
         setModel(m);
-        quoteSuggestionSet.add(PortfolioTransferEntry.Suggestion.goodwill, Messages.ColumnQuoteSuggestion_goodwill, true);
-        quoteSuggestionSet.add(PortfolioTransferEntry.Suggestion.market, Messages.ColumnQuoteSuggestion_market, false);
-        quoteSuggestionSet.add(PortfolioTransferEntry.Suggestion.purchase, Messages.ColumnQuoteSuggestion_purchase, false);
     }
 
     private SecurityTransferModel model()
@@ -190,9 +104,8 @@ public class SecurityTransferDialog extends AbstractTransactionDialog
         // quote suggestion selection
 
         ComboInput quoteSuggestion = new ComboInput(editArea, Messages.LabelNothing);
-        quoteSuggestion.value.setInput(quoteSuggestionSet.get());
+        quoteSuggestion.value.setInput(model().getQuoteSuggestionList());
         quoteSuggestion.bindValue(Properties.quoteSuggestion.name(), Messages.MsgMissingSuggestion);
-        quoteSuggestion.value.setSelection(new StructuredSelection(quoteSuggestionSet.get(model().getQuoteSuggestion())));
 
         // target portfolio
 
@@ -220,7 +133,7 @@ public class SecurityTransferDialog extends AbstractTransactionDialog
         Input quote = new Input(editArea, "x " + Messages.ColumnQuote); //$NON-NLS-1$
         quote.bindBigDecimal(Properties.quote.name(), Values.Quote.pattern());
         quote.bindCurrency(Properties.securityCurrencyCode.name());
-        quote.setEditable(quoteSuggestionSet.get(model().getQuoteSuggestion()).getEditable());
+        quote.setEditable(model().getQuoteSuggestion(model().getQuoteSuggestion().getSuggestion()).getEditable());
 
         Input amount = new Input(editArea, "="); //$NON-NLS-1$
         amount.bindValue(Properties.amount.name(), Messages.ColumnAmount, Values.Amount, true);
@@ -269,7 +182,7 @@ public class SecurityTransferDialog extends AbstractTransactionDialog
                 QuoteSuggestion selectedSuggestion = (QuoteSuggestion) ((IStructuredSelection) event.getSelection()).getFirstElement();
                 boolean editable = selectedSuggestion.getEditable();
                 quote.setEditable(editable);
-                model().setQuoteSuggestion(selectedSuggestion.getSuggestion());
+                model().setQuoteSuggestion(selectedSuggestion);
             }
         });
         model().updateQuote();

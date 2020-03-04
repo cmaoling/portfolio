@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.runtime.IStatus;
@@ -13,6 +15,7 @@ import com.ibm.icu.text.MessageFormat;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.PortfolioTransferEntry;
+import name.abuchen.portfolio.model.PortfolioTransferEntry.Suggestion;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.model.TransactionOwner;
@@ -31,6 +34,41 @@ public class SecurityTransferModel extends AbstractModel
         security, securityCurrencyCode, sourcePortfolio, sourcePortfolioLabel, quoteSuggestion, targetPortfolio, targetPortfolioLabel, date, time, shares, quote, amount, note, calculationStatus;
     }
 
+    public static final class QuoteSuggestion
+    {
+        private final Suggestion suggestion;
+        private final String label;
+        private final boolean editable;
+
+        public QuoteSuggestion(Suggestion suggestion, String label, boolean editable)
+        {
+            this.suggestion = suggestion;
+            this.label = label;
+            this.editable = editable;
+        }
+
+        public Suggestion getSuggestion()
+        {
+            return suggestion;
+        }
+
+        public String getLabel()
+        {
+            return label;
+        }
+
+        public boolean getEditable()
+        {
+            return editable;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "-> " + getLabel(); // TODO was "x " before //$NON-NLS-1$
+        }
+    }
+
     private final Client client;
 
     private PortfolioTransferEntry source;
@@ -46,13 +84,19 @@ public class SecurityTransferModel extends AbstractModel
     private long amount;
     private String note;
 
-    private PortfolioTransferEntry.Suggestion quoteSuggestion = PortfolioTransferEntry.Suggestion.goodwill;
+    private List<QuoteSuggestion> quoteSuggestionList = new ArrayList<QuoteSuggestion>();
+    private QuoteSuggestion quoteSuggestion;
 
     private IStatus calculationStatus = ValidationStatus.ok();
 
     public SecurityTransferModel(Client client)
     {
         this.client = client;
+        QuoteSuggestion goodwill = new QuoteSuggestion(Suggestion.goodwill, Messages.ColumnQuoteSuggestion_goodwill, true);
+        quoteSuggestionList.add(0, new QuoteSuggestion(Suggestion.market, Messages.ColumnQuoteSuggestion_market, false));
+        quoteSuggestionList.add(0, new QuoteSuggestion(Suggestion.purchase, Messages.ColumnQuoteSuggestion_purchase, false));
+        quoteSuggestionList.add(0, goodwill);
+        quoteSuggestion = goodwill;
     }
 
     @Override
@@ -102,7 +146,7 @@ public class SecurityTransferModel extends AbstractModel
         t.setAmount(amount);
         t.setCurrencyCode(security.getCurrencyCode());
         t.setNote(note);
-        t.setQuoteSuggestion(quoteSuggestion);
+        t.setQuoteSuggestion(quoteSuggestion.getSuggestion());
     }
 
     @Override
@@ -113,7 +157,10 @@ public class SecurityTransferModel extends AbstractModel
         setShares(0);
         setAmount(0);
         setNote(null);
-        triggerQuoteSuggestion(PortfolioTransferEntry.Suggestion.goodwill);
+        triggerQuoteSuggestion(quoteSuggestionList.stream()
+                        .filter(suggestion -> Suggestion.goodwill.equals(suggestion.getSuggestion()))
+                        .findAny()
+                        .orElse(null));
     }
 
     private IStatus calculateStatus()
@@ -187,13 +234,13 @@ public class SecurityTransferModel extends AbstractModel
     public void updateQuote()
     {
         BigDecimal newQuote = (source == null ? BigDecimal.ZERO: getQuote());
-        if (!quoteSuggestion.equals(PortfolioTransferEntry.Suggestion.goodwill))
+        if (!quoteSuggestion.getSuggestion().equals(Suggestion.goodwill))
         {
             SecurityPosition position = getPosition4Quote();
 
             if (position != null)
             {
-                if (quoteSuggestion.equals(PortfolioTransferEntry.Suggestion.purchase))
+                if (quoteSuggestion.getSuggestion().equals(Suggestion.purchase))
                     // purchase
                     newQuote = new BigDecimal(position.getFIFOPurchasePrice().getAmount() / Values.Amount.divider());
                 else
@@ -224,7 +271,7 @@ public class SecurityTransferModel extends AbstractModel
         this.quote = entry.getSourceTransaction().getGrossPricePerShare().toBigDecimal();
         this.amount = entry.getTargetTransaction().getAmount();
         this.note = entry.getSourceTransaction().getNote();
-        this.quoteSuggestion = entry.getQuoteSuggestion();
+        this.quoteSuggestion = getQuoteSuggestion(entry.getQuoteSuggestion());
     }
 
     @Override
@@ -382,21 +429,35 @@ public class SecurityTransferModel extends AbstractModel
         return security != null ? security.getCurrencyCode() : ""; //$NON-NLS-1$
     }
 
-    public PortfolioTransferEntry.Suggestion getQuoteSuggestion()
+    public List<QuoteSuggestion> getQuoteSuggestionList()
     {
-        return this.quoteSuggestion;
+        return this.quoteSuggestionList;
     }
 
-    public void setQuoteSuggestion(PortfolioTransferEntry.Suggestion suggestion)
+    public QuoteSuggestion getQuoteSuggestion(Suggestion element)
     {
-        if (this.quoteSuggestion.equals(suggestion))
-            return;
-        this.quoteSuggestion = suggestion;
-        updateQuote();
+        for(QuoteSuggestion quoteSuggestion : this.quoteSuggestionList)
+            if (quoteSuggestion.getSuggestion().toString().equals(element.toString()))
+                return quoteSuggestion;
+        return null;
     }
 
-    public void triggerQuoteSuggestion(PortfolioTransferEntry.Suggestion suggestion)
+    public void triggerQuoteSuggestion(QuoteSuggestion suggestion)
     {
         firePropertyChange(Properties.quoteSuggestion.name(), this.quoteSuggestion, this.quoteSuggestion = suggestion);
+    }
+
+    public void setQuoteSuggestion(QuoteSuggestion quoteSuggestion)
+    {
+        if (!(this.quoteSuggestion.equals(quoteSuggestion)))
+        {
+            triggerQuoteSuggestion(quoteSuggestion);
+            updateQuote();
+        }
+    }
+
+    public QuoteSuggestion getQuoteSuggestion()
+    {
+        return this.quoteSuggestion;
     }
 }
