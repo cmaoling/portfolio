@@ -28,7 +28,7 @@ import name.abuchen.portfolio.money.Money;
     @Override
     public int getDefaultSkipLines()
     {
-        return 1;
+        return 0;
     }
 
     @Override
@@ -50,6 +50,7 @@ import name.abuchen.portfolio.money.Money;
             enumMap.put((E) Type.DEPOSIT, "Gutschrift|Gehalt/Rente|Überweisung");
             enumMap.put((E) Type.INTEREST, "Abschluss");
             enumMap.put((E) Type.REMOVAL, "Lastschrift|Dauerauftrag");
+            enumMap.put((E) Type.TAXES, "Steuer");
             enumMap.put((E) Type.INTEREST_CHARGE, "Zinsen");
             enumMap.put((E) Type.FEES, "Gebühren");
             return enumMap;
