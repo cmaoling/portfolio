@@ -19,7 +19,7 @@ import name.abuchen.portfolio.model.Client;
     @Override
     public int getDefaultSkipLines()
     {
-        return 12;
+        return 14;
     }
 
     @Override
@@ -39,7 +39,7 @@ import name.abuchen.portfolio.model.Client;
             final EnumMap<E, String> enumMap = new EnumMap<>(enumType);
             enumMap.put((E) Type.BUY, "Wertpapierkauf");
             enumMap.put((E) Type.SELL, "Wertpapiergutschrift");
-            enumMap.put((E) Type.DEPOSIT, "Gutschrift|Lastschrifteinzug");
+            enumMap.put((E) Type.DEPOSIT, "Gutschrift|Lastschrifteinzug|Überweisungsgutschrift");
             enumMap.put((E) Type.INTEREST, "Abschluss");
             enumMap.put((E) Type.FEES, "Gebühren");
             enumMap.put((E) Type.REMOVAL, "Überweisung");
