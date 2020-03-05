@@ -485,7 +485,6 @@ public class PortfolioPart implements ClientInputListener
         return clientInput.getFile();
     }
 
-    @SuppressWarnings("unchecked")
     public void activateView(Navigation.Item item, Object parameter)
     {
         if (item.getViewClass() == null)
