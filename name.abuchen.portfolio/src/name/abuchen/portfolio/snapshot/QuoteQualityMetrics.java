@@ -142,3 +142,4 @@ public class QuoteQualityMetrics
         return answer;
     }
 }
+
