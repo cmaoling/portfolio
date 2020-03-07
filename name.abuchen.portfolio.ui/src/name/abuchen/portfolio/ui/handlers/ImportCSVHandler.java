@@ -2,6 +2,8 @@ package name.abuchen.portfolio.ui.handlers;
 
 import java.io.File;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Named;
 
@@ -16,7 +18,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 
+import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.editor.PortfolioPart;
 import name.abuchen.portfolio.ui.wizards.datatransfer.CSVImportWizard;
@@ -33,13 +37,11 @@ public class ImportCSVHandler
     public void execute(@Named(IServiceConstants.ACTIVE_PART) MPart part,
                     @Named(IServiceConstants.ACTIVE_SHELL) Shell shell)
     {
-        Optional<Client> client = MenuHelper.getActiveClient(part);
-        if (!client.isPresent())
-            return;
-
-        PortfolioPart object = (PortfolioPart) part.getObject();
-        String filterPath = (object.getClientFileName() == null?System.getProperty("user.dir"):object.getClientFileName().getParent().toString()); //$NON-NLS-1$
-
+        MenuHelper.getActiveClient(part).ifPresent(client -> runImport((PortfolioPart) part, shell, client, "", null, null)); //$NON-NLS-1$ 
+    }
+    
+    public static void runImport(PortfolioPart part, Shell shell, Client client, String filterPath, Account account, Portfolio portfolio)
+    {
         FileDialog fileDialog = new FileDialog(shell, SWT.OPEN);
         fileDialog.setFilterPath(filterPath);
         fileDialog.setFilterNames(new String[] { Messages.CSVImportLabelFileCSV, Messages.CSVImportLabelFileAll });
@@ -49,8 +51,14 @@ public class ImportCSVHandler
         if (fileName == null)
             return;
 
-        IPreferenceStore preferences = ((PortfolioPart) part.getObject()).getPreferenceStore();
-        Dialog wizwardDialog = new WizardDialog(shell, new CSVImportWizard(client.get(), preferences, new File(fileName)));
+        IPreferenceStore preferences = part.getPreferenceStore();
+        CSVImportWizard wizard = new CSVImportWizard(client, preferences, new File(fileName));
+        if (account != null)
+            wizard.setTarget(account);
+        if (portfolio != null)
+            wizard.setTarget(portfolio);
+
+        Dialog wizwardDialog = new WizardDialog(shell, wizard);
         wizwardDialog.open();
     }
 }

@@ -61,6 +61,8 @@ import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransferDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.OpenDialogAction;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransactionDialog;
+import name.abuchen.portfolio.ui.handlers.ImportCSVHandler;
+import name.abuchen.portfolio.ui.handlers.ImportPDFHandler;
 import name.abuchen.portfolio.ui.util.Colors;
 import name.abuchen.portfolio.ui.util.ConfirmAction;
 import name.abuchen.portfolio.ui.util.DropDown;
@@ -160,15 +162,14 @@ public class AccountListView extends AbstractListView implements ModificationLis
             accounts.editElement(account, 0);
         };
 
-        manager.add(new DropDown(Messages.MenuCreateAccountOrTransaction, Images.PLUS, SWT.NONE,
-                        menuListener -> {
-                            menuListener.add(new SimpleAction(Messages.AccountMenuAdd, newAccountAction));
+        manager.add(new DropDown(Messages.MenuCreateAccountOrTransaction, Images.PLUS, SWT.NONE, menuListener -> {
+            menuListener.add(new SimpleAction(Messages.AccountMenuAdd, newAccountAction));
 
-                            menuListener.add(new Separator());
+            menuListener.add(new Separator());
 
-                            Account account = (Account) accounts.getStructuredSelection().getFirstElement();
-                            new AccountContextMenu(AccountListView.this).menuAboutToShow(menuListener, account, null);
-                        }));
+            Account account = (Account) accounts.getStructuredSelection().getFirstElement();
+            new AccountContextMenu(AccountListView.this).menuAboutToShow(menuListener, account, null);
+        }));
     }
 
     private void addFilterButton(ToolBarManager manager)
@@ -327,63 +328,19 @@ public class AccountListView extends AbstractListView implements ModificationLis
         accountMenu.menuAboutToShow(manager, account, null);
         manager.add(new Separator());
 
-        manager.add(new Action(Messages.AccountMenuImportCSV)
-        {
-            @Override
-            public void run()
-            {
-                Client client = getClient();
-                Shell shell  = Display.getDefault().getActiveShell();
-                String filterPath = (getPart().getClientFileName() == null?System.getProperty("user.dir"):getPart().getClientFileName().getParent().toString()); //$NON-NLS-1$
+        String filterPath = (getPart().getClientFileName() == null?System.getProperty("user.dir"):getPart().getClientFileName().getParent().toString()); //$NON-NLS-1$
+        manager.add(new SimpleAction(Messages.AccountMenuImportCSV, a -> ImportCSVHandler.runImport(getPart(),
+                        Display.getDefault().getActiveShell(), getClient(), filterPath, account, null)));
 
-                FileDialog fileDialog = new FileDialog(shell, SWT.OPEN);
-                fileDialog.setFilterPath(filterPath);
-                fileDialog.setFilterNames(new String[] { Messages.CSVImportLabelFileCSV, Messages.CSVImportLabelFileAll });
-                fileDialog.setFilterExtensions(new String[] { "*.csv", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-                String fileName = fileDialog.open();
+        manager.add(new SimpleAction(Messages.AccountMenuImportPDF, a -> ImportPDFHandler.runImport(getPart(),
+                        Display.getDefault().getActiveShell(), getClient(), filterPath, account, null)));
 
-                if (fileName == null)
-                    return;
-
-                IPreferenceStore preferences = getPart().getPreferenceStore();
-                CSVImportWizard wizard = new CSVImportWizard(client, preferences, new File(fileName));
-                wizard.setTarget(account);
-                Dialog wizwardDialog = new WizardDialog(shell, wizard);
-                if (wizwardDialog.open() != Dialog.OK)
-                    return;
-
-                markDirty();
-                resetInput();
-            }
-
-        });
-
-        manager.add(new Action(Messages.AccountMenuImportPDF)
-        {
-            @Override
-            public void run()
-            {
-                Client client = getClient();
-                Shell shell  = Display.getDefault().getActiveShell();
-                String filterPath = (getPart().getClientFileName() == null?System.getProperty("user.dir"):getPart().getClientFileName().getParent().toString()); //$NON-NLS-1$
-
-                ImportPDFHandler.runImport(getPart(), shell, client, filterPath, account, null);
-            }
-
-        });
-
-
-        manager.add(new Action(account.isRetired() ? Messages.AccountMenuActivate : Messages.AccountMenuDeactivate)
-        {
-            @Override
-            public void run()
-            {
-                account.setRetired(!account.isRetired());
-                markDirty();
-                resetInput();
-            }
-
-        });
+        manager.add(new SimpleAction(
+                        account.isRetired() ? Messages.AccountMenuActivate : Messages.AccountMenuDeactivate, a -> {
+                            account.setRetired(!account.isRetired());
+                            markDirty();
+                            resetInput();
+                        }));
 
         manager.add(new ConfirmAction(Messages.AccountMenuDelete,
                         MessageFormat.format(Messages.AccountMenuDeleteConfirm, account.getName()), //

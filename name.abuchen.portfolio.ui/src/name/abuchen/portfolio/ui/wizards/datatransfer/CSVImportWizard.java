@@ -16,6 +16,7 @@ import name.abuchen.portfolio.datatransfer.actions.InsertAction;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.ui.Images;
@@ -77,6 +78,11 @@ public class CSVImportWizard extends Wizard
      */
     private Account account;
 
+    /**
+     * If a target portfolio is given, then portfolio is preselected to be imported
+     */
+    private Portfolio portfolio;
+
     private CSVImportDefinitionPage definitionPage;
     private ReviewExtractedItemsPage reviewPage;
     private SelectSecurityPage selectSecurityPage;
@@ -87,6 +93,11 @@ public class CSVImportWizard extends Wizard
         this.preferences = preferences;
         this.importer = new CSVImporter(client, inputFile);
         setWindowTitle(MessageFormat.format(Messages.CSVImportWizardTitle, inputFile.toString()));
+    }
+
+    public void setTarget(Portfolio target)
+    {
+        this.portfolio = target;
     }
 
     public void setTarget(Security target)
@@ -117,7 +128,10 @@ public class CSVImportWizard extends Wizard
         
         reviewPage = new ReviewExtractedItemsPage(client, new ExtractorProxy(importer), preferences,
                         Arrays.asList(new Extractor.InputFile(importer.getInputFile())), REVIEW_PAGE_ID);
-        reviewPage.setAccount(account);
+        if (account != null)
+            reviewPage.setAccount(account);
+        if (portfolio != null)
+            reviewPage.setPortfolio(portfolio);
         reviewPage.setDoExtractBeforeEveryPageDisplay(true);
         addPage(reviewPage);
 

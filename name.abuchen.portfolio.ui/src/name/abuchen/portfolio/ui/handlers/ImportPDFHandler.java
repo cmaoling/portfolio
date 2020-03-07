@@ -59,7 +59,7 @@ public class ImportPDFHandler
 
     private void runImport(MPart part, Shell shell, Client client)
     {
-        runImport((PortfolioPart) part.getObject(), shell, client, "", null, null); // $NON-NLS-1$
+        runImport((PortfolioPart) part.getObject(), shell, client, "", null, null); //$NON-NLS-1$
     }
 
     public static void runImport(PortfolioPart part, Shell shell, Client client, String filterPath, Account account, Portfolio portfolio)
