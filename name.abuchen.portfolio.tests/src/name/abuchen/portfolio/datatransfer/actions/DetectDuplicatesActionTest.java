@@ -191,14 +191,16 @@ public class DetectDuplicatesActionTest
                     change.getWriteMethod().invoke(similar,
                                     alternative(change.getPropertyType(), change.getReadMethod().invoke(similar)));
                     afterTransaction = (AccountTransaction) similar;
-                } while ((beforeTransaction.getType().isCredit() != afterTransaction.getType().isCredit()) || (afterTransaction.getType().toString().equals(beforeTransaction.getType().toString())));
+                }
+                while ((beforeTransaction.getType().isCredit() != afterTransaction.getType().isCredit()) || (afterTransaction.getType().toString().equals(beforeTransaction.getType().toString())));
                 intermediate.accept(change.getName(), instance, similar);
                 do
                 {
                     change.getWriteMethod().invoke(other,
                                     alternative(change.getPropertyType(), change.getReadMethod().invoke(other)));
                     afterTransaction = (AccountTransaction) other;
-                } while (beforeTransaction.getType().isCredit() == afterTransaction.getType().isCredit());
+                }
+                while (beforeTransaction.getType().isCredit() == afterTransaction.getType().isCredit());
             }
             else
             {
