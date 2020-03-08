@@ -320,6 +320,19 @@ public class PerformanceView extends AbstractHistoricView
                 }
                 return null;
             }
+
+            @Override
+            public String getToolTipText(Object element)
+            {
+                if (!(element instanceof ClientPerformanceSnapshot.Position))
+                    return null;
+
+                ClientPerformanceSnapshot.Position position = (ClientPerformanceSnapshot.Position) element;
+
+                return position.explain(ClientPerformanceSnapshot.Position.TRAIL_FOREX_GAIN).isPresent()
+                                ? ClientPerformanceSnapshot.Position.TRAIL_FOREX_GAIN
+                                : null;
+            }
         });
         support.addColumn(column);
 
