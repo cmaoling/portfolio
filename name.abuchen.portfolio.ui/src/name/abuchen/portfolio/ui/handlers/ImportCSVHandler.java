@@ -37,7 +37,7 @@ public class ImportCSVHandler
     public void execute(@Named(IServiceConstants.ACTIVE_PART) MPart part,
                     @Named(IServiceConstants.ACTIVE_SHELL) Shell shell)
     {
-        MenuHelper.getActiveClient(part).ifPresent(client -> runImport((PortfolioPart) part, shell, client, "", null, null)); //$NON-NLS-1$ 
+        MenuHelper.getActiveClient(part).ifPresent(client -> runImport((PortfolioPart) part.getObject(), shell, client, "", null, null)); //$NON-NLS-1$
     }
     
     public static void runImport(PortfolioPart part, Shell shell, Client client, String filterPath, Account account, Portfolio portfolio)
