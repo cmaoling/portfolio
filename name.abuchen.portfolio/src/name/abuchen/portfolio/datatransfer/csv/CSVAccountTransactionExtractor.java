@@ -62,6 +62,7 @@ import name.abuchen.portfolio.money.Money;
         fields.add(new AmountField(Messages.CSVColumn_Shares).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_Note).setOptional(true));
         fields.add(new AmountField(Messages.CSVColumn_Taxes).setOptional(true));
+        fields.add(new AmountField(Messages.CSVColumn_Fees).setOptional(true));
         fields.add(new IBANField(Messages.CSVColumn_IBAN).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_PartnerName).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_AccountName).setOptional(true)); //$NON-NLS-1$
@@ -91,6 +92,7 @@ import name.abuchen.portfolio.money.Money;
         String note = getText(Messages.CSVColumn_Note, rawValues, field2column);
         Long shares = getShares(Messages.CSVColumn_Shares, rawValues, field2column);
         Long taxes = getAmount(Messages.CSVColumn_Taxes, rawValues, field2column);
+        Long fees = getAmount(Messages.CSVColumn_Fees, rawValues, field2column);
 
         Account account = getAccount(getClient(), rawValues, field2column);
         Account account2nd = getAccount(getClient(), rawValues, field2column, true);
@@ -148,7 +150,27 @@ import name.abuchen.portfolio.money.Money;
                 buySellEntry.setSecurity(security);
                 buySellEntry.setDate(date);
                 buySellEntry.setNote(note);
-                item = new BuySellEntryItem(buySellEntry);
+
+                if (taxes != null && taxes.longValue() != 0)
+                    buySellEntry.getPortfolioTransaction().addUnit(new Unit(Unit.Type.TAX, Money
+                                    .of(buySellEntry.getPortfolioTransaction().getCurrencyCode(), Math.abs(taxes))));
+
+                if (fees != null && fees.longValue() != 0)
+                    buySellEntry.getPortfolioTransaction().addUnit(new Unit(Unit.Type.FEE, Money
+                                    .of(buySellEntry.getPortfolioTransaction().getCurrencyCode(), Math.abs(fees))));
+
+                if (buySellEntry.getPortfolioTransaction().getAmount() == 0L
+                                && buySellEntry.getPortfolioTransaction().getType() == PortfolioTransaction.Type.SELL)
+                {
+                    // convert to outbound delivery if amount is 0
+                    PortfolioTransaction tx = buySellEntry.getPortfolioTransaction();
+                    item = new TransactionItem(convertToOutboundDelivery(tx));
+                }
+                else
+                {
+                    item = new BuySellEntryItem(buySellEntry);
+                }
+
                 break;
             case DIVIDENDS:
             case DIVIDEND_CHARGE:
@@ -209,6 +231,20 @@ import name.abuchen.portfolio.money.Money;
 
         // TODO: still needed for debug? for (Item item : items)
         // TODO: still needed for debug?     System.err.println("CSVAccountTransactionExtratctor:extract items: " + item.getClass().toString() + " = " + item.toString() );         //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    private PortfolioTransaction convertToOutboundDelivery(PortfolioTransaction tx)
+    {
+        PortfolioTransaction delivery = new PortfolioTransaction();
+        delivery.setType(PortfolioTransaction.Type.DELIVERY_OUTBOUND);
+        delivery.setDateTime(tx.getDateTime());
+        delivery.setAmount(tx.getAmount());
+        delivery.setCurrencyCode(tx.getCurrencyCode());
+        delivery.setShares(tx.getShares());
+        delivery.setSecurity(tx.getSecurity());
+        delivery.setNote(tx.getNote());
+        delivery.addUnits(tx.getUnits());
+        return delivery;
     }
 
     protected Type inferType(String[] rawValues, Map<String, Column> field2column, Security security, Money amount)
