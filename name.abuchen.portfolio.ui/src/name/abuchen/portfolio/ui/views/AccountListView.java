@@ -39,6 +39,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
@@ -352,8 +353,8 @@ public class AccountListView extends AbstractListView implements ModificationLis
                 if (wizwardDialog.open() != Dialog.OK)
                     return;
 
-                markDirty();
-                resetInput();
+                //markDirty();
+                //re7setInput();
             }
 
         });
@@ -372,6 +373,42 @@ public class AccountListView extends AbstractListView implements ModificationLis
 
         });
 
+
+        manager.add(new Action("Dummy Starter") //$NON-NLS-1$
+        {
+            @Override
+            public void run()
+            {
+                Client client = getClient();
+                Shell shell  = Display.getDefault().getActiveShell();
+                String filterPath = (getPart().getClientFileName() == null?System.getProperty("user.dir"):getPart().getClientFileName().getParent().toString()); //$NON-NLS-1$
+
+             // taken from on http://www.java2s.com/Code/Java/SWT-JFace-Eclipse/DemonstratestheDirectoryDialogclass.htm
+                DirectoryDialog dlg = new DirectoryDialog(shell);
+
+                // Set the initial filter path according
+                // to anything they've selected or typed in
+                dlg.setFilterPath(client.getBackupDirectory().toString());
+
+                // Change the title bar text
+                dlg.setText("SWT's DirectoryDialog");
+
+                // Customizable message displayed in the dialog
+                dlg.setMessage("Select a directory");
+
+                // Calling open() will open and run the dialog.
+                // It will return the selected directory, or
+                // null if user cancels
+                String dir = dlg.open();
+                if (dir != null) {
+                  // Set the text box to the new selection
+                    System.err.println(">>>> AccoutnListView::getDirectory "  + dir);
+                    client.setBackupDirectory(dir);
+
+                }
+            }
+
+        });
 
         manager.add(new Action(account.isRetired() ? Messages.AccountMenuActivate : Messages.AccountMenuDeactivate)
         {
