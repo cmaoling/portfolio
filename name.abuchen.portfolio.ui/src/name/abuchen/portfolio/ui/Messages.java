@@ -813,7 +813,6 @@ public class Messages extends NLS
     public static String MsgAccountFromMissing;
     public static String MsgAccountMustBeDifferent;
     public static String MsgAccountToMissing;
-    public static String MsgCannotRestartBecauseOfOpenDialog;
     public static String MsgConfirmInstall;
     public static String MsgCreateTransactionsAutomaticallyUponOpening;
     public static String MsgDateIsInTheFuture;
