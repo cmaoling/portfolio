@@ -374,7 +374,7 @@ public class HTMLTableQuoteFeed extends QuoteFeed
                             .get());
             return parse(url, document, errors);
         }
-        catch (URISyntaxException | IOException e)
+        catch (URISyntaxException | IOException | Error e)
         {
             errors.add(new IOException(url + '\n' + e.getMessage(), e));
             return Collections.emptyList();
