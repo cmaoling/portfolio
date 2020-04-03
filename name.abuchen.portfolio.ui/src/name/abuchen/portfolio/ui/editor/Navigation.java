@@ -410,9 +410,7 @@ public final class Navigation
         masterData.add(new Item(Messages.LabelInvestmentPlans, Images.INVESTMENTPLAN, InvestmentPlanListView.class));
         masterData.add(new Item(Messages.LabelPeers, Images.PEER, PeerListView.class));
 
-        Item allTransactions = new Item(Messages.LabelAllTransactions, AllTransactionsView.class);
-        allTransactions.addTag(Tag.HIDE);
-        masterData.add(allTransactions);
+        masterData.add(new Item(Messages.LabelAllTransactions, AllTransactionsView.class));
     }
 
     private void createPerformanceSection()
@@ -435,10 +433,7 @@ public final class Navigation
         performance.add(new Item(Messages.ClientEditorLabelReturnsVolatility, ReturnsVolatilityChartView.class));
         performance.add(new Item(Messages.LabelSecurities, SecuritiesPerformanceView.class));
         performance.add(new Item(Messages.LabelEarningsExpenses, EarningsView.class));
-
-        Item allTrades = new Item(Messages.LabelTrades, TradeDetailsView.class);
-        allTrades.addTag(Tag.HIDE);
-        performance.add(allTrades);
+        performance.add(new Item(Messages.LabelTrades, TradeDetailsView.class));
     }
 
     private void createTaxonomyDataSection(Client client)
