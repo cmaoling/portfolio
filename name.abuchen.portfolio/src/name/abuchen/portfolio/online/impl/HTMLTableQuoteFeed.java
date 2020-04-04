@@ -171,7 +171,7 @@ public class HTMLTableQuoteFeed extends QuoteFeed
         public CloseColumn()
         {
             super(new String[] { "Schluss.*", "Schluß.*", "Rücknahmepreis.*", "Close.*", "Zuletzt", "Price",
-                            "akt. Kurs" });
+                            "akt. Kurs", "Dernier" });
         }
 
         public CloseColumn(String[] patterns)
