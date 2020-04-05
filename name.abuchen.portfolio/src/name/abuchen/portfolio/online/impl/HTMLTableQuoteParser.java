@@ -1,18 +1,15 @@
 package name.abuchen.portfolio.online.impl;
 
 import java.text.ParseException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import org.jsoup.nodes.Element;
 
 import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.SecurityElement;
-import name.abuchen.portfolio.util.TextUtil;
+import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.util.Pair;
 
 public class HTMLTableQuoteParser extends HTMLTableParser
 {
@@ -31,7 +28,7 @@ public class HTMLTableQuoteParser extends HTMLTableParser
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends SecurityElement> List<T> castList(List<Object> Olist, Class<T> clazz, List<Exception> errors)
+    private <T extends SecurityElement> List<T> castList(List<Object> Olist, Class<T> clazz, QuoteFeedData data)
     {
         List<T> Tlist = new ArrayList<>();
         for (Object obj : Olist)
@@ -39,70 +36,49 @@ public class HTMLTableQuoteParser extends HTMLTableParser
             if (obj instanceof SecurityElement)
                 Tlist.add((T) obj); // need to cast each object specifically
             else
-                errors.add(new ClassCastException());
+                data.addError(new ClassCastException());
         }
         return Tlist;
     }
-    
-    public List<LatestSecurityPrice> parseFromURL(String url, List<Exception> errors)
+ 
+    @SuppressWarnings("unchecked")
+    private <T extends SecurityElement> Pair<String, List<T>> castPair(Pair<String, List<Object>> pair, Class<T> clazz, QuoteFeedData data)
     {
-        return castList(super._parseFromURL(url, errors), LatestSecurityPrice.class, errors);
-    }
-
-    public List<LatestSecurityPrice> parseFromHTML(String html, List<Exception> errors)
-    {
-        return castList(super._parseFromHTML(html, errors), LatestSecurityPrice.class, errors);
-    }
-    
-    private static class DateColumn extends Column
-    {
-        private DateTimeFormatter[] formatters;
-
-        @SuppressWarnings("nls")
-        public DateColumn()
+        List<T> Tlist = new ArrayList<>();
+        List<Object> Olist = pair.getValue();
+        for (Object obj : Olist)
         {
-            super(new String[] { "Datum", "Date" });
-
-            formatters = new DateTimeFormatter[] { DateTimeFormatter.ofPattern("y-M-d"), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("d.M.yy"), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("d.M.y"), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("d. MMM y"), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("d. MMMM y"), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("d. MMM. y"), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("MMM dd, y", Locale.ENGLISH) //$NON-NLS-1$
-            };
+            if (obj instanceof SecurityElement)
+                Tlist.add((T) obj); // need to cast each object specifically
+            else
+                data.addError(new ClassCastException());
         }
-
-        @Override
-        public void setValue(Element value, Object obj, String languageHint) throws ParseException
-        {
-            LatestSecurityPrice price = (LatestSecurityPrice) obj;
-            String text = TextUtil.strip(value.text());
-            for (int ii = 0; ii < formatters.length; ii++)
-            {
-                try
-                {
-                    LocalDate date = LocalDate.parse(text, formatters[ii]);
-                    price.setDate(date);
-                    return;
-                }
-                catch (DateTimeParseException e) // NOSONAR
-                {
-                    // continue with next pattern
-                }
-            }
-
-            throw new ParseException(text, 0);
-        }
+        return new Pair<>(pair.getKey(), Tlist);
+    }
+    
+    public Pair<String, List<LatestSecurityPrice>> parseFromURL(String url, QuoteFeedData data)
+    {
+        return castPair(super._parseFromURL(url, data), LatestSecurityPrice.class, data);
     }
 
-    private static class CloseColumn extends Column
+    public List<LatestSecurityPrice> parseFromHTML(String html, QuoteFeedData data)
+    {
+        return castList(super._parseFromHTML(html, data), LatestSecurityPrice.class, data);
+    }
+    
+    protected static class CloseColumn extends Column
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         @SuppressWarnings("nls")
         public CloseColumn()
         {
             super(new String[] { "Schluss.*", "Schluß.*", "Rücknahmepreis.*", "Close.*", "Zuletzt", "Price",
-                            "akt. Kurs" });
+                            "akt. Kurs", "Dernier" });
+        }
+
+        public CloseColumn(String[] patterns)
+        {
+            super(patterns);
         }
 
         @Override
@@ -113,12 +89,18 @@ public class HTMLTableQuoteParser extends HTMLTableParser
         }
     }
 
-    private static class HighColumn extends Column
+    protected static class HighColumn extends Column
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         @SuppressWarnings("nls")
         public HighColumn()
         {
             super(new String[] { "Hoch.*", "Tageshoch.*", "Max.*", "High.*" });
+        }
+
+        public HighColumn(String[] patterns)
+        {
+            super(patterns);
         }
 
         @Override
@@ -132,12 +114,18 @@ public class HTMLTableQuoteParser extends HTMLTableParser
         }
     }
 
-    private static class LowColumn extends Column
+    protected static class LowColumn extends Column
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         @SuppressWarnings("nls")
         public LowColumn()
         {
             super(new String[] { "Tief.*", "Tagestief.*", "Low.*" });
+        }
+
+        public LowColumn(String[] patterns)
+        {
+            super(patterns);
         }
 
         @Override
@@ -152,6 +140,7 @@ public class HTMLTableQuoteParser extends HTMLTableParser
     }
 
     private static class VolumeColumn extends Column
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         @SuppressWarnings("nls")
         public VolumeColumn()
@@ -172,6 +161,7 @@ public class HTMLTableQuoteParser extends HTMLTableParser
     
     @Override
     protected boolean isSpecValid(List<Spec> specs)
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         if (specs == null || specs.isEmpty())
             return false;

@@ -48,12 +48,11 @@ import name.abuchen.portfolio.model.Exchange;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.online.QuoteFeed;
 import name.abuchen.portfolio.online.impl.AlphavantageQuoteFeed;
-import name.abuchen.portfolio.online.impl.CSQuoteFeed;
+//import name.abuchen.portfolio.online.impl.CSQuoteFeed;
 import name.abuchen.portfolio.online.impl.EurostatHICPQuoteFeed;
 import name.abuchen.portfolio.online.impl.FinnhubQuoteFeed;
 import name.abuchen.portfolio.online.impl.GenericJSONQuoteFeed;
 import name.abuchen.portfolio.online.impl.HTMLTableQuoteFeed;
-import name.abuchen.portfolio.online.impl.OldHTMLTableQuoteFeed;
 import name.abuchen.portfolio.online.impl.PortfolioReportQuoteFeed;
 import name.abuchen.portfolio.online.impl.QuandlQuoteFeed;
 import name.abuchen.portfolio.ui.Images;
@@ -392,8 +391,8 @@ public abstract class AbstractQuoteProviderPage extends AbstractPage
                                         || feed.getId().equals(PortfolioReportQuoteFeed.ID));
 
         boolean feedURL = feed != null && feed.getId() != null && (feed.getId().equals(HTMLTableQuoteFeed.ID)
-                        || feed.getId().equals(OldHTMLTableQuoteFeed.ID)
-                        || feed.getId().equals(CSQuoteFeed.ID) || feed.getId().equals(GenericJSONQuoteFeed.ID));
+//                        || feed.getId().equals(CSQuoteFeed.ID)
+                        || feed.getId().equals(GenericJSONQuoteFeed.ID));
 
         boolean needsTicker = feed != null && feed.getId() != null
                         && (feed.getId().equals(AlphavantageQuoteFeed.ID) || feed.getId().equals(FinnhubQuoteFeed.ID));

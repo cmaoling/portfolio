@@ -1,21 +1,14 @@
 package name.abuchen.portfolio.online.impl;
 
 import java.text.ParseException;
-import java.time.LocalDate;
-import java.time.Year;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoField;
 import java.util.List;
-import java.util.Locale;
 
 import org.jsoup.nodes.Element;
 
 import name.abuchen.portfolio.model.SecurityElement;
 import name.abuchen.portfolio.model.SecurityEvent;
 import name.abuchen.portfolio.money.Monetary;
-import name.abuchen.portfolio.util.TextUtil;
+import name.abuchen.portfolio.online.QuoteFeedData;
 
 public class HTMLTableEventParser extends HTMLTableParser
 {
@@ -32,58 +25,15 @@ public class HTMLTableEventParser extends HTMLTableParser
         return (SecurityEvent) event;
     }
 
-    public List<SecurityElement> parseFromURL(String url, List<Exception> errors)
+    public List<SecurityElement> parseFromURL(String url, QuoteFeedData data)
     {
-        return SecurityElement.cast2ElementList(super._parseFromURL(url, errors));
+        return SecurityElement.cast2ElementList(super._parseFromURL(url, data).getValue());
     }
 
-    public List<SecurityElement> parseFromHTML(String html, List<Exception> errors)
+    public List<SecurityElement> parseFromHTML(String html, QuoteFeedData data)
     {
-        return SecurityElement.cast2ElementList(super._parseFromHTML(html, errors));
+        return SecurityElement.cast2ElementList(super._parseFromHTML(html, data));
     }
-    
-    private static class DateColumn extends Column
-    {
-        private DateTimeFormatter[] formatters;
-
-        @SuppressWarnings("nls")
-        public DateColumn()
-        {
-            super(new String[] { "Datum", "Date" });
-
-            formatters = new DateTimeFormatter[] { DateTimeFormatter.ofPattern("y-M-d"),
-                            new DateTimeFormatterBuilder().appendPattern("d.M.").appendValueReduced(ChronoField.YEAR, 2, 2, Year.now().getValue() - 80).toFormatter(), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("d.M.y"), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("d. MMM y"), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("d. MMMM y"), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("d. MMM. y"), //$NON-NLS-1$
-                            DateTimeFormatter.ofPattern("MMM dd, y", Locale.ENGLISH) //$NON-NLS-1$
-            };
-        }
-
-        @Override
-        public void setValue(Element value, Object obj, String languageHint) throws ParseException
-        {
-            SecurityEvent event = (SecurityEvent) obj;
-            String text = TextUtil.strip(value.text());
-            for (int ii = 0; ii < formatters.length; ii++)
-            {
-                try
-                {
-                    LocalDate date = LocalDate.parse(text, formatters[ii]);
-                    event.setDate(date);
-                    return;
-                }
-                catch (DateTimeParseException e) // NOSONAR
-                {
-                    // continue with next pattern
-                }
-            }
-
-            throw new ParseException(text, 0);
-        }
-    }
-
 
     private static class TypeColumn extends Column
     {

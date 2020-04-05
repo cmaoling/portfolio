@@ -1,101 +1,82 @@
 package name.abuchen.portfolio.online;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Optional;
 
+import name.abuchen.portfolio.PortfolioLog;
+import name.abuchen.portfolio.model.Exchange;
 import name.abuchen.portfolio.model.LatestSecurityPrice;
-import name.abuchen.portfolio.model.SecurityElement;
 import name.abuchen.portfolio.model.Security;
-import name.abuchen.portfolio.money.Values;
-import name.abuchen.portfolio.online.impl.HTMLTableQuoteParser;
+import name.abuchen.portfolio.model.SecurityPrice;
 
-public abstract class QuoteFeed extends Feed
+public interface QuoteFeed extends Feed // NOSONAR
 {
-    public static String ID = "QUOTE"; //$NON-NLS-1$
+    String ID = "QUOTE"; //$NON-NLS-1$
+
+    /**
+     * Returns the technical identifier of the quote feed.
+     */
+    @Override
+    default String getId()
+    {
+        return ID;
+    }
+
+    /**
+     * Returns the display name of the quote feed.
+     */
+    @Override
+    default String getName()
+    {
+        return "QuoteFeed"; //$NON-NLS-1$
+    }
 
     /**
      * Returns the help URL to be shown to the user.
      */
-    public Optional<String> getHelpURL()
+    default Optional<String> getHelpURL()
     {
         return Optional.empty();
     }
 
-    abstract public boolean updateLatestQuotes(Security security, List<Exception> errors);
-
-    abstract public boolean updateHistoricalQuotes(Security security, List<Exception> errors);
-
-    abstract public List<LatestSecurityPrice> getHistoricalQuotes(Security security, LocalDate start, List<Exception> errors);
-
-    abstract public List<LatestSecurityPrice> getHistoricalQuotes(String response, List<Exception> errors);
-
-    @Override
-    public boolean updateLatest(Security security, List<Exception> errors)
+    /**
+     * Update the latest quote of the given securities.
+     */
+    default Optional<LatestSecurityPrice> getLatestQuote(Security security)
     {
-        return updateLatestQuotes(security, errors);
+        QuoteFeedData data = getHistoricalQuotes(security);
+        
+        if (!data.getErrors().isEmpty())
+            PortfolioLog.error(data.getErrors());
+        
+        List<LatestSecurityPrice> prices = data.getLatestPrices();
+        if (prices.isEmpty())
+            return Optional.empty();
+        
+        Collections.sort(prices, new SecurityPrice.ByDate());
+        
+        return Optional.of(prices.get(prices.size() - 1));
+    }
+
+    /**
+     * Retrieves the historical quotes of the given security. The quote provider
+     * may reduce the response to only include newly updated quotes.
+     */
+    QuoteFeedData getHistoricalQuotes(Security security);
+
+    /**
+     * Retrieves a sample of historical quotes of the given security. The list
+     * of quotes may be reduced to the last 2 months or latest 100 entries.
+     */
+    default QuoteFeedData previewHistoricalQuotes(Security security)
+    {
+        return getHistoricalQuotes(security);
     }
 
     @Override
-    public boolean updateHistorical(Security security, List<Exception> errors)
+    default List<Exchange> getExchanges(Security subject, List<Exception> errors)
     {
-        return updateHistoricalQuotes(security, errors);
-    }
-
-    @Override
-    public final List<SecurityElement> get(Security security, LocalDate start, List<Exception> errors)
-    {
-        return SecurityElement.cast2ElementList(getHistoricalQuotes(security, start, errors));
-    }
-
-    @Override
-    public final List<SecurityElement> get(String response, List<Exception> errors)
-    {
-        return SecurityElement.cast2ElementList(getHistoricalQuotes(response, errors));
-    }
-
-    @Override
-    @SuppressWarnings("nls")
-    protected void doLoad(String source, PrintWriter writer) throws IOException
-    {
-        writer.println("--------");
-        writer.println(source);
-        writer.println("--------");
-
-        List<LatestSecurityPrice> prices;
-        List<Exception> errors = new ArrayList<>();
-
-        if (source.startsWith("http"))
-        {
-            prices = new HTMLTableQuoteParser().parseFromURL(source, errors);
-        }
-        else
-        {
-            try (Scanner scanner = new Scanner(new File(source), StandardCharsets.UTF_8.name()))
-            {
-                String html = scanner.useDelimiter("\\A").next();
-                prices = new HTMLTableQuoteParser().parseFromHTML(html, errors);
-            }
-        }
-
-        for (Exception error : errors)
-            error.printStackTrace(writer); // NOSONAR
-
-        for (LatestSecurityPrice p : prices)
-        {
-            writer.print(Values.Date.format(p.getDate()));
-            writer.print("\t");
-            writer.print(Values.Quote.format(p.getValue()));
-            writer.print("\t");
-            writer.print(Values.Quote.format(p.getLow()));
-            writer.print("\t");
-            writer.println(Values.Quote.format(p.getHigh()));
-        }
+        return Collections.emptyList();
     }
 }

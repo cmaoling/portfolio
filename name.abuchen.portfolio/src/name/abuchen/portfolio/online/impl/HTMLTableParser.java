@@ -1,26 +1,43 @@
 package name.abuchen.portfolio.online.impl;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.MessageFormat;
+import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.Year;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.jsoup.Jsoup;
+import org.jsoup.UncheckedIOException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.jsoup.safety.Whitelist;
 
 import name.abuchen.portfolio.Messages;
+import name.abuchen.portfolio.model.SecurityElement;
+import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.util.OnlineHelper;
+import name.abuchen.portfolio.util.Pair;
+import name.abuchen.portfolio.util.TextUtil;
+import name.abuchen.portfolio.util.WebAccess;
 
 abstract class HTMLTableParser
 {
-    protected GenericPageCache cache = new GenericPageCache();
+    protected GenericPageCache<Pair<String, List<Object>>> cache = new GenericPageCache<>();
  
+    // from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     protected static class Spec
     {
         private final Column column;
@@ -38,6 +55,76 @@ abstract class HTMLTableParser
         }
     }
 
+    // from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
+    protected static class HeaderInfo
+    {
+        private final int rowIndex;
+        private final int numberOfHeaderColumns;
+
+        public HeaderInfo(int rowIndex, int numberOfHeaderColumns)
+        {
+            this.rowIndex = rowIndex;
+            this.numberOfHeaderColumns = numberOfHeaderColumns;
+        }
+    }
+
+
+    protected static class DateColumn extends Column
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
+    {
+        private DateTimeFormatter[] formatters;
+
+        @SuppressWarnings("nls")
+        public DateColumn()
+        {
+            this(new String[] { "Datum.*", "Date.*" });
+        }
+
+        @SuppressWarnings("nls")
+        public DateColumn(String[] patterns)
+        {
+            super(patterns);
+
+            formatters = new DateTimeFormatter[] { DateTimeFormatter.ofPattern("y-M-d"),
+                            // https://stackoverflow.com/a/29496149/1158146
+                            new DateTimeFormatterBuilder().appendPattern("d.M.")
+                                            .appendValueReduced(ChronoField.YEAR, 2, 2, Year.now().getValue() - 80)
+                                            .toFormatter(),
+                            DateTimeFormatter.ofPattern("d.M.yy"), //$NON-NLS-1$
+                            DateTimeFormatter.ofPattern("d.M.y"), //$NON-NLS-1$
+                            DateTimeFormatter.ofPattern("d. MMM y"), //$NON-NLS-1$
+                            DateTimeFormatter.ofPattern("d. MMMM y"), //$NON-NLS-1$
+                            DateTimeFormatter.ofPattern("d. MMM. y"), //$NON-NLS-1$
+                            DateTimeFormatter.ofPattern("MMM d, y", Locale.ENGLISH), //$NON-NLS-1$
+                            DateTimeFormatter.ofPattern("MMM dd, y", Locale.ENGLISH), //$NON-NLS-1$
+                            DateTimeFormatter.ofPattern("EEEE, MMMM dd, yEEE, MMM dd, y", Locale.ENGLISH) //$NON-NLS-1$
+            };
+        }
+
+        @Override
+        public void setValue(Element value, Object obj, String languageHint) throws ParseException
+        {
+            String text = TextUtil.strip(value.text());
+            for (int ii = 0; ii < formatters.length; ii++)
+            {
+                try
+                {
+                    LocalDate date = LocalDate.parse(text, formatters[ii]);
+                    if (date == null)
+                        throw new ParseException(text, 0);
+                    ((SecurityElement) obj).setDate(date);
+                    return;
+                }
+                catch (DateTimeParseException e) // NOSONAR
+                {
+                    // continue with next pattern
+                }
+            }
+
+            throw new ParseException(text, 0);
+        }
+    }
+
     public HTMLTableParser()
     {        
     }
@@ -45,61 +132,67 @@ abstract class HTMLTableParser
     public abstract <T extends Object> T newRowObject();
     
     protected Column[] COLUMNS = new Column[] {}; 
-    
-    @SuppressWarnings("nls")
-    protected List<Object> _parseFromURL(String url, List<Exception> errors)
+
+    protected String getUserAgent()
     {
-        List<Object> answer = cache.lookup(url);
+        return OnlineHelper.getUserAgent();
+    }
+
+    protected Pair<String, List<Object>> _parseFromURL(String url, QuoteFeedData data)
+    {
+        //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed: internalGetQuotes
+        Pair<String, List<Object>> answer = cache.lookup(url);
+
         if (answer != null)
+        {
             return answer;
-
-        // without a user agent, some sites serve a mobile/alternative version
-        String userAgent;
-
-        String os = System.getProperty("os.name", "unknown").toLowerCase();
-        if (os.startsWith("windows"))
-            userAgent = "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1700.77 Safari/537.36";
-        else if (os.startsWith("mac"))
-            userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_1) AppleWebKit/537.73.11 (KHTML, like Gecko) Version/7.0.1 Safari/537.73.11";
-        else
-            userAgent = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:25.0) Gecko/20100101 Firefox/25.0";
-
+        }
         try
         {
-            String escapedUrl = new URI(url).toASCIIString();
-            answer = parse(Jsoup.connect(escapedUrl).userAgent(userAgent).timeout(30000).get(), errors);
-            if (!answer.isEmpty())
+            String html = new WebAccess(url) //
+                            .addUserAgent(getUserAgent()) //
+                            .get();
+
+            Document document = Jsoup.parse(html);
+            List<Object>  oList = parse(url, document, data);
+            answer = new Pair<>(html, oList);
+            if (!answer.getRight().isEmpty())
                 cache.put(url, answer);
+
             return answer;
         }
-        catch (URISyntaxException | IOException e)
+        catch (URISyntaxException | IOException | UncheckedIOException e)
         {
-            errors.add(e);
-            return Collections.emptyList();
+            data.addError(new IOException(url + '\n' + e.getMessage(), e));
+            return new Pair<>(e.getMessage(), Collections.emptyList());
         }
     }
 
-    protected List<Object> _parseFromHTML(String html, List<Exception> errors)
+    protected List<Object> _parseFromHTML(String html, QuoteFeedData data)
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
-        return parse(Jsoup.parse(html), errors);
+        return parse("n/a", Jsoup.parse(html), data); //$NON-NLS-1$
     }
 
     @SuppressWarnings("nls")
-    private int buildSpecFromTable(Element table, List<Spec> specs)
+    protected HeaderInfo buildSpecFromTable(Element table, List<Spec> specs)
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         // check if thead exists
         Elements header = table.select("> thead > tr > th");
         if (!header.isEmpty())
         {
             buildSpecFromRow(header, specs);
-            return 0;
+            if (!specs.isEmpty())
+                return new HeaderInfo(0, header.size());
         }
 
         header = table.select("> thead > tr > td");
         if (!header.isEmpty())
         {
             buildSpecFromRow(header, specs);
-            return 0;
+            if (!specs.isEmpty())
+                return new HeaderInfo(0, header.size());
         }
 
         // check if th exist in body
@@ -107,31 +200,37 @@ abstract class HTMLTableParser
         if (!header.isEmpty())
         {
             buildSpecFromRow(header, specs);
-            return 0;
+            if (!specs.isEmpty())
+                return new HeaderInfo(0, header.size());
         }
 
         // then check first two regular rows
         int rowIndex = 0;
 
         Elements rows = table.select("> tbody > tr");
+        Elements headerRow = null;
+
         if (!rows.isEmpty())
         {
             Element firstRow = rows.get(0);
-            buildSpecFromRow(firstRow.select("> td"), specs);
+            headerRow = firstRow.select("> td");
+            buildSpecFromRow(headerRow, specs);
             rowIndex++;
         }
 
         if (specs.isEmpty() && rows.size() > 1)
         {
             Element secondRow = rows.get(1);
-            buildSpecFromRow(secondRow.select("> td"), specs);
+            headerRow = secondRow.select("> td");
+            buildSpecFromRow(headerRow, specs);
             rowIndex++;
         }
 
-        return rowIndex;
+        return new HeaderInfo(rowIndex, headerRow != null ? headerRow.size() : 0);
     }
 
-    private <T extends Object> List<T> parse(Document document, List<Exception> errors)
+    protected <T extends Object> List<T> parse(String url, Document document, QuoteFeedData data)
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         // check if language is provided
         String language = document.select("html").attr("lang"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -144,45 +243,56 @@ abstract class HTMLTableParser
         {
             List<Spec> specs = new ArrayList<>();
 
-            int rowIndex = buildSpecFromTable(table, specs);
+            HeaderInfo headerInfo = buildSpecFromTable(table, specs);
+            int rowIndex = headerInfo.rowIndex;
 
             if (isSpecValid(specs))
             {
                 Elements rows = table.select("> tbody > tr"); //$NON-NLS-1$
 
                 int size = rows.size();
-                for (; rowIndex < size; rowIndex++)
+                if (size != 0)
                 {
-                    Element row = rows.get(rowIndex);
+                    for (; rowIndex < size; rowIndex++)
+                    {
+                        Element row = rows.get(rowIndex);
 
-                    try
-                    {
-                        T element = extractData(row, specs, language, errors);
-                        if (element != null)
-                            elementList.add(element);
+                        try
+                        {
+                            T element = extractData(row, specs, language, headerInfo.numberOfHeaderColumns, data);
+                            if (element != null)
+                                elementList.add(element);
+                        }
+                        catch (Exception e)
+                        {
+                            data.addError(new IOException(url + '\n' + e.getMessage(), e));
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        errors.add(e);
-                    }
+
+                    // skip all other tables
+                    break;
                 }
-
-                // skip all other tables
-                break;
             }
         }
 
         // if no quotes could be extract, log HTML for further analysis
         if (elementList.isEmpty())
-            errors.add(new IOException(MessageFormat.format(Messages.MsgNoMatchingTableFoundInHTML, document.html())));
+            data.addError(new IOException(MessageFormat.format(Messages.MsgNoQuotesFoundInHTML, url,
+                            Jsoup.clean(document.html(), Whitelist.relaxed()))));
         return elementList;
     }
 
-    private void buildSpecFromRow(Elements row, List<Spec> specs)
+    protected Column[] getColumns()
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
+    {
+        return COLUMNS;
+    }
+
+    protected void buildSpecFromRow(Elements row, List<Spec> specs)
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         Set<Column> available = new HashSet<>();
-        for (Column column : COLUMNS)
-            available.add(column);
+        Collections.addAll(available, getColumns());
 
         for (int ii = 0; ii < row.size(); ii++)
         {
@@ -205,12 +315,13 @@ abstract class HTMLTableParser
         return false;
     }
     
-    private <T extends Object> T extractData(Element row, List<Spec> specs, String languageHint, List<Exception> errors)
+    private <T extends Object> T extractData(Element row, List<Spec> specs, String languageHint, int numberOfHeaderColumns, QuoteFeedData data)
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         Elements cells = row.select("> td"); //$NON-NLS-1$
 
-        // row can be empty if it contains only 'th' elements
-        if (cells.size() <= 1)
+        // we're only looking at rows having the same size as the header row
+        if (cells.size() != numberOfHeaderColumns)
             return null;
 
         T obj = newRowObject();
@@ -225,7 +336,7 @@ abstract class HTMLTableParser
             }
             catch (Exception e)
             {
-                errors.add(new IOException(MessageFormat.format(Messages.MsgParsingFailedWithHTML, spec.column.toString(), spec.index,  cells.toString())));
+                data.addError(new IOException(MessageFormat.format(Messages.MsgParsingFailedWithHTML, spec.column.toString(), spec.index,  cells.toString())));
             }
         }
 
