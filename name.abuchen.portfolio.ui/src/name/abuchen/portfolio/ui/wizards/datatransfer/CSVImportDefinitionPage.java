@@ -389,9 +389,14 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
 
     private void doProcessFile()
     {
+        doProcessFile(true);
+    }
+
+    private void doProcessFile(boolean remap)
+    {
         try
         {
-            importer.processFile();
+            importer.processFile(remap);
 
             tableViewer.getTable().setRedraw(false);
 

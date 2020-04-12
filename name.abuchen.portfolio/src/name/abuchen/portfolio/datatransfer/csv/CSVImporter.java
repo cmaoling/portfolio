@@ -45,6 +45,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 import name.abuchen.portfolio.Messages;
+import name.abuchen.portfolio.PortfolioLog;
 import name.abuchen.portfolio.datatransfer.Extractor.Item;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;
@@ -790,10 +791,9 @@ public class CSVImporter
             if (remap)
                 this.columns = new Column[] { new Column(0, Messages.LabelError) };
 
-                List<String[]> reply = new ArrayList<>();
-                reply.add(new String[] { e.getMessage() });
-                this.values = reply;
-            }
+            List<String[]> reply = new ArrayList<>();
+            reply.add(new String[] { e.getMessage() });
+            this.values = reply;
         }
     }
 
@@ -809,7 +809,7 @@ public class CSVImporter
     {
         try (FileInputStream stream = new FileInputStream(inputFile))
         {
-            processStream(stream);
+            processStream(stream,remap);
         }
         catch (IOException e)
         {
@@ -820,7 +820,7 @@ public class CSVImporter
 
             try (InputStream stream = Files.newInputStream(path))
             {
-                processStream(stream);
+                processStream(stream,remap);
             }
             catch (IOException e2)
             {
