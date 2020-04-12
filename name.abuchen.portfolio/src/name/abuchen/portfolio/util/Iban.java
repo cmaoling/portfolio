@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.Strings;
 
 public class Iban
 {
@@ -93,7 +93,7 @@ public class Iban
         Matcher matcher = pattern.matcher(iban);
         if (matcher.matches())
         {
-            final String reformattedIban =  String.format("%2s%2s%18s", iban.substring(0, 2), Iban.DEFAULT_CHECK_DIGIT, StringUtils.leftPad(iban.substring(4), 18, '0')); //$NON-NLS-1$
+            final String reformattedIban =  String.format("%2s%2s%18s", iban.substring(0, 2), Iban.DEFAULT_CHECK_DIGIT, Strings.padStart(iban.substring(4), 18, '0')); //$NON-NLS-1$
             final int modResult = calculateMod(reformattedIban);
             final int checkDigitIntValue = (IBANNUMBER_MAGIC_NUMBER.intValue() + 1 - modResult);
             final String checkDigit = Integer.toString(checkDigitIntValue);
@@ -112,7 +112,7 @@ public class Iban
     public static final String DEconvert(String blz, String account) // NOSONAR
     {
         String country = "DE"; //$NON-NLS-1$
-        String iban = String.format("%2s%2s%8s%10s", country, "XX", StringUtils.leftPad(blz, 8, '0'), StringUtils.leftPad(account, 10, '0')); //$NON-NLS-1$ //$NON-NLS-2$
+        String iban = String.format("%2s%2s%8s%10s", country, "XX", Strings.padStart(blz, 8, '0'), Strings.padStart(account, 10, '0')); //$NON-NLS-1$ //$NON-NLS-2$
         iban = iban.substring(0, 2) + calculateCheckDigit(iban) + iban.substring(4);
         return iban;
     }
