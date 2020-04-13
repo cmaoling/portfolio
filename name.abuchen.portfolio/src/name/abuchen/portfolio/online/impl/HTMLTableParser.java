@@ -140,32 +140,38 @@ abstract class HTMLTableParser
 
     protected Pair<String, List<Object>> _parseFromURL(String url, QuoteFeedData data)
     {
+        return _parseFromURL(url, false, data);
+    }
+
+    protected Pair<String, List<Object>> _parseFromURL(String url, boolean collectRawResponse, QuoteFeedData data)
+    {
         //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed: internalGetQuotes
         Pair<String, List<Object>> answer = cache.lookup(url);
 
-        if (answer != null)
+        if (answer == null || (collectRawResponse && answer.getLeft().isEmpty()))
         {
-            return answer;
-        }
-        try
-        {
-            String html = new WebAccess(url) //
-                            .addUserAgent(getUserAgent()) //
-                            .get();
+            try
+            {
+                String html = new WebAccess(url) //
+                                .addUserAgent(getUserAgent()) //
+                                .get();
 
-            Document document = Jsoup.parse(html);
-            List<Object>  oList = parse(url, document, data);
-            answer = new Pair<>(html, oList);
-            if (!answer.getRight().isEmpty())
-                cache.put(url, answer);
+                Document document = Jsoup.parse(html);
+                List<Object>  oList = parse(url, document, data);
+                answer = new Pair<>(collectRawResponse ? html : "", oList);
+                if (!answer.getRight().isEmpty())
+                    cache.put(url, answer);
+            }
+            catch (URISyntaxException | IOException | UncheckedIOException e)
+            {
+                data.addError(new IOException(url + '\n' + e.getMessage(), e));
+                return new Pair<>(String.valueOf(e.getMessage()), Collections.emptyList());
+            }
+        }
 
-            return answer;
-        }
-        catch (URISyntaxException | IOException | UncheckedIOException e)
-        {
-            data.addError(new IOException(url + '\n' + e.getMessage(), e));
-            return new Pair<>(e.getMessage(), Collections.emptyList());
-        }
+        if (collectRawResponse)
+            data.addResponse(url, answer.getLeft());
+        return answer;
     }
 
     protected List<Object> _parseFromHTML(String html, QuoteFeedData data)

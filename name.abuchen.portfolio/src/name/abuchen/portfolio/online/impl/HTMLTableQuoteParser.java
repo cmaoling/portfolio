@@ -58,7 +58,12 @@ public class HTMLTableQuoteParser extends HTMLTableParser
     
     public Pair<String, List<LatestSecurityPrice>> parseFromURL(String url, QuoteFeedData data)
     {
-        return castPair(super._parseFromURL(url, data), LatestSecurityPrice.class, data);
+        return parseFromURL(url, false, data);
+    }
+
+    public Pair<String, List<LatestSecurityPrice>> parseFromURL(String url, boolean collectRawResponse, QuoteFeedData data)
+    {
+        return castPair(super._parseFromURL(url, collectRawResponse, data), LatestSecurityPrice.class, data);
     }
 
     public List<LatestSecurityPrice> parseFromHTML(String html, QuoteFeedData data)

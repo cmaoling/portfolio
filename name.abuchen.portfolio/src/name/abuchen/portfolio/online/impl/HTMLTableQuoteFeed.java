@@ -312,7 +312,7 @@ public class HTMLTableQuoteFeed implements QuoteFeed
         // as historic quotes'
         String feedURL = security.getLatestFeed() == null ? security.getFeedURL() : security.getLatestFeedURL();
 
-        QuoteFeedData data = internalGetQuotes(security, feedURL, false);
+        QuoteFeedData data = internalGetQuotes(security, feedURL, false, false);
 
         if (!data.getErrors().isEmpty())
             PortfolioLog.error(data.getErrors());
@@ -327,9 +327,9 @@ public class HTMLTableQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security)
+    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
-        return internalGetQuotes(security, security.getFeedURL(), false);
+        return internalGetQuotes(security, security.getFeedURL(), collectRawResponse, false);
     }
 
     public QuoteFeedData getHistoricalQuotes(String html)
@@ -342,10 +342,11 @@ public class HTMLTableQuoteFeed implements QuoteFeed
     @Override
     public QuoteFeedData previewHistoricalQuotes(Security security)
     {
-        return internalGetQuotes(security, security.getFeedURL(), true);
+        return internalGetQuotes(security, security.getFeedURL(), true, true);
     }
 
-    private QuoteFeedData internalGetQuotes(Security security, String feedURL, boolean isPreview)
+    private QuoteFeedData internalGetQuotes(Security security, String feedURL, boolean collectRawResponse,
+                    boolean isPreview)
     {
         if (feedURL == null || feedURL.length() == 0)
         {
@@ -365,18 +366,19 @@ public class HTMLTableQuoteFeed implements QuoteFeed
         for (String url : variableURL) // NOSONAR
         {
             // => name.abuchen.portfolio.online.impl/HTMLTableParser:_parseFromUrl
+            Pair<String, List<LatestSecurityPrice>> answer = Parser.parseFromURL(url, collectRawResponse, data);
             // Pair<String, List<LatestSecurityPrice>> answer = cache.lookup(url);
-            Pair<String, List<LatestSecurityPrice>> answer;
             //
-            //if (answer == null)
+            //if (answer == null || (collectRawResponse && answer.getLeft().isEmpty()))
             //{
-            answer = Parser.parseFromURL(url, data);
+            //     answer = parseFromURL(url, collectRawResponse, data);
             //
-            //    if (!answer.getRight().isEmpty())
-            //        cache.put(url, answer);
+            //     if (!answer.getRight().isEmpty())
+            //          cache.put(url, answer);
             //}
-            
-            data.addResponse(url, answer.getLeft());
+            //
+            //if (collectRawResponse)
+            //    data.addResponse(url, answer.getLeft());
 
             int sizeBefore = newPricesByDate.size();
             newPricesByDate.addAll(answer.getRight());
@@ -413,7 +415,7 @@ public class HTMLTableQuoteFeed implements QuoteFeed
 //            Document document = Jsoup.parse(html);
 //            List<LatestSecurityPrice> prices = Parser.parse(url, document, data);
 //
-//            return new Pair<>(html, prices);
+//            return new Pair<>(collectRawResponse ? html : "", prices); //$NON-NLS-1$
 //        }
 //        catch (URISyntaxException | IOException | UncheckedIOException e)
 //        {
