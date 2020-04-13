@@ -689,7 +689,7 @@ public class ClientPerformanceSnapshot
 
         // cmaoling BEGIN: also account interest and dividends w/o security
         if (!mOtherEarnings.isZero())
-            earningsCategory.positions.add(new Position(Messages.LabelInterest, mOtherEarnings.toMoney()));
+            earningsCategory.positions.add(new Position(Messages.LabelInterest, mOtherEarnings.toMoney(), null));
         // cmaoling  END : also account interest and dividends w/o security
 
         categories.get(CategoryType.FEES).valuation = mFees.toMoney();
