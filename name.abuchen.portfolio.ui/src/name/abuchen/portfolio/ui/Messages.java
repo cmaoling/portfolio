@@ -511,6 +511,7 @@ public class Messages extends NLS
     public static String LabelChartDetailSettingsShowMissingTradingDays;
     public static String LabelChartShowLabels;
     public static String LabelChartType;
+    public static String LabelCleanHTML;
     public static String LabelClientClearCustomItems;
     public static String LabelClientFilterDialogMessage;
     public static String LabelClientFilterDialogTitle;
@@ -561,6 +562,7 @@ public class Messages extends NLS
     public static String LabelExport;
     public static String LabelFeedProvider;
     public static String LabelFees;
+    public static String LabelFormatJSON;
     public static String LabelFullClassification;
     public static String LabelImportWarning;
     public static String LabelIncludeSecuritiesInPieChart;
