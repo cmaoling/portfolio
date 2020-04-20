@@ -25,6 +25,16 @@ import name.abuchen.portfolio.online.FeedData;
 @SuppressWarnings("nls")
 public class YahooFinanceQuoteFeedTest
 {
+    private String getHistoricalYahooQuotes()
+    {
+        String responseBody = null;
+        Scanner scanner = new Scanner(getClass().getResourceAsStream("response_yahoo_historical.txt"), "UTF-8");
+        responseBody = scanner.useDelimiter("\\A").next();
+        scanner.close();
+
+        return responseBody;
+    }
+
     @Test
     public void testGetLatestQuoteValid() throws IOException
     {
@@ -47,7 +57,7 @@ public class YahooFinanceQuoteFeedTest
     }
 
     @Test
-    public void testCalculateDate() throws IOException
+    public void testCalculateDate()
     {
 
         YahooFinanceQuoteFeed feed = new YahooFinanceQuoteFeed();
@@ -70,17 +80,13 @@ public class YahooFinanceQuoteFeedTest
     @Test
     public void testParsingHistoricalQuotes()
     {
-        String responseBody = null;
-        try (Scanner scanner = new Scanner(getClass().getResourceAsStream("response_yahoo_historical.txt"), "UTF-8"))
-        {
-            responseBody = scanner.useDelimiter("\\A").next();
-        }
+        String rawQuotes = getHistoricalYahooQuotes();
 
         Security security = new Security();
         security.setTickerSymbol("DAI.DE");
 
         YahooFinanceQuoteFeed feed = new YahooFinanceQuoteFeed();
-        FeedData data = feed.extractQuotes(responseBody);
+        FeedData data = feed.extractQuotes(rawQuotes);
         List<LatestSecurityPrice> prices = data.getLatestPrices();
         Collections.sort(prices, new SecurityPrice.ByDate());
 
@@ -104,17 +110,13 @@ public class YahooFinanceQuoteFeedTest
     @Test
     public void testParsingHistoricalAdjustedCloseQuotes() throws IOException
     {
-        String responseBody = null;
-        try (Scanner scanner = new Scanner(getClass().getResourceAsStream("response_yahoo_historical.txt"), "UTF-8"))
-        {
-            responseBody = scanner.useDelimiter("\\A").next();
-        }
+        String rawQuotes = getHistoricalYahooQuotes();
 
         Security security = new Security();
         security.setTickerSymbol("DAI.DE");
 
         YahooFinanceAdjustedCloseQuoteFeed feed = new YahooFinanceAdjustedCloseQuoteFeed();
-        FeedData data = feed.extractQuotes(responseBody);
+        FeedData data = feed.extractQuotes(rawQuotes);
         List<LatestSecurityPrice> prices = data.getLatestPrices();
         Collections.sort(prices, new SecurityPrice.ByDate());
 
