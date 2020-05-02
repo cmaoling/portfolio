@@ -261,6 +261,9 @@ public class Messages extends NLS
     public static String ColumnQuoteSuggestion_market;
     public static String ColumnQuoteSuggestion_none;
     public static String ColumnQuoteSuggestion_purchase;
+    public static String ColumnRebalancingIndicatorAbsoluteThreshold;
+    public static String ColumnRebalancingIndicatorBarLength;
+    public static String ColumnRebalancingIndicatorRelativeThreshold;
     public static String ColumnReferenceAccount;
     public static String ColumnRetired;
     public static String ColumnSecurity;
@@ -746,6 +749,7 @@ public class Messages extends NLS
     public static String MenuConfigureChart;
     public static String MenuConfigureCurrentDashboard;
     public static String MenuConfigureDashboards;
+    public static String MenuConfigureRebalancingIndicator;
     public static String MenuConfigureView;
     public static String MenuConfirmDeleteAllTransactions;
     public static String MenuConvertToBuy;
@@ -1033,6 +1037,7 @@ public class Messages extends NLS
     public static String TooltipMaxDrawdownDurationFromXtoY;
     public static String TooltipMaxDurationLowToHigh;
     public static String TooltipQuoteAtDate;
+    public static String TooltipRebalancingIndicator;
     public static String TooltipSemiVolatility;
     public static String TooltipVolatility;
     public static String WatchlistDelete;
