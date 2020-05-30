@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
+import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.money.Monetary;
@@ -16,7 +18,7 @@ public class SecurityEvent extends SecurityElement
 {
     public enum Type
     {
-        STOCK_SPLIT, STOCK_DIVIDEND, STOCK_RIGHT, STOCK_OTHER, NONE;
+        STOCK_SPLIT, STOCK_DIVIDEND, STOCK_RIGHT, STOCK_OTHER, NONE, CUSTOM, PLACED_ORDER, CHART_SIGNAL, STOCK_NEWS, WORLD_EVENT;
 
         private static final ResourceBundle RESOURCES = ResourceBundle.getBundle("name.abuchen.portfolio.model.labels"); //$NON-NLS-1$
 
@@ -24,6 +26,17 @@ public class SecurityEvent extends SecurityElement
         public String toString()
         {
             return RESOURCES.getString("event." + name()); //$NON-NLS-1$
+        }
+        public static List<Type> getValues()
+        {
+            return Stream.of(Type.values())
+            .filter(x -> x == SecurityEvent.Type.CHART_SIGNAL
+                      || x == SecurityEvent.Type.CUSTOM
+                      || x == SecurityEvent.Type.PLACED_ORDER
+                      || x == SecurityEvent.Type.STOCK_NEWS
+                      || x == SecurityEvent.Type.STOCK_OTHER
+                      || x == SecurityEvent.Type.WORLD_EVENT)
+            .collect(Collectors.toList());
         }
     }
 
@@ -39,13 +52,18 @@ public class SecurityEvent extends SecurityElement
 
     private boolean isVisible = true;
 
-    @Deprecated
     protected String details = null;
     @Deprecated
     protected long value;
 
     public SecurityEvent()
     {
+    }
+
+    public SecurityEvent(LocalDate date, Type type, String details)
+    {
+        this(date, type);
+        this.details = details;
     }
 
     public SecurityEvent(LocalDate date, Type type)
@@ -204,6 +222,14 @@ public class SecurityEvent extends SecurityElement
         else if (type.equals(Type.STOCK_OTHER))
         {
             return getTypeStr() + ": " + (ratio == null ? "" : getRatioString()) + (amount == null? "" : " @ " + getAmount().toString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        }
+        else if (type.equals(Type.CHART_SIGNAL)
+                || type.equals(Type.CUSTOM)
+                || type.equals(Type.PLACED_ORDER)
+                || type.equals(Type.STOCK_NEWS)
+                || type.equals(Type.WORLD_EVENT))
+        {
+            return (details == null? "" : details); //$NON-NLS-1$ 
         }
         else
         {
