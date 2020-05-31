@@ -101,6 +101,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
     private Label lblSecondaryAccount;
     private ComboViewer secondaryAccount;
     private Button cbConvertToDelivery;
+    private Button cbRemoveDividends;
 
     private final Client client;
     private final Extractor extractor;
@@ -170,6 +171,11 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         return cbConvertToDelivery.getSelection();
     }
 
+    public boolean doRemoveDividends()
+    {
+        return cbRemoveDividends.getSelection();
+    }
+
     @Override
     public void createControl(Composite parent)
     {
@@ -219,6 +225,9 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         cbConvertToDelivery = new Button(container, SWT.CHECK);
         cbConvertToDelivery.setText(Messages.LabelConvertBuySellIntoDeliveryTransactions);
 
+        cbRemoveDividends = new Button(container, SWT.CHECK);
+        cbRemoveDividends.setText(Messages.LabelRemoveDividends);
+
         Composite compositeTable = new Composite(container, SWT.NONE);
         Composite errorTable = new Composite(container, SWT.NONE);
 
@@ -229,6 +238,9 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         FormDataFactory.startingWith(targetContainer) //
                         .top(new FormAttachment(0, 0)).left(new FormAttachment(0, 0)).right(new FormAttachment(100, 0))
                         .thenBelow(cbConvertToDelivery) //
+                        .thenRight(cbRemoveDividends);
+
+        FormDataFactory.startingWith(cbConvertToDelivery) //
                         .thenBelow(compositeTable).right(targetContainer).bottom(new FormAttachment(80, 0)) //
                         .thenBelow(errorTable).right(targetContainer).bottom(new FormAttachment(100, 0));
 

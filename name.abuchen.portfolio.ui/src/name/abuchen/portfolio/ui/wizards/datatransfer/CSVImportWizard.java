@@ -185,6 +185,7 @@ public class CSVImportWizard extends Wizard
     {
         InsertAction action = new InsertAction(client);
         action.setConvertBuySellToDelivery(reviewPage.doConvertToDelivery());
+        action.setRemoveDividends(reviewPage.doRemoveDividends());
 
         boolean isDirty = false;
         for (ExtractedEntry entry : reviewPage.getEntries())
