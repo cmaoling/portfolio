@@ -9,38 +9,24 @@ import java.util.regex.Pattern;
 import org.jsoup.nodes.Element;
 
 import name.abuchen.portfolio.money.Values;
+import name.abuchen.portfolio.util.TextUtil;
 
 
 public abstract class Column
+//from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
 {
-    static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT_GERMAN = new ThreadLocal<DecimalFormat>()
-    {
-        @Override
-        protected DecimalFormat initialValue()
-        {
-            return new DecimalFormat("#,##0.###", new DecimalFormatSymbols(Locale.GERMAN)); //$NON-NLS-1$
-        }
-    };
 
-    static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT_ENGLISH = new ThreadLocal<DecimalFormat>()
-    {
-        @Override
-        protected DecimalFormat initialValue()
-        {
-            return new DecimalFormat("#,##0.###", new DecimalFormatSymbols(Locale.ENGLISH)); //$NON-NLS-1$
-        }
-    };
+    static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT_GERMAN = ThreadLocal
+                    .withInitial(() -> new DecimalFormat("#,##0.###", new DecimalFormatSymbols(Locale.GERMAN))); //$NON-NLS-1$
 
-    static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT_APOSTROPHE = new ThreadLocal<DecimalFormat>()
-    {
-        @Override
-        protected DecimalFormat initialValue()
-        {
-            DecimalFormatSymbols unusualSymbols = new DecimalFormatSymbols(Locale.US);
-            unusualSymbols.setGroupingSeparator('\'');
-            return new DecimalFormat("#,##0.##", unusualSymbols); //$NON-NLS-1$
-        }
-    };
+    static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT_ENGLISH = ThreadLocal
+                    .withInitial(() -> new DecimalFormat("#,##0.###", new DecimalFormatSymbols(Locale.ENGLISH))); //$NON-NLS-1$
+
+    static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT_APOSTROPHE = ThreadLocal.withInitial(() -> {
+        DecimalFormatSymbols unusualSymbols = new DecimalFormatSymbols(Locale.US);
+        unusualSymbols.setGroupingSeparator('\'');
+        return new DecimalFormat("#,##0.##", unusualSymbols); //$NON-NLS-1$
+    });
 
     private final Pattern[] patterns;
 
@@ -53,7 +39,7 @@ public abstract class Column
 
     public boolean matches(Element header)
     {
-        String text = header.text();
+        String text = TextUtil.strip(header.text());
         for (Pattern pattern : patterns)
         {
             if (pattern.matcher(text).matches())
