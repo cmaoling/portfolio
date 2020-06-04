@@ -65,9 +65,9 @@ import name.abuchen.portfolio.money.Money;
         fields.add(new AmountField(Messages.CSVColumn_Fees).setOptional(true));
         fields.add(new IBANField(Messages.CSVColumn_IBAN).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_PartnerName).setOptional(true));
-        fields.add(new Field(Messages.CSVColumn_AccountName).setOptional(true)); //$NON-NLS-1$
-        fields.add(new Field(Messages.CSVColumn_AccountName2nd).setOptional(true)); //$NON-NLS-1$
-        fields.add(new Field(Messages.CSVColumn_PortfolioName).setOptional(true)); //$NON-NLS-1$
+        fields.add(new Field(Messages.CSVColumn_AccountName).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_AccountName2nd).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_PortfolioName).setOptional(true));
 
         return fields;
     }

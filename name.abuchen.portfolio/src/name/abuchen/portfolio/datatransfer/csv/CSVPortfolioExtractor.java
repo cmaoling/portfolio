@@ -31,25 +31,25 @@ import name.abuchen.portfolio.money.Money;
         super(client, Messages.CSVDefPortfolio);
 
         List<Field> fields = getFields();
-        fields.add(new DateField(Messages.CSVColumn_DateValue).setOptional(true)); //$NON-NLS-1$
-        fields.add(new Field(Messages.CSVColumn_Time).setOptional(true)); //$NON-NLS-1$
+        fields.add(new DateField(Messages.CSVColumn_DateValue).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_Time).setOptional(true));
 
-        fields.add(new ISINField(Messages.CSVColumn_ISIN).setOptional(true)); //$NON-NLS-1$
-        fields.add(new Field(Messages.CSVColumn_TickerSymbol).setOptional(true)); //$NON-NLS-1$
-        fields.add(new Field(Messages.CSVColumn_WKN).setOptional(true)); //$NON-NLS-1$
-        fields.add(new Field(Messages.CSVColumn_SecurityName).setOptional(true)); //$NON-NLS-1$
+        fields.add(new ISINField(Messages.CSVColumn_ISIN).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_TickerSymbol).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_WKN).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_SecurityName).setOptional(true));
 
-        fields.add(new AmountField(Messages.CSVColumn_Value)); //$NON-NLS-1$
-        fields.add(new Field(Messages.CSVColumn_Currency).setOptional(true)); //$NON-NLS-1$
+        fields.add(new AmountField(Messages.CSVColumn_Value));
+        fields.add(new Field(Messages.CSVColumn_Currency).setOptional(true));
 
-        fields.add(new AmountField(Messages.CSVColumn_Shares)); //$NON-NLS-1$
-        fields.add(new Field(Messages.CSVColumn_Note).setOptional(true)); //$NON-NLS-1$
+        fields.add(new AmountField(Messages.CSVColumn_Shares));
+        fields.add(new Field(Messages.CSVColumn_Note).setOptional(true));
 
-        fields.add(new DateField(Messages.CSVColumn_DateQuote).setOptional(true)); //$NON-NLS-1$
-        fields.add(new AmountField(Messages.CSVColumn_Quote, "Schluss", "Schlusskurs", "Close") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        fields.add(new DateField(Messages.CSVColumn_DateQuote).setOptional(true));
+        fields.add(new AmountField(Messages.CSVColumn_Quote, "Schluss", "Schlusskurs", "Close") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                         .setOptional(true));
-        fields.add(new Field(Messages.CSVColumn_AccountName).setOptional(true)); //$NON-NLS-1$
-        fields.add(new Field(Messages.CSVColumn_PortfolioName).setOptional(true)); //$NON-NLS-1$
+        fields.add(new Field(Messages.CSVColumn_AccountName).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_PortfolioName).setOptional(true));
     }
 
     @Override

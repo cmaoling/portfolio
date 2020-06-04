@@ -1,6 +1,5 @@
 package name.abuchen.portfolio.datatransfer.csv;
 
-import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Files;
@@ -614,8 +613,6 @@ public class CSVImporter
             return getLabel();
         }
     }
-
-    private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
     private final Client client;
     private final File inputFile;
