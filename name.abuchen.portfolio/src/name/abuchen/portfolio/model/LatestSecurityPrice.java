@@ -2,6 +2,8 @@ package name.abuchen.portfolio.model;
 
 import java.time.LocalDate;
 
+import name.abuchen.portfolio.money.Values;
+
 public class LatestSecurityPrice extends SecurityPrice
 {
     private long high;
@@ -100,5 +102,12 @@ public class LatestSecurityPrice extends SecurityPrice
         if (volume != other.volume)
             return false;
         return true;
+    }
+
+    @Override
+    @SuppressWarnings("nls")
+    public String toString()
+    {
+        return String.format("%tF: %,10.4f high: %d low: %d volume: %10d", date, value / Values.Quote.divider(), high, low, volume);
     }
 }
