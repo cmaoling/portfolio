@@ -77,8 +77,8 @@ public class AboutDialog extends Dialog
     private Control createAboutText(Composite parent)
     {
         String aboutText = MessageFormat.format(Messages.AboutText,
-                        PortfolioPlugin.getDefault().getBundle().getVersion().toString(), //
-                        DateTimeFormatter.ofPattern("MMM YYYY").format(BuildInfo.INSTANCE.getBuildTime()), //$NON-NLS-1$
+                        PortfolioPlugin.getDefault().getBundle().getVersion().toString(),
+                        DateTimeFormatter.ofPattern("MMM YYYY").format(BuildInfo.INSTANCE.getBuildTime()).concat(Messages.ForkDetails), //$NON-NLS-1$
                         System.getProperty("osgi.os"), //$NON-NLS-1$
                         System.getProperty("osgi.arch"), //$NON-NLS-1$
                         System.getProperty("java.vm.version"), //$NON-NLS-1$

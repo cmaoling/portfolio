@@ -382,6 +382,8 @@ public class Messages extends NLS
     public static String ExportWizardSelectDirectory;
     public static String ExportWizardTitle;
     public static String ExportWizardUnsupportedExport;
+    public static String ForkDetails;
+    public static String ForkName;
     public static String FormatAccount;
     public static String GroupLabelAttributes;
     public static String GroupLabelDataQuality;

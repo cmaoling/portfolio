@@ -108,7 +108,7 @@ public class WelcomePart
         Label version = new Label(composite, SWT.NONE);
         version.setText(PortfolioPlugin.getDefault().getBundle().getVersion().toString() + " (" //$NON-NLS-1$
                         + DateTimeFormatter.ofPattern("MMM YYYY").format(BuildInfo.INSTANCE.getBuildTime()) //$NON-NLS-1$
-                        + ")"); //$NON-NLS-1$
+                        + ") " + Messages.ForkName ); //$NON-NLS-1$
 
         FormDataFactory.startingWith(image) //
                         .thenRight(title, 30).top(new FormAttachment(image, 0, SWT.TOP)) //
