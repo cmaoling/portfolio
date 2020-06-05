@@ -14,7 +14,7 @@ import java.util.Scanner;
 import org.junit.Test;
 
 import name.abuchen.portfolio.model.LatestSecurityPrice;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 
 @SuppressWarnings("nls")
 public class HTMLTableQuoteFeedTest
@@ -29,7 +29,7 @@ public class HTMLTableQuoteFeedTest
         {
             String html = scanner.useDelimiter("\\A").next();
 
-            QuoteFeedData data = new QuoteFeedData();
+            FeedData data = new FeedData();
 
             List<LatestSecurityPrice> elements = new HTMLTableQuoteParser().parseFromHTML(html, data);
 

@@ -22,7 +22,7 @@ import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.online.Factory;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.online.impl.HTMLTableQuoteFeed;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
@@ -262,7 +262,7 @@ public final class UpdateQuotesJob extends AbstractClientJob
                         if (feed == null)
                             return Status.OK_STATUS;
 
-                        QuoteFeedData data = feed.getHistoricalQuotes(security, false);
+                        FeedData data = feed.getHistoricalQuotes(security, false);
 
                         if (security.addAllPrices(data.getPrices()))
                             dirtyable.markDirty();

@@ -31,7 +31,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.Factory;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.online.impl.PortfolioReportQuoteFeed;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
@@ -54,9 +54,9 @@ public class LatestQuoteProviderPage extends AbstractQuoteProviderPage
         }
 
         @Override
-        public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+        public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
         {
-            return new QuoteFeedData();
+            return new FeedData();
         }
     }
 

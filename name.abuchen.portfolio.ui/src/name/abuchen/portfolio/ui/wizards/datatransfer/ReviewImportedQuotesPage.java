@@ -7,7 +7,7 @@ import org.eclipse.swt.widgets.Composite;
 
 import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.online.Factory;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.online.impl.HTMLTableQuoteFeed;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
@@ -38,7 +38,7 @@ public class ReviewImportedQuotesPage extends AbstractWizardPage
 
         HTMLTableQuoteFeed feed = (HTMLTableQuoteFeed) Factory.getQuoteFeedProvider(HTMLTableQuoteFeed.ID);
 
-        QuoteFeedData data = feed.getHistoricalQuotes(source);
+        FeedData data = feed.getHistoricalQuotes(source);
         quotes = data.getLatestPrices();
 
         if (!data.getErrors().isEmpty())

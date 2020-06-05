@@ -19,7 +19,7 @@ import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.money.Values;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 
 @SuppressWarnings("nls")
 public class YahooFinanceQuoteFeedTest
@@ -57,7 +57,7 @@ public class YahooFinanceQuoteFeedTest
         security.setTickerSymbol("DAI.DE");
 
         YahooFinanceQuoteFeed feed = new YahooFinanceQuoteFeed();
-        QuoteFeedData data = feed.extractQuotes(responseBody);
+        FeedData data = feed.extractQuotes(responseBody);
         List<LatestSecurityPrice> prices = data.getLatestPrices();
         Collections.sort(prices, new SecurityPrice.ByDate());
 
@@ -91,7 +91,7 @@ public class YahooFinanceQuoteFeedTest
         security.setTickerSymbol("DAI.DE");
 
         YahooFinanceAdjustedCloseQuoteFeed feed = new YahooFinanceAdjustedCloseQuoteFeed();
-        QuoteFeedData data = feed.extractQuotes(responseBody);
+        FeedData data = feed.extractQuotes(responseBody);
         List<LatestSecurityPrice> prices = data.getLatestPrices();
         Collections.sort(prices, new SecurityPrice.ByDate());
 

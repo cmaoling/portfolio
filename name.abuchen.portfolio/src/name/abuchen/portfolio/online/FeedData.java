@@ -10,7 +10,7 @@ import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.SecurityElement;
 import name.abuchen.portfolio.model.SecurityPrice;
 
-public class QuoteFeedData
+public class FeedData
 {
     public static class RawResponse
     {
@@ -39,9 +39,9 @@ public class QuoteFeedData
     private final List<Exception> errors = new ArrayList<>();
     private final List<RawResponse> responses = new ArrayList<>();
 
-    public static QuoteFeedData withError(Exception error)
+    public static FeedData withError(Exception error)
     {
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
         data.getErrors().add(error);
         return data;
     }

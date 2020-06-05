@@ -19,7 +19,7 @@ import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityProperty;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.WebAccess;
 
 public final class QuandlQuoteFeed implements QuoteFeed
@@ -54,13 +54,13 @@ public final class QuandlQuoteFeed implements QuoteFeed
     @Override
     public Optional<LatestSecurityPrice> getLatestQuote(Security security)
     {
-        QuoteFeedData data = getHistoricalQuotes(security, false, a -> a.addParameter("limit", "1")); //$NON-NLS-1$ //$NON-NLS-2$
+        FeedData data = getHistoricalQuotes(security, false, a -> a.addParameter("limit", "1")); //$NON-NLS-1$ //$NON-NLS-2$
         List<LatestSecurityPrice> prices = data.getLatestPrices();
         return prices.isEmpty() ? Optional.empty() : Optional.of(prices.get(prices.size() - 1));
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
         Consumer<WebAccess> parameters = null;
 
@@ -74,13 +74,13 @@ public final class QuandlQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData previewHistoricalQuotes(Security security)
+    public FeedData previewHistoricalQuotes(Security security)
     {
         return getHistoricalQuotes(security, true, a -> a.addParameter("limit", "100")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @SuppressWarnings("unchecked")
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse,
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse,
                     Consumer<WebAccess> parameters)
     {
         if (apiKey == null)
@@ -90,11 +90,11 @@ public final class QuandlQuoteFeed implements QuoteFeed
 
         if (!quandlCode.isPresent())
         {
-            return QuoteFeedData.withError(new IOException(
+            return FeedData.withError(new IOException(
                             MessageFormat.format(Messages.MsgErrorQuandlMissingCode, security.getName())));
         }
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
 
         try
         {

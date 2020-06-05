@@ -18,7 +18,7 @@ import name.abuchen.portfolio.PortfolioLog;
 import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.WebAccess;
 
 public final class KrakenQuoteFeed implements QuoteFeed
@@ -42,7 +42,7 @@ public final class KrakenQuoteFeed implements QuoteFeed
     @Override
     public Optional<LatestSecurityPrice> getLatestQuote(Security security)
     {
-        QuoteFeedData data = getHistoricalQuotes(security, false, LocalDate.now());
+        FeedData data = getHistoricalQuotes(security, false, LocalDate.now());
 
         if (!data.getErrors().isEmpty())
             PortfolioLog.error(data.getErrors());
@@ -52,7 +52,7 @@ public final class KrakenQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
         LocalDate quoteStartDate = LocalDate.MIN;
 
@@ -63,19 +63,19 @@ public final class KrakenQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData previewHistoricalQuotes(Security security)
+    public FeedData previewHistoricalQuotes(Security security)
     {
         return getHistoricalQuotes(security, true, LocalDate.now().minusMonths(2));
     }
 
     @SuppressWarnings("unchecked")
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse, LocalDate start)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse, LocalDate start)
     {
         if (security.getTickerSymbol() == null)
-            return QuoteFeedData.withError(
+            return FeedData.withError(
                             new IOException(MessageFormat.format(Messages.MsgMissingTickerSymbol, security.getName())));
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
 
         final long tickerStartEpochSeconds = start.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
         try

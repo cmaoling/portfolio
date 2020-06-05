@@ -35,7 +35,7 @@ import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.model.SecurityProperty;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.Dates;
 import name.abuchen.portfolio.util.WebAccess;
 
@@ -164,7 +164,7 @@ public class YahooFinanceQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
         LocalDate start = caculateStart(security);
         return internalGetQuotes(security, start);
@@ -187,16 +187,16 @@ public class YahooFinanceQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData previewHistoricalQuotes(Security security)
+    public FeedData previewHistoricalQuotes(Security security)
     {
         return internalGetQuotes(security, LocalDate.now().minusMonths(2));
     }
 
-    private QuoteFeedData internalGetQuotes(Security security, LocalDate startDate)
+    private FeedData internalGetQuotes(Security security, LocalDate startDate)
     {
         if (security.getTickerSymbol() == null)
         {
-            return QuoteFeedData.withError(
+            return FeedData.withError(
                             new IOException(MessageFormat.format(Messages.MsgMissingTickerSymbol, security.getName())));
         }
 
@@ -207,7 +207,7 @@ public class YahooFinanceQuoteFeed implements QuoteFeed
         }
         catch (IOException e)
         {
-            return QuoteFeedData.withError(new IOException(MessageFormat.format(Messages.MsgErrorDownloadYahoo, 1,
+            return FeedData.withError(new IOException(MessageFormat.format(Messages.MsgErrorDownloadYahoo, 1,
                             security.getTickerSymbol(), e.getMessage()), e));
         }
     }
@@ -239,7 +239,7 @@ public class YahooFinanceQuoteFeed implements QuoteFeed
 
     }
 
-    /* package */ QuoteFeedData extractQuotes(String responseBody)
+    /* package */ FeedData extractQuotes(String responseBody)
     {
         List<LatestSecurityPrice> answer = new ArrayList<>();
 
@@ -295,10 +295,10 @@ public class YahooFinanceQuoteFeed implements QuoteFeed
         }
         catch (IOException | IndexOutOfBoundsException | IllegalArgumentException e)
         {
-            return QuoteFeedData.withError(e);
+            return FeedData.withError(e);
         }
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
         data.getLatestPrices().addAll(answer);
         return data;
     }

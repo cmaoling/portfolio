@@ -27,7 +27,7 @@ import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.model.SecurityProperty;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.online.impl.variableurl.Factory;
 import name.abuchen.portfolio.online.impl.variableurl.urls.VariableURL;
 import name.abuchen.portfolio.util.WebAccess;
@@ -59,18 +59,18 @@ public final class GenericJSONQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
         return getHistoricalQuotes(security, security.getFeedURL(), collectRawResponse, false);
     }
 
     @Override
-    public QuoteFeedData previewHistoricalQuotes(Security security)
+    public FeedData previewHistoricalQuotes(Security security)
     {
         return getHistoricalQuotes(security, security.getFeedURL(), true, true);
     }
 
-    private QuoteFeedData getHistoricalQuotes(Security security, String feedURL, boolean collectRawResponse,
+    private FeedData getHistoricalQuotes(Security security, String feedURL, boolean collectRawResponse,
                     boolean isPreview)
     {
         Optional<String> dateProperty = security.getPropertyValue(SecurityProperty.Type.FEED, DATE_PROPERTY_NAME);
@@ -78,20 +78,20 @@ public final class GenericJSONQuoteFeed implements QuoteFeed
 
         if (!dateProperty.isPresent() || !closeProperty.isPresent())
         {
-            return QuoteFeedData.withError(new IOException(
+            return FeedData.withError(new IOException(
                             MessageFormat.format(Messages.MsgErrorMissingPathToDateOrClose, security.getName())));
         }
 
         if (feedURL == null || feedURL.length() == 0)
         {
-            return QuoteFeedData.withError(
+            return FeedData.withError(
                             new IOException(MessageFormat.format(Messages.MsgMissingFeedURL, security.getName())));
         }
 
         VariableURL variableURL = Factory.fromString(feedURL);
         variableURL.setSecurity(security);
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
 
         SortedSet<LatestSecurityPrice> newPricesByDate = new TreeSet<>(new SecurityPrice.ByDate());
         long failedAttempts = 0;
@@ -138,7 +138,7 @@ public final class GenericJSONQuoteFeed implements QuoteFeed
     }
 
     protected List<LatestSecurityPrice> parse(String url, String json, String datePath, String closePath,
-                    QuoteFeedData data)
+                    FeedData data)
     {
         try
         {

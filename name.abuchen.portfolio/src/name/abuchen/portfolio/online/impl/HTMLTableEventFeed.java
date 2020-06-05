@@ -13,7 +13,7 @@ import name.abuchen.portfolio.model.SecurityElement;
 import name.abuchen.portfolio.model.SecurityEvent;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.online.EventFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 
 public class HTMLTableEventFeed extends EventFeed
 {
@@ -68,7 +68,7 @@ public class HTMLTableEventFeed extends EventFeed
             return Collections.emptyList();
         }
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
         data.setErrors(errors);
         List<SecurityElement> elements = Parser.parseFromURL(feedURL, data);
         errors = data.getErrors();
@@ -86,7 +86,7 @@ public class HTMLTableEventFeed extends EventFeed
     @Override
     public List<SecurityElement> get(String response, List<Exception> errors)
     {
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
         data.setErrors(errors);
         List<SecurityElement> answer = Parser.parseFromHTML(response, data);
         errors = data.getErrors();

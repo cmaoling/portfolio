@@ -20,7 +20,7 @@ import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.WebAccess;
 
 public final class BitfinexQuoteFeed implements QuoteFeed
@@ -44,7 +44,7 @@ public final class BitfinexQuoteFeed implements QuoteFeed
     @Override
     public Optional<LatestSecurityPrice> getLatestQuote(Security security)
     {
-        QuoteFeedData data = getHistoricalQuotes(security, false, LocalDate.now());
+        FeedData data = getHistoricalQuotes(security, false, LocalDate.now());
 
         if (!data.getErrors().isEmpty())
             PortfolioLog.error(data.getErrors());
@@ -60,7 +60,7 @@ public final class BitfinexQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
         LocalDate quoteStartDate = LocalDate.MIN;
 
@@ -71,13 +71,13 @@ public final class BitfinexQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData previewHistoricalQuotes(Security security)
+    public FeedData previewHistoricalQuotes(Security security)
     {
         return getHistoricalQuotes(security, true, LocalDate.now().minusMonths(2));
     }
 
     @SuppressWarnings("unchecked")
-    private void convertBitfinexJsonArray(JSONArray ohlcArray, QuoteFeedData data)
+    private void convertBitfinexJsonArray(JSONArray ohlcArray, FeedData data)
     {
         if (ohlcArray.isEmpty())
             return;
@@ -134,13 +134,13 @@ public final class BitfinexQuoteFeed implements QuoteFeed
         return price;
     }
 
-    private QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse, LocalDate start)
+    private FeedData getHistoricalQuotes(Security security, boolean collectRawResponse, LocalDate start)
     {
         if (security.getTickerSymbol() == null)
-            return QuoteFeedData.withError(
+            return FeedData.withError(
                             new IOException(MessageFormat.format(Messages.MsgMissingTickerSymbol, security.getName())));
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
 
         final Long tickerStartEpochSeconds = start.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
         final String histLatest = ((start.compareTo(LocalDate.now()) == 0) ? "last" : "hist"); //$NON-NLS-1$ //$NON-NLS-2$

@@ -20,7 +20,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.Dates;
 import name.abuchen.portfolio.util.WebAccess;
 
@@ -50,7 +50,7 @@ public final class FinnhubQuoteFeed implements QuoteFeed
     @Override
     public Optional<LatestSecurityPrice> getLatestQuote(Security security)
     {
-        QuoteFeedData data = getHistoricalQuotes(security, false, 5);
+        FeedData data = getHistoricalQuotes(security, false, 5);
 
         List<LatestSecurityPrice> prices = data.getLatestPrices();
         if (prices.isEmpty())
@@ -62,7 +62,7 @@ public final class FinnhubQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
         int count = 20000;
 
@@ -76,20 +76,20 @@ public final class FinnhubQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData previewHistoricalQuotes(Security security)
+    public FeedData previewHistoricalQuotes(Security security)
     {
         return getHistoricalQuotes(security, true, 100);
     }
 
-    private QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse, int count)
+    private FeedData getHistoricalQuotes(Security security, boolean collectRawResponse, int count)
     {
         if (security.getTickerSymbol() == null)
         {
-            return QuoteFeedData.withError(
+            return FeedData.withError(
                             new IOException(MessageFormat.format(Messages.MsgMissingTickerSymbol, security.getName())));
         }
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
 
         try
         {

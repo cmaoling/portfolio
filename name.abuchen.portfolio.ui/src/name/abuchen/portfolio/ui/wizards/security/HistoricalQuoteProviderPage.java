@@ -26,7 +26,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityProperty;
 import name.abuchen.portfolio.online.Factory;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.online.impl.AlphavantageQuoteFeed;
 import name.abuchen.portfolio.online.impl.FinnhubQuoteFeed;
 import name.abuchen.portfolio.online.impl.GenericJSONQuoteFeed;
@@ -39,11 +39,11 @@ import name.abuchen.portfolio.ui.util.QuotesTableViewer;
 
 public class HistoricalQuoteProviderPage extends AbstractQuoteProviderPage
 {
-    private QuoteFeedData feedData;
+    private FeedData feedData;
     private QuotesTableViewer tableSampleData;
     private Button showRawResponse;
 
-    private Map<Object, QuoteFeedData> cacheQuotes = new HashMap<>();
+    private Map<Object, FeedData> cacheQuotes = new HashMap<>();
 
     // read and write 'currentJob' only from the UI thread; used to check
     // whether a more recent job has already been started
@@ -186,7 +186,7 @@ public class HistoricalQuoteProviderPage extends AbstractQuoteProviderPage
     {
         Object cacheKey = buildCacheKey(exchange);
 
-        QuoteFeedData data = cacheQuotes.get(cacheKey);
+        FeedData data = cacheQuotes.get(cacheKey);
 
         if (data != null)
         {
@@ -243,7 +243,7 @@ public class HistoricalQuoteProviderPage extends AbstractQuoteProviderPage
                 }
                 s.setFeed(feed.getId());
 
-                QuoteFeedData data = feed.previewHistoricalQuotes(s);
+                FeedData data = feed.previewHistoricalQuotes(s);
 
                 Display.getDefault().asyncExec(() -> {
                     if (LoadHistoricalQuotes.this.equals(HistoricalQuoteProviderPage.this.currentJob)

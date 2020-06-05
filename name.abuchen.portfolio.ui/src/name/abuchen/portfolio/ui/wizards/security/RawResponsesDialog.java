@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import name.abuchen.portfolio.online.QuoteFeedData.RawResponse;
+import name.abuchen.portfolio.online.FeedData.RawResponse;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.FormDataFactory;
 import name.abuchen.portfolio.ui.util.SWTHelper;

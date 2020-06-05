@@ -15,7 +15,7 @@ import org.junit.Test;
 
 import name.abuchen.portfolio.model.SecurityElement;
 import name.abuchen.portfolio.model.SecurityEvent;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 
 @SuppressWarnings("nls")
 public class HTMLTableEventFeedTest
@@ -30,7 +30,7 @@ public class HTMLTableEventFeedTest
         {
             String html = scanner.useDelimiter("\\A").next();
 
-            QuoteFeedData data = new QuoteFeedData();
+            FeedData data = new FeedData();
 
             List<SecurityElement> elements = new HTMLTableEventParser().parseFromHTML(html, data);
 

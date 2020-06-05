@@ -25,7 +25,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityProperty;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.online.impl.PortfolioReportNet.MarketInfo;
 import name.abuchen.portfolio.util.WebAccess;
 
@@ -54,7 +54,7 @@ public final class PortfolioReportQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
         LocalDate start = null;
 
@@ -67,17 +67,17 @@ public final class PortfolioReportQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData previewHistoricalQuotes(Security security)
+    public FeedData previewHistoricalQuotes(Security security)
     {
         return getHistoricalQuotes(security, true, LocalDate.now().minusMonths(2));
     }
 
     @SuppressWarnings("unchecked")
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse, LocalDate start)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse, LocalDate start)
     {
         if (security.getOnlineId() == null)
         {
-            return QuoteFeedData.withError(new IOException(
+            return FeedData.withError(new IOException(
                             MessageFormat.format(Messages.MsgErrorMissingOnlineId, security.getName())));
         }
 
@@ -85,11 +85,11 @@ public final class PortfolioReportQuoteFeed implements QuoteFeed
 
         if (!market.isPresent())
         {
-            return QuoteFeedData.withError(new IOException(
+            return FeedData.withError(new IOException(
                             MessageFormat.format(Messages.MsgErrorMissingPortfolioReportMarket, security.getName())));
         }
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
 
         try
         {

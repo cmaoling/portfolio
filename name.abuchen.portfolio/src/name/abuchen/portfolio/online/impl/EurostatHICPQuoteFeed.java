@@ -24,7 +24,7 @@ import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.WebAccess;;
 
 public class EurostatHICPQuoteFeed implements QuoteFeed
@@ -55,15 +55,15 @@ public class EurostatHICPQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
         if (security.getTickerSymbol() == null)
         {
-            return QuoteFeedData.withError(
+            return FeedData.withError(
                             new IOException(MessageFormat.format(Messages.MsgMissingTickerSymbol, security.getName())));
         }
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
 
         try
         {
@@ -80,7 +80,7 @@ public class EurostatHICPQuoteFeed implements QuoteFeed
     }
 
     @SuppressWarnings("nls")
-    private String requestData(Security security, boolean collectRawResponse, QuoteFeedData data)
+    private String requestData(Security security, boolean collectRawResponse, FeedData data)
                     throws IOException, URISyntaxException
     {
         WebAccess webaccess = new WebAccess(EUROSTAT_HOST, EUROSTAT_PAGE) //
@@ -101,7 +101,7 @@ public class EurostatHICPQuoteFeed implements QuoteFeed
         return text;
     }
 
-    private void extractQuotes(String responseBody, QuoteFeedData data)
+    private void extractQuotes(String responseBody, FeedData data)
     {
         try
         {

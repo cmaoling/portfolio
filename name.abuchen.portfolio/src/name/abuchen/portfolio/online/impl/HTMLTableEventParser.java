@@ -8,7 +8,7 @@ import org.jsoup.nodes.Element;
 import name.abuchen.portfolio.model.SecurityElement;
 import name.abuchen.portfolio.model.SecurityEvent;
 import name.abuchen.portfolio.money.Monetary;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 
 public class HTMLTableEventParser extends HTMLTableParser
 {
@@ -25,12 +25,12 @@ public class HTMLTableEventParser extends HTMLTableParser
         return (SecurityEvent) event;
     }
 
-    public List<SecurityElement> parseFromURL(String url, QuoteFeedData data)
+    public List<SecurityElement> parseFromURL(String url, FeedData data)
     {
         return SecurityElement.cast2ElementList(super._parseFromURL(url, data).getValue());
     }
 
-    public List<SecurityElement> parseFromHTML(String html, QuoteFeedData data)
+    public List<SecurityElement> parseFromHTML(String html, FeedData data)
     {
         return SecurityElement.cast2ElementList(super._parseFromHTML(html, data));
     }

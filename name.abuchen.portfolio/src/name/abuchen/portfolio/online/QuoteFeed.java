@@ -45,7 +45,7 @@ public interface QuoteFeed extends Feed // NOSONAR
      */
     default Optional<LatestSecurityPrice> getLatestQuote(Security security)
     {
-        QuoteFeedData data = getHistoricalQuotes(security, false);
+        FeedData data = getHistoricalQuotes(security, false);
 
         if (!data.getErrors().isEmpty())
             PortfolioLog.error(data.getErrors());
@@ -63,13 +63,13 @@ public interface QuoteFeed extends Feed // NOSONAR
      * Retrieves the historical quotes of the given security. The quote provider
      * may reduce the response to only include newly updated quotes.
      */
-    QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse);
+    FeedData getHistoricalQuotes(Security security, boolean collectRawResponse);
 
     /**
      * Retrieves a sample of historical quotes of the given security. The list
      * of quotes may be reduced to the last 2 months or latest 100 entries.
      */
-    default QuoteFeedData previewHistoricalQuotes(Security security)
+    default FeedData previewHistoricalQuotes(Security security)
     {
         return getHistoricalQuotes(security, true);
     }

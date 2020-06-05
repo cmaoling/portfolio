@@ -8,7 +8,7 @@ import org.jsoup.nodes.Element;
 
 import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.SecurityElement;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.Pair;
 
 public class HTMLTableQuoteParser extends HTMLTableParser
@@ -28,7 +28,7 @@ public class HTMLTableQuoteParser extends HTMLTableParser
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends SecurityElement> List<T> castList(List<Object> Olist, Class<T> clazz, QuoteFeedData data)
+    private <T extends SecurityElement> List<T> castList(List<Object> Olist, Class<T> clazz, FeedData data)
     {
         List<T> Tlist = new ArrayList<>();
         for (Object obj : Olist)
@@ -42,7 +42,7 @@ public class HTMLTableQuoteParser extends HTMLTableParser
     }
  
     @SuppressWarnings("unchecked")
-    private <T extends SecurityElement> Pair<String, List<T>> castPair(Pair<String, List<Object>> pair, Class<T> clazz, QuoteFeedData data)
+    private <T extends SecurityElement> Pair<String, List<T>> castPair(Pair<String, List<Object>> pair, Class<T> clazz, FeedData data)
     {
         List<T> Tlist = new ArrayList<>();
         List<Object> Olist = pair.getValue();
@@ -56,17 +56,17 @@ public class HTMLTableQuoteParser extends HTMLTableParser
         return new Pair<>(pair.getKey(), Tlist);
     }
     
-    public Pair<String, List<LatestSecurityPrice>> parseFromURL(String url, QuoteFeedData data)
+    public Pair<String, List<LatestSecurityPrice>> parseFromURL(String url, FeedData data)
     {
         return parseFromURL(url, false, data);
     }
 
-    public Pair<String, List<LatestSecurityPrice>> parseFromURL(String url, boolean collectRawResponse, QuoteFeedData data)
+    public Pair<String, List<LatestSecurityPrice>> parseFromURL(String url, boolean collectRawResponse, FeedData data)
     {
         return castPair(super._parseFromURL(url, collectRawResponse, data), LatestSecurityPrice.class, data);
     }
 
-    public List<LatestSecurityPrice> parseFromHTML(String html, QuoteFeedData data)
+    public List<LatestSecurityPrice> parseFromHTML(String html, FeedData data)
     {
         return castList(super._parseFromHTML(html, data), LatestSecurityPrice.class, data);
     }

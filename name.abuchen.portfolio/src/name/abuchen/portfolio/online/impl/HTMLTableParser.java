@@ -27,7 +27,7 @@ import org.jsoup.safety.Whitelist;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.model.SecurityElement;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.OnlineHelper;
 import name.abuchen.portfolio.util.Pair;
 import name.abuchen.portfolio.util.TextUtil;
@@ -138,12 +138,12 @@ abstract class HTMLTableParser
         return OnlineHelper.getUserAgent();
     }
 
-    protected Pair<String, List<Object>> _parseFromURL(String url, QuoteFeedData data)
+    protected Pair<String, List<Object>> _parseFromURL(String url, FeedData data)
     {
         return _parseFromURL(url, false, data);
     }
 
-    protected Pair<String, List<Object>> _parseFromURL(String url, boolean collectRawResponse, QuoteFeedData data)
+    protected Pair<String, List<Object>> _parseFromURL(String url, boolean collectRawResponse, FeedData data)
     {
         //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed: internalGetQuotes
         Pair<String, List<Object>> answer = cache.lookup(url);
@@ -174,7 +174,7 @@ abstract class HTMLTableParser
         return answer;
     }
 
-    protected List<Object> _parseFromHTML(String html, QuoteFeedData data)
+    protected List<Object> _parseFromHTML(String html, FeedData data)
     //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         return parse("n/a", Jsoup.parse(html), data); //$NON-NLS-1$
@@ -235,7 +235,7 @@ abstract class HTMLTableParser
         return new HeaderInfo(rowIndex, headerRow != null ? headerRow.size() : 0);
     }
 
-    protected <T extends Object> List<T> parse(String url, Document document, QuoteFeedData data)
+    protected <T extends Object> List<T> parse(String url, Document document, FeedData data)
     //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         // check if language is provided
@@ -321,7 +321,7 @@ abstract class HTMLTableParser
         return false;
     }
     
-    private <T extends Object> T extractData(Element row, List<Spec> specs, String languageHint, int numberOfHeaderColumns, QuoteFeedData data)
+    private <T extends Object> T extractData(Element row, List<Spec> specs, String languageHint, int numberOfHeaderColumns, FeedData data)
     //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
     {
         Elements cells = row.select("> td"); //$NON-NLS-1$

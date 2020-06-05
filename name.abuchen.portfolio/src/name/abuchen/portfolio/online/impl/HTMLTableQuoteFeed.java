@@ -15,7 +15,7 @@ import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.online.impl.variableurl.Factory;
 import name.abuchen.portfolio.online.impl.variableurl.urls.VariableURL;
 import name.abuchen.portfolio.util.Pair;
@@ -312,7 +312,7 @@ public class HTMLTableQuoteFeed implements QuoteFeed
         // as historic quotes'
         String feedURL = security.getLatestFeed() == null ? security.getFeedURL() : security.getLatestFeedURL();
 
-        QuoteFeedData data = internalGetQuotes(security, feedURL, false, false);
+        FeedData data = internalGetQuotes(security, feedURL, false, false);
 
         if (!data.getErrors().isEmpty())
             PortfolioLog.error(data.getErrors());
@@ -327,34 +327,34 @@ public class HTMLTableQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
         return internalGetQuotes(security, security.getFeedURL(), collectRawResponse, false);
     }
 
-    public QuoteFeedData getHistoricalQuotes(String html)
+    public FeedData getHistoricalQuotes(String html)
     {
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
         data.addAllPrices(Parser.parseFromHTML(html, data));
         return data;
     }
 
     @Override
-    public QuoteFeedData previewHistoricalQuotes(Security security)
+    public FeedData previewHistoricalQuotes(Security security)
     {
         return internalGetQuotes(security, security.getFeedURL(), true, true);
     }
 
-    private QuoteFeedData internalGetQuotes(Security security, String feedURL, boolean collectRawResponse,
+    private FeedData internalGetQuotes(Security security, String feedURL, boolean collectRawResponse,
                     boolean isPreview)
     {
         if (feedURL == null || feedURL.length() == 0)
         {
-            return QuoteFeedData.withError(
+            return FeedData.withError(
                             new IOException(MessageFormat.format(Messages.MsgMissingFeedURL, security.getName())));
         }
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
 
         VariableURL variableURL = Factory.fromString(feedURL);
         variableURL.setSecurity(security);
