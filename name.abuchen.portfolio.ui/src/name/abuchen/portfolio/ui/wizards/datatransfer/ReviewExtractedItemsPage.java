@@ -707,7 +707,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         preferences.setValue(IMPORT_TARGET_ACCOUNT + extractor.getLabel(), getAccount().getUUID());
         preferences.setValue(IMPORT_TARGET_PORTFOLIO + extractor.getLabel(), getPortfolio().getUUID());
 
-        if (extractor.getSubject() instanceof CSVAccountTransactionExtractor)
+        if (extractor.getSubject() instanceof CSVAccountTransactionExtractor && account != null)
             account.setExtractor(extractor.getSubject().getClass().getName());
     }
 
