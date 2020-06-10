@@ -44,8 +44,8 @@ public class ImportCSVHandler
     {
         FileDialog fileDialog = new FileDialog(shell, SWT.OPEN);
         fileDialog.setFilterPath(filterPath);
-        fileDialog.setFilterNames(new String[] { Messages.CSVImportLabelFileCSV, Messages.CSVImportLabelFileAll });
-        fileDialog.setFilterExtensions(new String[] { "*.csv", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+        fileDialog.setFilterNames(new String[] { Messages.CSVImportLabelFileCSV, Messages.PDFImportFilterName, Messages.CSVImportLabelFileAll });
+        fileDialog.setFilterExtensions(new String[] { "*.csv", "*.pdf", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         String fileName = fileDialog.open();
 
         if (fileName == null)

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import name.abuchen.portfolio.model.LatestSecurityPrice;
-import name.abuchen.portfolio.model.SecurityElement;
 import name.abuchen.portfolio.model.SecurityPrice;
 
 public class FeedData

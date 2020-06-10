@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -74,6 +75,7 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumMapFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.FieldFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
+import name.abuchen.portfolio.datatransfer.pdf.AbstractPDFConverter;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Header;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.HeaderSet;
 import name.abuchen.portfolio.model.Account;
@@ -844,9 +846,15 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
     @Override
     public void beforePage()
     {
+        CSVExtractor e = null;
         if (account == null)
-            return;
-        CSVExtractor e = importer.setExtractor(account.getExtractor());
+        {
+            AbstractPDFConverter c = importer.getConverter();
+            if (c != null)
+                e = importer.setExtractor(c.getDefaultExtractorName());
+        }
+        else
+            e = importer.setExtractor(account.getExtractor());
         if (e != null)
             changeExtractor(e);
     }

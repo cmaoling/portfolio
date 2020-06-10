@@ -56,6 +56,7 @@ public class Messages extends NLS
     public static String CSVColumn_TransactionCurrency;
     public static String CSVColumn_Transferals;
     public static String CSVDefAccountTransactions;
+    public static String CSVDefAmazonCreditcardTransactions;
     public static String CSVDefConsorsAccountBookings;
     public static String CSVDefConsorsAccountTransactions;
     public static String CSVDefDibaAccountTransactions;
@@ -271,6 +272,10 @@ public class Messages extends NLS
     public static String MsgXMLFormatInvalid;
     public static String PDFdbLabel;
     public static String PDFdbMsgCannotDetermineFileType;
+    public static String PDFImportBlockError;
+    public static String PDFImportBufferError;
+    public static String PDFImportFailure;
+    public static String PDFImportNoConverter;
     public static String PDFMsgExtracingFiles;
     public static String PDFMsgFileNotSupported;
     public static String PDFMsgMissingShares;

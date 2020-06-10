@@ -47,11 +47,15 @@ import org.apache.commons.csv.CSVRecord;
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.PortfolioLog;
 import name.abuchen.portfolio.datatransfer.Extractor.Item;
+import name.abuchen.portfolio.datatransfer.pdf.AbstractPDFConverter;
+import name.abuchen.portfolio.datatransfer.pdf.AmazonPDFConverter;
+import name.abuchen.portfolio.datatransfer.pdf.PDFInputFile;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.util.Isin;
 import name.abuchen.portfolio.util.Iban;
+
 
 public class CSVImporter
 {
@@ -628,6 +632,10 @@ public class CSVImporter
     private Column[] columns;
     private List<String[]> values;
 
+    private final List<AbstractPDFConverter> converters = new ArrayList<>();
+
+    private AbstractPDFConverter converter = null;
+
     public CSVImporter(Client client, File file)
     {
         this.client = client;
@@ -636,6 +644,7 @@ public class CSVImporter
         this.extractors = Collections.unmodifiableList(
                         Arrays.asList(
                                         new CSVAccountTransactionExtractor(client),
+                                        new CSVAmazonCreditcardTransactionExtractor(client),
                                         new CSVPortfolioTransactionExtractor(client), 
                                         new CSVConsorsAccountTransactionExtractor(client), 
                                         new CSVConsorsAccountBookingExtractor(client), 
@@ -645,6 +654,8 @@ public class CSVImporter
                                     )
                         );
         this.setExtractor(extractors.get(0));
+
+        this.converters.add(new AmazonPDFConverter(client));
     }
 
     public Client getClient()
@@ -655,6 +666,11 @@ public class CSVImporter
     public File getInputFile()
     {
         return inputFile;
+    }
+
+    public AbstractPDFConverter getConverter()
+    {
+        return converter;
     }
 
     public List<CSVExtractor> getExtractors()
@@ -813,25 +829,70 @@ public class CSVImporter
 
     public void processFile(boolean remap) throws IOException
     {
-        try (FileInputStream stream = new FileInputStream(inputFile))
+        boolean converted = false;
+        // Let's first try to open it as a PDF
+        try
         {
-            processStream(stream,remap);
+            // https://stackoverflow.com/questions/941813/how-can-i-determine-if-a-file-is-a-pdf-file
+            // https://stackoverflow.com/questions/14381880/read-first-4-bytes-of-file
+            byte[] pdfIdentifier = {(byte)0x25, (byte)0x50, (byte)0x44, (byte)0x46, (byte)0x2D};
+            byte[] buffer = new byte[5];
+            InputStream is = new FileInputStream(inputFile);
+            if (is.read(buffer) != buffer.length)
+                PortfolioLog.error(Messages.PDFImportBufferError);
+            is.close();
+            if (Arrays.equals(buffer, pdfIdentifier))
+            {
+                PDFInputFile intermediateFile = new PDFInputFile(inputFile);
+                intermediateFile.convertPDFtoText();
+                // The file we are importing is actually a PDF.
+                // Let's check for the converters we have...
+                for (AbstractPDFConverter converter : converters)
+                {
+                    if (intermediateFile.getAuthor().contains(converter.getPDFAuthor()))
+                    {
+                        converter.setFile(intermediateFile);
+                        if (converter.process())
+                            processStream(converter.getStream(), remap);
+                        else
+                            PortfolioLog.error(MessageFormat.format(Messages.PDFImportFailure, intermediateFile.getName(), intermediateFile.getAuthor(), converter.getLabel()));
+                        converted = true;
+                        this.converter = converter;
+                        break;
+                    }
+                }
+                if (!converted)
+                    PortfolioLog.error(MessageFormat.format(Messages.PDFImportNoConverter, intermediateFile.getName(), intermediateFile.getAuthor()));
+            }
         }
-        catch (IOException e)
+        catch (IOException e1)
         {
-            // fallback for file names with umlaute on Linux
-            byte[] ptext = inputFile.toString().getBytes(StandardCharsets.UTF_8);
-            String str = new String(ptext, StandardCharsets.ISO_8859_1);
-            Path path = Paths.get(URI.create("file://" + str)); //$NON-NLS-1$
+            PortfolioLog.error(e1);
+        }
+        if (!converted)
+        {
+            try (FileInputStream stream = new FileInputStream(inputFile))
+            {
+                processStream(stream, remap);
+            }
+            catch (IOException e)
+            {
+                // fallback for file names with umlaute on Linux
+                byte[] ptext = inputFile.toString().getBytes(StandardCharsets.UTF_8);
+                String str = new String(ptext, StandardCharsets.ISO_8859_1);
+                Path path = Paths.get(URI.create("file://" + str)); //$NON-NLS-1$
 
-            try (InputStream stream = Files.newInputStream(path))
-            {
-                processStream(stream,remap);
+                try (InputStream stream = Files.newInputStream(path))
+                {
+                    processStream(stream, remap);
+                }
+                catch (IOException e2)
+                {
+                    PortfolioLog.error(e);
+                    PortfolioLog.error(e2);
+                }
             }
-            catch (IOException e2)
-            {
-                throw e;
-            }
+
         }
     }
 
