@@ -42,23 +42,33 @@ public class ImportCSVHandler
     
     public static void runImport(PortfolioPart part, Shell shell, Client client, String filterPath, Account account, Portfolio portfolio)
     {
-        FileDialog fileDialog = new FileDialog(shell, SWT.OPEN);
+        FileDialog fileDialog = new FileDialog(shell, SWT.OPEN | SWT.MULTI);
         fileDialog.setFilterPath(filterPath);
         fileDialog.setFilterNames(new String[] { Messages.CSVImportLabelFileCSV, Messages.PDFImportFilterName, Messages.CSVImportLabelFileAll });
         fileDialog.setFilterExtensions(new String[] { "*.csv", "*.pdf", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        String fileName = fileDialog.open();
+        fileDialog.open();
 
-        if (fileName == null)
+        String[] filenames = fileDialog.getFileNames();
+
+        if (filenames.length == 0)
             return;
 
-        IPreferenceStore preferences = part.getPreferenceStore();
-        CSVImportWizard wizard = new CSVImportWizard(client, preferences, new File(fileName));
-        if (account != null)
-            wizard.setTarget(account);
-        if (portfolio != null)
-            wizard.setTarget(portfolio);
+        List<File> files = new ArrayList<>();
+        for (String filename : filenames)
+            files.add(new File(fileDialog.getFilterPath(), filename));
 
-        Dialog wizwardDialog = new WizardDialog(shell, wizard);
-        wizwardDialog.open();
+        IPreferenceStore preferences = part.getPreferenceStore();
+
+        for (File fileName : files)
+        {
+            CSVImportWizard wizard = new CSVImportWizard(client, preferences, fileName);
+            if (account != null)
+                wizard.setTarget(account);
+            if (portfolio != null)
+                wizard.setTarget(portfolio);
+
+            Dialog wizwardDialog = new WizardDialog(shell, wizard);
+            wizwardDialog.open();
+        }
     }
 }
