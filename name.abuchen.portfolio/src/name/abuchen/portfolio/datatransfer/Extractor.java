@@ -829,4 +829,13 @@ public interface Extractor
         return result;
     }
 
+    default public boolean knownFilename(String filename)
+    {
+        return false;
+    }
+
+    default public String extractIban(String filename)
+    {
+        return null;
+    }
 }

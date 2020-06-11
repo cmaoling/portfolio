@@ -641,6 +641,15 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
     {
         setTitle(extractor.getLabel());
 
+        for (Extractor.InputFile file : files)
+        {
+            List<Account> accounts = client.getProposedAccount(((Extractor) extractor).getSubject().extractIban(file.getName()));
+            if (accounts.size() > 0)
+            {
+                setAccount(accounts.get(0));
+                preselectDropDowns();
+            }
+        }
         if (!doExtractBeforeEveryPageDisplay
                         && (!allEntries.isEmpty() || errorTableViewer.getTable().getItemCount() > 0))
             return;

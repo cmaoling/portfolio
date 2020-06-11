@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -305,6 +306,21 @@ public class Client
                         .filter(a -> !a.isRetired()) //
                         .sorted(new Account.ByName()) //
                         .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a sorted list of accounts, which seem to match w/ the IBAN/Account.
+     */
+    public List<Account> getProposedAccount(String identifier)
+    {
+        List<Account> accounts = new ArrayList<>();
+        if (identifier == null)
+            return accounts;
+        String numberPattern = identifier.replace("X", "."); //$NON-NLS-1$ //$NON-NLS-2$
+        for (Account account : getAccounts())
+            if (account.getIban() != null && Pattern.matches(numberPattern, account.getIban()))
+                accounts.add(account);
+        return accounts;
     }
 
     public void addPortfolio(Portfolio portfolio)

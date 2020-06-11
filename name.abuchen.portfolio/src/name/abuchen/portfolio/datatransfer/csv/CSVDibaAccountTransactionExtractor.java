@@ -1,6 +1,10 @@
 package name.abuchen.portfolio.datatransfer.csv;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Header;
@@ -10,10 +14,14 @@ import name.abuchen.portfolio.model.Client;
 
 /* package */ class CSVDibaAccountTransactionExtractor extends CSVAccountTransactionExtractor
 {
+    private List<Pattern> matchPattern = new ArrayList<>();
+
     /* package */ CSVDibaAccountTransactionExtractor(Client client)
     {
         super(client, Messages.CSVDefDibaAccountTransactions);
         sharesOptional = true;
+        matchPattern.add(Pattern.compile("^Umsatzanzeige_([A-Z0-9]{22})([_-].*)?\\.csv")); //$NON-NLS-1$
+        matchPattern.add(Pattern.compile("^Umsatzanzeige_([0-9]{10})([_-].*)?\\.csv")); //$NON-NLS-1$
     }
 
     @Override
@@ -60,7 +68,7 @@ import name.abuchen.portfolio.model.Client;
     @Override   
     public String[] getDefaultHeader()
     {
-        String[] defaultHeader = {  "",  //0 //$NON-NLS-1$
+        String[] defaultHeader = {  Messages.CSVColumn_IBAN, //0 //$NON-NLS-1$
                                     Messages.CSVColumn_Date, //1
                                     Messages.CSVColumn_Note, //2
                                     Messages.CSVColumn_Type, //3
@@ -74,5 +82,36 @@ import name.abuchen.portfolio.model.Client;
                                     };
         return defaultHeader;
     }
-    
+
+    @Override
+    public boolean knownFilename(String filename)
+    {
+        for (Pattern p : matchPattern)
+        {
+            Matcher m = p.matcher(filename);
+            if (m.matches())
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String extractIban(String filename)
+    {
+        if (knownFilename(filename))
+        {
+            for (Pattern p : matchPattern)
+            {
+                Matcher m = p.matcher(filename);
+                if (m.matches())
+                {
+                    String iban = m.group(1);
+                    if (iban.length() < 22)
+                        iban = "DE..50010517" + iban; //$NON-NLS-1$
+                    return iban;
+                }
+            }
+        }
+        return null;
+    }
 }

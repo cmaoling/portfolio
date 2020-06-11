@@ -852,6 +852,12 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
             AbstractPDFConverter c = importer.getConverter();
             if (c != null)
                 e = importer.setExtractor(c.getDefaultExtractorName());
+            else
+            {
+                for (CSVExtractor extractor : importer.getExtractors())
+                   if (extractor.knownFilename(importer.getInputFile().getName()))
+                       e = extractor;
+            }
         }
         else
             e = importer.setExtractor(account.getExtractor());

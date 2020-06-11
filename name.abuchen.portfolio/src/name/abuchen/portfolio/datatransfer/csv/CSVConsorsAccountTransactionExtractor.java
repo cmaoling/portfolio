@@ -1,8 +1,12 @@
 package name.abuchen.portfolio.datatransfer.csv;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
@@ -15,9 +19,13 @@ import name.abuchen.portfolio.money.Money;
 
 /* package */ class CSVConsorsAccountTransactionExtractor extends CSVAccountTransactionExtractor
 {
+    private List<Pattern> matchPattern = new ArrayList<>();
+
     /* package */ CSVConsorsAccountTransactionExtractor(Client client)
     {
         super(client, Messages.CSVDefConsorsAccountTransactions);
+        matchPattern.add(Pattern.compile("^Umsatzuebersicht_([0-9]{8,10})([_-].*)?\\.csv")); //$NON-NLS-1$
+        matchPattern.add(Pattern.compile("^Umsatz.bersicht_([0-9]{8,10})([_-].*)?\\.csv")); //$NON-NLS-1$
     }
 
     CSVConsorsAccountTransactionExtractor(Client client, String label)
@@ -120,4 +128,35 @@ import name.abuchen.portfolio.money.Money;
         return type;
     }
 
+    @Override
+    public boolean knownFilename(String filename)
+    {
+        for (Pattern p : matchPattern)
+        {
+            Matcher m = p.matcher(filename);
+            if (m.matches())
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String extractIban(String filename)
+    {
+        if (knownFilename(filename))
+        {
+            for (Pattern p : matchPattern)
+            {
+                Matcher m = p.matcher(filename);
+                if (m.matches())
+                {
+                    String iban = m.group(1);
+                    if (iban.length() < 22)
+                        iban = "DE..76030080" + ("0000" + iban).substring(12 - iban.length()); //$NON-NLS-1$ //$NON-NLS-2$
+                    return iban;
+                }
+            }
+        }
+        return null;
+    }
 }
