@@ -19,8 +19,8 @@ public class GeneralPreferencePage extends FieldEditorPreferencePage
     @Override
     public void createFieldEditors()
     {
-        addField(new IntegerFieldEditor(UIConstants.Preferences.AUTO_SAVE_FILE,
-                        Messages.PrefAutoSaveFrequency, getFieldEditorParent()));
+//        addField(new IntegerFieldEditor(UIConstants.Preferences.AUTO_SAVE_FILE,
+//                        Messages.PrefAutoSaveFrequency, getFieldEditorParent()));
 
         addField(new BooleanFieldEditor(UIConstants.Preferences.CREATE_BACKUP_BEFORE_SAVING, //
                         Messages.PrefCreateBackupBeforeSaving, getFieldEditorParent()));

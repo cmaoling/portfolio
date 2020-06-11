@@ -440,6 +440,7 @@ public class Messages extends NLS
     public static String JobLabelUpdateQuotes;
     public static String JobLabelUpdateStackedLineChart;
     public static String JobLabelUpdating;
+    public static String JobMsgAutoSave;
     public static String JobMsgCheckingForUpdates;
     public static String JobMsgErrorUpdatingIndices;
     public static String JobMsgErrorUpdatingQuotes;
@@ -928,7 +929,8 @@ public class Messages extends NLS
     public static String PrefAlphaVantageCallFrequencyLimit;
     public static String PrefCheckOnStartup;
     public static String PrefCreateBackupBeforeSaving;
-    public static String PrefAutoSaveFrequency;
+    public static String PrefAutoSavePeriod;
+    public static String PrefAutoSaveWithDatestamp;
     public static String PrefDescriptionAlphaVantage;
     public static String PrefDescriptionFinnhub;
     public static String PrefDescriptionProxy;
@@ -1011,6 +1013,10 @@ public class Messages extends NLS
     public static String SecurityTabHistoricalQuotes;
     public static String SecurityTabTrades;
     public static String SecurityTabTransactions;
+    public static String SettingsListView_setting;
+    public static String SettingsListView_title;
+    public static String SettingsListView_type;
+    public static String SettingsListView_value;
     public static String SplitWizardDefinitionDescription;
     public static String SplitWizardDefinitionTitle;
     public static String SplitWizardErrorNewAndOldMustNotBeEqual;
@@ -1027,6 +1033,7 @@ public class Messages extends NLS
     public static String SystemMenuNewAndNoteworthy;
     public static String TabAccountBalanceChart;
     public static String TabTransactions;
+    public static String TitleDirectoryDialog;
     public static String TitlePasswordDialog;
     public static String TooltipAverageHoldingPeriod;
     public static String TooltipDateOfExchangeRate;

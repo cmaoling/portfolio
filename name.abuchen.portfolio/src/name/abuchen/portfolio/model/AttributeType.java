@@ -169,11 +169,33 @@ public class AttributeType
         }
     }
 
-    private static class DoubleConverter implements Converter
+    public static class PeriodConverter extends LongConverter
+    {
+        private Values<Long> values;
+
+        public PeriodConverter()
+        {
+            super(Values.TimePeriod);
+            this.values = Values.TimePeriod;
+        }
+
+        @Override
+        public String toString(Object object)
+        {
+            return object != null ? values.format((Long) object) : ""; //$NON-NLS-1$
+        }
+    }
+
+    public static class DoubleConverter implements Converter
     {
         private final NumberFormat full = new DecimalFormat("#,###.##"); //$NON-NLS-1$
 
         private Values<Double> values;
+
+        public DoubleConverter()
+        {
+            this(Values.Double);
+        }
 
         public DoubleConverter(Values<Double> values)
         {
@@ -267,25 +289,6 @@ public class AttributeType
                 }
             }
             throw new IllegalArgumentException(MessageFormat.format(Messages.MsgErrorNotAValidDate, value));
-        }
-    }
-
-    public static class BooleanConverter implements Converter
-    {
-
-        @Override
-        public String toString(Object object)
-        {
-            return object != null ? ((Boolean) object).toString() : ""; //$NON-NLS-1$
-        }
-
-        @Override
-        public Object fromString(String value)
-        {
-            if (value.trim().length() == 0)
-                return null;
-
-            return Boolean.valueOf(value);
         }
     }
 

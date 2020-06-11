@@ -2,6 +2,10 @@ package name.abuchen.portfolio.model;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,10 +22,12 @@ import java.util.stream.Stream;
 import javax.crypto.SecretKey;
 
 import name.abuchen.portfolio.Messages;
+import name.abuchen.portfolio.model.AttributeType.PeriodConverter;
+import name.abuchen.portfolio.model.ClientAttribute.AttributeFieldOption;
 import name.abuchen.portfolio.model.Classification.Assignment;
 import name.abuchen.portfolio.money.CurrencyUnit;
 
-public class Client
+public class Client implements Attributable
 {
     /* package */static final int MAJOR_VERSION = 1;
 
@@ -43,6 +49,7 @@ public class Client
     private transient int fileVersionAfterRead = CURRENT_VERSION; // NOSONAR
 
     private String baseCurrency = CurrencyUnit.EUR;
+    private String backupDirectory;
 
     private List<Security> securities = new ArrayList<>();
     private List<Watchlist> watchlists;
@@ -60,6 +67,9 @@ public class Client
 
     private Map<String, String> properties;
     private ClientSettings settings;
+
+    private Boolean autosaveWithDatestamp;
+    private Long autosavePeriod;
 
     @Deprecated
     private String industryTaxonomyId;
@@ -108,9 +118,49 @@ public class Client
         if (settings == null)
             settings = new ClientSettings();
         else
+        {
             settings.doPostLoadInitialization();
+            if (settings.getClientAttributes().size() < 1)
+                addDefaultClientAttributes();
+        }
+        if (backupDirectory == null)
+            setBackupDirectory(""); //$NON-NLS-1$
+
+        if (autosaveWithDatestamp == null)
+            autosaveWithDatestamp = false;
+
+        if (autosavePeriod == null)
+            autosavePeriod = Long.valueOf(5);
+
     }
 
+    private void addDefaultClientAttributes()
+    {
+        ClientAttribute backupDir = new ClientAttribute("backupDirectory"); //$NON-NLS-1$
+        backupDir.setColumnLabel(Messages.LabelClientAttributeBackupDirectory);
+        backupDir.setParent(this);
+        backupDir.setType(Path.class);
+        backupDir.setEdit(true);
+        settings.addClientAttributes(backupDir);
+
+        ClientAttribute autosavePeriod = new ClientAttribute("autosavePeriod"); //$NON-NLS-1$
+        autosavePeriod.setColumnLabel(Messages.LabelClientAttributeAutosavePeriod);
+        autosavePeriod.setParent(this);
+        autosavePeriod.setType(Long.class);
+        autosavePeriod.setConverter(PeriodConverter.class);
+        autosavePeriod.setEdit(true);
+        settings.addClientAttributes(autosavePeriod);
+
+        ClientAttribute autosaveWithDatestamp = new ClientAttribute("autosaveWithDatestamp"); //$NON-NLS-1$
+        autosaveWithDatestamp.setColumnLabel(Messages.LabelClientAttributeAutosaveDatestamp);
+        autosaveWithDatestamp.setParent(this);
+        autosaveWithDatestamp.setType(Boolean.class);
+        autosaveWithDatestamp.addOptions(new AttributeFieldOption(Messages.LabelBooleanFalse, false));
+        autosaveWithDatestamp.addOptions(new AttributeFieldOption(Messages.LabelBooleanTrue, true));
+        autosaveWithDatestamp.setEdit(true);
+        settings.addClientAttributes(autosaveWithDatestamp);
+    }
+ 
     /* package */int getVersion()
     {
         return version;
@@ -140,6 +190,80 @@ public class Client
     public void setBaseCurrency(String baseCurrency)
     {
         propertyChangeSupport.firePropertyChange("baseCurrency", this.baseCurrency, this.baseCurrency = baseCurrency); //$NON-NLS-1$ //NOSONAR
+    }
+
+    @Override
+    public Attributes getAttributes()
+    {
+        Attributes attributes = new Attributes();
+        List<ClientAttribute> clientAttributeList = settings.getClientAttributes();
+        for (ClientAttribute attrib : clientAttributeList)
+            attributes.put(attrib, attrib.getValue());
+        return attributes;
+    }
+
+    @Override
+    public void setAttributes(Attributes attributes)
+    {
+        List<ClientAttribute> clientAttributeList = settings.getClientAttributes();
+        for (ClientAttribute attrib : clientAttributeList)
+            attrib.setValue(attributes.get(attrib));
+    }
+
+    public ClientAttribute getAttribute(String attribute)
+    {
+        List<ClientAttribute> clientAttributeList = settings.getClientAttributes();
+        for (ClientAttribute attrib : clientAttributeList)
+            if (attrib.getId().equals(attribute))
+                return attrib;
+        return null;
+    }
+    
+    public Path getBackupDirectory()
+    {
+        try
+        {
+            return Paths.get(new URI(backupDirectory));
+        }
+        catch (URISyntaxException | IllegalArgumentException e)
+        {
+            // If given file string isn't an URL, fall back to using a normal file 
+            return Paths.get(backupDirectory);
+        }
+    }
+
+    public void setBackupDirectory(String directory)
+    {
+        backupDirectory = directory;
+    }
+
+    public void setBackupDirectory(Path path)
+    {
+        setBackupDirectory(path.toUri().toString());
+    }
+
+    public long getAutosavePeriod()
+    {
+        return autosavePeriod;
+    }
+
+    public void setAutosavePeriod(long period)
+    {
+        autosavePeriod = period;
+        if (period > 0)
+            getAttribute("autosaveWithDatestamp").setEdit(true); //$NON-NLS-1$
+        else
+            getAttribute("autosaveWithDatestamp").setEdit(false); //$NON-NLS-1$
+    }
+
+    public Boolean getAutosaveWithDatestamp()
+    {
+        return autosaveWithDatestamp;
+    }
+
+    public void setAutosaveWithDatestamp(Boolean enable)
+    {
+        autosaveWithDatestamp = enable;
     }
 
     public List<InvestmentPlan> getPlans()

@@ -125,6 +125,11 @@ public class Messages extends NLS
     public static String IssuePortfolioTransactionWithoutSecurity;
     public static String LabelAnyPeer;
     public static String LabelAssetAllocation;
+    public static String LabelBooleanFalse;
+    public static String LabelBooleanTrue;
+    public static String LabelClientAttributeAutosaveDatestamp;
+    public static String LabelClientAttributeAutosavePeriod;
+    public static String LabelClientAttributeBackupDirectory;
     public static String LabelCreditSuisseHTMLTable;
     public static String LabelDefaultReferenceAccountName;
     public static String LabelDeposits;
