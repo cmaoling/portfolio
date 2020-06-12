@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.model.AttributeType.AmountPlainConverter;
+import name.abuchen.portfolio.model.AttributeType.ImageConverter;
 import name.abuchen.portfolio.model.AttributeType.PercentConverter;
 import name.abuchen.portfolio.model.AttributeType.StringConverter;
 
@@ -115,6 +117,14 @@ public class ClientSettings
         managementFee.setType(Double.class);
         managementFee.setConverter(PercentConverter.class);
         addAttributeType(managementFee);
+        
+        AttributeType logoType = new AttributeType("logo"); //$NON-NLS-1$
+        logoType.setName(Messages.AttributesLogoName);
+        logoType.setColumnLabel(Messages.AttributesLogoColumn);
+        logoType.setTarget(Security.class);
+        logoType.setType(String.class);
+        logoType.setConverter(ImageConverter.class);
+        addAttributeType(logoType);
     }
    
     public List<Bookmark> getBookmarks()
@@ -194,5 +204,15 @@ public class ClientSettings
                         .filter(attribute -> id.equals(attribute.getId()))
                         .findAny()
                         .orElse(null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Optional<AttributeType> getOptionalLogoAttributeType(Class<? extends Object> type) 
+    {
+        return getAttributeTypes()
+                        .filter(t -> t.getConverter() instanceof AttributeType.ImageConverter 
+                                     && t.getName().equalsIgnoreCase("logo") //$NON-NLS-1$
+                                     && t.supports((Class<? extends Attributable>) type))
+                        .findFirst();
     }
 }

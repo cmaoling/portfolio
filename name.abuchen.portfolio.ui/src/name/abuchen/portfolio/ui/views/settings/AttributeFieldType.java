@@ -19,6 +19,7 @@ import name.abuchen.portfolio.model.AttributeType.PeriodConverter;
 import name.abuchen.portfolio.model.AttributeType.QuoteConverter;
 import name.abuchen.portfolio.model.AttributeType.ShareConverter;
 import name.abuchen.portfolio.model.AttributeType.StringConverter;
+import name.abuchen.portfolio.model.AttributeType.ImageConverter;
 import name.abuchen.portfolio.model.Bookmark;
 import name.abuchen.portfolio.model.ClientAttribute.BooleanConverter;
 import name.abuchen.portfolio.model.ClientAttribute.PathConverter;
@@ -40,7 +41,8 @@ public enum AttributeFieldType
     DOUBLE(Double.class, DoubleConverter.class), //
     BOOLEAN(Boolean.class, BooleanConverter.class), //
     LIMIT_PRICE(LimitPrice.class, LimitPriceConverter.class, Security.class), //
-    BOOKMARK(Bookmark.class, BookmarkConverter.class);
+    BOOKMARK(Bookmark.class, BookmarkConverter.class), //
+    IMAGE(String.class, ImageConverter.class);
 
     private static final ResourceBundle RESOURCES = ResourceBundle
                     .getBundle("name.abuchen.portfolio.ui.views.settings.labels"); //$NON-NLS-1$

@@ -220,8 +220,8 @@ public class PeerListView extends AbstractListView implements ModificationListen
         peerColumns = new ShowHideColumnHelper(PeerListView.class.getSimpleName() + "@top2", //$NON-NLS-1$
                         getPreferenceStore(), peers, layout);
 
-        Column column = new NameColumn("0", Messages.ColumnPeer, SWT.None, 150); //$NON-NLS-1$
-        column.setLabelProvider(new NameColumnLabelProvider() // NOSONAR
+        Column column = new NameColumn("0", Messages.ColumnPeer, SWT.None, 150, getClient()); //$NON-NLS-1$
+        column.setLabelProvider(new NameColumnLabelProvider(getClient()) // NOSONAR
         {
             @Override
             public String getText(Object e)
@@ -236,8 +236,8 @@ public class PeerListView extends AbstractListView implements ModificationListen
         column.getEditingSupport().addListener(this);
         peerColumns.addColumn(column);
 
-        column = new NameColumn("2", Messages.ColumnReferenceAccount, SWT.None, 180); //$NON-NLS-1$
-        column.setLabelProvider(new NameColumnLabelProvider() // NOSONAR
+        column = new NameColumn("2", Messages.ColumnReferenceAccount, SWT.None, 180, getClient()); //$NON-NLS-1$
+        column.setLabelProvider(new NameColumnLabelProvider(getClient()) // NOSONAR
         {
             @Override
             public String getText(Object e)
