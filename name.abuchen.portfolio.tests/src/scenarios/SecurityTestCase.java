@@ -80,13 +80,14 @@ public class SecurityTestCase
         AccountTransaction dividendCharge = client.getAccounts().get(0).getTransactions().get(0);
         assertThat(dividendCharge.getType(), is(AccountTransaction.Type.DIVIDEND_CHARGE));
 
-        Interval period = Interval.of(LocalDate.parse("2015-01-01"), LocalDate.parse("2015-12-31"));
+        Interval period = Interval.of(LocalDate.parse("2015-01-01"), LocalDate.parse("2016-12-31"));
         TestCurrencyConverter converter = new TestCurrencyConverter();
         SecurityPerformanceSnapshot snapshot = SecurityPerformanceSnapshot.create(client, converter, period);
         SecurityPerformanceRecord record = snapshot.getRecords().get(0);
 
+        // checked with https://www.calculatestuff.com/financial/irr-calculator?initial_investment=104.00&cash_flows%5B%5D=112&guess=
         assertThat(record.getSecurity().getName(), is("Anleihe"));
-        assertThat(record.getTrueTimeWeightedRateOfReturn(), closeTo(-0.0291, 0.0001));
-        assertThat(record.getIrr(), closeTo(-0.05725, 0.0001));
+        assertThat(record.getTrueTimeWeightedRateOfReturn(), closeTo(0.07692, 0.0001));
+        assertThat(record.getIrr(), closeTo(0.054, 0.0001));
     }
 }
