@@ -262,6 +262,7 @@ public class Messages extends NLS
     public static String ColumnQuoteSuggestion_market;
     public static String ColumnQuoteSuggestion_none;
     public static String ColumnQuoteSuggestion_purchase;
+    public static String ColumnRealizedCapitalGains;
     public static String ColumnRebalancingIndicatorAbsoluteThreshold;
     public static String ColumnRebalancingIndicatorBarLength;
     public static String ColumnRebalancingIndicatorRelativeThreshold;
@@ -296,6 +297,7 @@ public class Messages extends NLS
     public static String ColumnTTWROR_Option;
     public static String ColumnTWROR;
     public static String ColumnTWROR_Description;
+    public static String ColumnUnrealizedCapitalGains;
     public static String ColumnUpdatedQuote;
     public static String ColumnUpdatedShares;
     public static String ColumnValue;
@@ -475,6 +477,7 @@ public class Messages extends NLS
     public static String LabelAvailableAttributes;
     public static String LabelAverageHoldingPeriod;
     public static String LabelBenchmarks;
+    public static String LabelCapitalGains;
     public static String LabelCategoryOtherMovements;
     public static String LabelChartDetailPurchaseIndicator;
     public static String LabelChartDetailChartScaling;
