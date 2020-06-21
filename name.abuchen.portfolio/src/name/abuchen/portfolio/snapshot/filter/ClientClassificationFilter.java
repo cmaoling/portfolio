@@ -488,25 +488,25 @@ public class ClientClassificationFilter implements ClientFilter
                     readOnlyAccount.internalAddTransaction(new AccountTransaction(t.getDateTime(), t.getCurrencyCode(),
                                     amount + taxes, t.getSecurity(), t.getType()));
                     readOnlyAccount.internalAddTransaction(new AccountTransaction(t.getDateTime(), t.getCurrencyCode(),
-                                    amount + taxes, t.getSecurity(), AccountTransaction.Type.REMOVAL));
+                                    amount + taxes, null, AccountTransaction.Type.REMOVAL));
                     break;
                 case DIVIDEND_CHARGE:
                     readOnlyAccount.internalAddTransaction(new AccountTransaction(t.getDateTime(), t.getCurrencyCode(),
                                     amount + taxes, t.getSecurity(), t.getType()));
                     readOnlyAccount.internalAddTransaction(new AccountTransaction(t.getDateTime(), t.getCurrencyCode(),
-                                    amount + taxes, t.getSecurity(), AccountTransaction.Type.DEPOSIT));
+                                    amount + taxes, null, AccountTransaction.Type.DEPOSIT));
                     break;
                 case FEES:
                     readOnlyAccount.internalAddTransaction(new AccountTransaction(t.getDateTime(), t.getCurrencyCode(),
                                     amount, t.getSecurity(), t.getType()));
                     readOnlyAccount.internalAddTransaction(new AccountTransaction(t.getDateTime(), t.getCurrencyCode(),
-                                    amount, t.getSecurity(), AccountTransaction.Type.DEPOSIT));
+                                    amount, null, AccountTransaction.Type.DEPOSIT));
                     break;
                 case FEES_REFUND:
                     readOnlyAccount.internalAddTransaction(new AccountTransaction(t.getDateTime(), t.getCurrencyCode(),
                                     amount, t.getSecurity(), t.getType()));
                     readOnlyAccount.internalAddTransaction(new AccountTransaction(t.getDateTime(), t.getCurrencyCode(),
-                                    amount, t.getSecurity(), AccountTransaction.Type.REMOVAL));
+                                    amount, null, AccountTransaction.Type.REMOVAL));
                     break;
                 case TAXES:
                 case TAX_REFUND:
