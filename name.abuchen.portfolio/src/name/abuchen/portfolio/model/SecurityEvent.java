@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
-import java.util.stream.Stream;
-import java.util.stream.Collectors;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.money.Monetary;
@@ -18,25 +16,33 @@ public class SecurityEvent extends SecurityElement
 {
     public enum Type
     {
-        STOCK_SPLIT, STOCK_DIVIDEND, STOCK_RIGHT, STOCK_OTHER, NONE, CUSTOM, PLACED_ORDER, CHART_SIGNAL, STOCK_NEWS, WORLD_EVENT;
+        STOCK_SPLIT(false, false), STOCK_DIVIDEND(true, false), STOCK_RIGHT(true, false), STOCK_OTHER(true, false), NONE(false, false), NOTE(true, true);
 
         private static final ResourceBundle RESOURCES = ResourceBundle.getBundle("name.abuchen.portfolio.model.labels"); //$NON-NLS-1$
+
+        private boolean isUserEditable;
+        private boolean isFlexible;
+
+        private Type(boolean isFlexible, boolean isUserEditable)
+        {
+            this.isUserEditable = isUserEditable;
+            this.isFlexible = isFlexible;
+        }
+
+        public boolean isUserEditable()
+        {
+            return isUserEditable;
+        }
+
+        public boolean isFlexible()
+        {
+            return isFlexible;
+        }
 
         @Override
         public String toString()
         {
             return RESOURCES.getString("event." + name()); //$NON-NLS-1$
-        }
-        public static List<Type> getValues()
-        {
-            return Stream.of(Type.values())
-            .filter(x -> x == SecurityEvent.Type.CHART_SIGNAL
-                      || x == SecurityEvent.Type.CUSTOM
-                      || x == SecurityEvent.Type.PLACED_ORDER
-                      || x == SecurityEvent.Type.STOCK_NEWS
-                      || x == SecurityEvent.Type.STOCK_OTHER
-                      || x == SecurityEvent.Type.WORLD_EVENT)
-            .collect(Collectors.toList());
         }
     }
 
@@ -223,11 +229,7 @@ public class SecurityEvent extends SecurityElement
         {
             return getTypeStr() + ": " + (ratio == null ? "" : getRatioString()) + (amount == null? "" : " @ " + getAmount().toString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         }
-        else if (type.equals(Type.CHART_SIGNAL)
-                || type.equals(Type.CUSTOM)
-                || type.equals(Type.PLACED_ORDER)
-                || type.equals(Type.STOCK_NEWS)
-                || type.equals(Type.WORLD_EVENT))
+        else if (type.equals(Type.NOTE))
         {
             return (details == null? "" : details); //$NON-NLS-1$ 
         }
