@@ -17,6 +17,7 @@ public class SecurityEvent extends SecurityElement
     public enum Type
     {
         STOCK_SPLIT(false, false), STOCK_DIVIDEND(true, false), STOCK_RIGHT(true, false), STOCK_OTHER(true, false), NONE(false, false), NOTE(true, true);
+        // upstream STOCK_DIVIDEND is called DIVIDEND_PAYMENT
 
         private static final ResourceBundle RESOURCES = ResourceBundle.getBundle("name.abuchen.portfolio.model.labels"); //$NON-NLS-1$
 
@@ -52,6 +53,8 @@ public class SecurityEvent extends SecurityElement
 
     private LocalDate exDate = null;
 
+    private LocalDate payDate = null;
+
     private double[] ratio = null;
 
     private String typeStr = null;
@@ -59,11 +62,79 @@ public class SecurityEvent extends SecurityElement
     private boolean isVisible = true;
 
     protected String details = null;
+
+    private String source = null;
+
     @Deprecated
     protected long value;
 
+//+    public static class DividendPayment extends SecurityEvent
+//+    {
+//+        private LocalDate payDate;
+//+        private Money amount;
+//+        private String source;
+//+
+//+        public DividendPayment()
+//+        {
+//+            super(null, Type.DIVIDEND_PAYMENT, null);
+//+        }
+//+
+//+        public DividendPayment(LocalDate exDate, LocalDate payDate, Money amount, String source)
+//+        {
+//+            super(exDate, Type.DIVIDEND_PAYMENT, null);
+//+            this.payDate = payDate;
+//+            this.amount = amount;
+//+            this.source = source;
+//+        }
+//+
+//+        @Override
+//+        public void setType(Type type)
+//+        {
+//+            if (type != Type.DIVIDEND_PAYMENT)
+//+                throw new IllegalArgumentException();
+//+        }
+//+
+//+        public LocalDate getPayDate()
+//+        {
+//+            return payDate;
+//+        }
+//+
+//+        public void setPayDate(LocalDate payDate)
+//+        {
+//+            this.payDate = payDate;
+//+        }
+//+
+//+        public Money getAmount()
+//+        {
+//+            return amount;
+//+        }
+//+
+//+        public void setAmount(Money amount)
+//+        {
+//+            this.amount = amount;
+//+        }
+//+
+//+        public String getSource()
+//+        {
+//+            return source;
+//+        }
+//+
+//+        public void setSource(String source)
+//+        {
+//+            this.source = source;
+//+        }
+//+    }
+
     public SecurityEvent()
     {
+    }
+
+    public SecurityEvent(LocalDate exDate, LocalDate payDate, Monetary monetary, String source)
+    {
+        this(exDate, Type.STOCK_DIVIDEND, null);
+        this.payDate = payDate;
+        this.amount = monetary;
+        setSource(source);
     }
 
     public SecurityEvent(LocalDate date, Type type, String details)
@@ -125,6 +196,16 @@ public class SecurityEvent extends SecurityElement
         return this.exDate;
     }
 
+    public LocalDate getPayDate()
+    {
+        return payDate;
+    }
+
+    public void setPayDate(LocalDate payDate)
+    {
+        this.payDate = payDate;
+    }
+
     public SecurityEvent setRatio(double enumerator, double denumerator)
     {
         ratio = new double[]{enumerator, denumerator};
@@ -170,6 +251,19 @@ public class SecurityEvent extends SecurityElement
     {
         ratio = null;
         return this;
+    }
+
+    public void setSource(String source)
+    {
+        this.source = source;
+    }
+
+    public String getSource()
+    {
+        if (source != null)
+            return source;
+        else
+            return Messages.LabelNothing;
     }
 
     public void setType(Type type)

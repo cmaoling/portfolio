@@ -71,7 +71,7 @@ public /* package */class YahooHelper
     {
         if (s == null || "\"N/A\"".equals(s) || "null".equals(s)) //$NON-NLS-1$ //$NON-NLS-2$
             return null;
-        return LocalDate.parse(s);
+        return s.length() > 10 ? LocalDate.parse(s.substring(0, 10)) : LocalDate.parse(s);
     }
 
     static String stripQuotes(String s)

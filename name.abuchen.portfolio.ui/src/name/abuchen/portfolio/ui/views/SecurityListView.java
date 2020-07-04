@@ -1158,7 +1158,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 
         events = new TableViewer(container, SWT.FULL_SELECTION | SWT.MULTI);
 
-        ShowHideColumnHelper support = new ShowHideColumnHelper(SecurityListView.class.getSimpleName() + "@events", //$NON-NLS-1$
+        ShowHideColumnHelper support = new ShowHideColumnHelper(SecurityListView.class.getSimpleName() + "@events2", //$NON-NLS-1$
                         getPreferenceStore(), events, layout);
 
         Column column = new Column(Messages.ColumnDate, SWT.None, 80);
@@ -1181,7 +1181,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         });
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnTransactionType, SWT.None, 80);
+        column = new Column(Messages.ColumnTransactionType, SWT.None, 120);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1212,7 +1212,48 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         column.setSorter(ColumnViewerSorter.create(e -> ((SecurityEvent) e).getType()), SWT.UP);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnDetails, SWT.None, 80);
+        column = new Column("Zahltag", SWT.NONE, 80);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object element)
+            {
+                if (element instanceof SecurityEvent)
+                {
+                    SecurityEvent event = (SecurityEvent) element;
+                    return event.getPayDate() != null? Values.Date.format(event.getPayDate())
+                                : null;
+                }
+                else
+                    return null;
+            }
+        });
+//        column.setSorter(
+//                        ColumnViewerSorter.create(
+//                                        e -> e instanceof DividendPayment ? ((DividendPayment) e).getPayDate() : null),
+//                        SWT.UP);
+        support.addColumn(column);
+
+//      (cmaoling)-edition: the amount is provided in the explaination column
+//        column = new Column(Messages.ColumnAmount, SWT.NONE, 80);
+//        column.setLabelProvider(new ColumnLabelProvider()
+//        {
+//            @Override
+//            public String getText(Object element)
+//            {
+//                return element instanceof DividendPayment
+//                                ? Values.Money.format(((DividendPayment) element).getAmount(),
+//                                                getClient().getBaseCurrency())
+//                                : null;
+//            }
+//        });
+//        column.setSorter(
+//                        ColumnViewerSorter.create(
+//                                        e -> e instanceof DividendPayment ? ((DividendPayment) e).getAmount() : null),
+//                        SWT.UP);
+//        support.addColumn(column);
+
+        column = new Column(Messages.ColumnDetails, SWT.None, 300);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1221,7 +1262,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 return ((SecurityEvent) element).getExplaination();
             }
         });
-        column.setSorter(ColumnViewerSorter.create(e -> ((SecurityEvent) e).getDetails().toLowerCase()), SWT.UP);
+        column.setSorter(ColumnViewerSorter.createIgnoreCase(e -> ((SecurityEvent) e).getExplaination()), SWT.UP);
         column.setEditingSupport(new StringEditingSupport(SecurityEvent.class, "details") //$NON-NLS-1$
         {
             @Override

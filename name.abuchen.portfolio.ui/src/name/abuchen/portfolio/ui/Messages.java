@@ -441,6 +441,7 @@ public class Messages extends NLS
     public static String JobLabelAutoSave;
     public static String JobLabelSyncSecuritiesOnline;
     public static String JobLabelUpdateCPI;
+    public static String JobLabelUpdateDividends;
     public static String JobLabelUpdateEvents;
     public static String JobLabelUpdateQuotes;
     public static String JobLabelUpdateStackedLineChart;
