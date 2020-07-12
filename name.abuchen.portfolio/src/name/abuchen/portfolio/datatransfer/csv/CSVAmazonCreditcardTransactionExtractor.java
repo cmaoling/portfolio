@@ -48,7 +48,7 @@ import name.abuchen.portfolio.money.Money;
                                     Messages.CSVColumn_Date, //1
                                     "", //2 //$NON-NLS-1$
                                     Messages.CSVColumn_Note, //3
-                                    "", //4
+                                    "", //4 //$NON-NLS-1$
                                     "", //5 //$NON-NLS-1$
                                     Messages.CSVColumn_Value, //6
                                     "", //7 //$NON-NLS-1$

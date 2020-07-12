@@ -87,7 +87,6 @@ public class AccountPerformanceTaxRefundTestCase
         double endValue = account.getCurrentAmount(LocalDateTime.of(2014,12,31, 10, 00));
         double taxValue = account.getTransactions().get(2).getUnitSum(Transaction.Unit.Type.TAX).getAmount();
         double ttwror = (endValue / startValue) - 1;
-        System.err.println("testAccountPerformanceTax4Interest startValue: " + startValue + " Endvalue: " + endValue + "  ttwror: " + ttwror);
         List<Exception> warnings = new ArrayList<>();
         CurrencyConverter converter = new TestCurrencyConverter();
         PerformanceIndex accountPerformance = PerformanceIndex.forAccount(client, converter, account, period, warnings);
