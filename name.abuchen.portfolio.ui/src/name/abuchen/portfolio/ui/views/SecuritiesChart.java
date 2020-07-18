@@ -1159,6 +1159,10 @@ public class SecuritiesChart
     {
         security.getEvents(SecurityEvent.Type.STOCK_SPLIT).stream() //
                         .filter(e -> chartInterval.contains(e.getDate())) //
+// (cmaoling-edition): obsolete, because mapped to STOCK_DIVIDEND instead
+//                        .filter(e -> e.getType() != SecurityEvent.Type.DIVIDEND_PAYMENT) //
+//                        .forEach(e -> chart.addMarkerLine(e.getDate(),
+//                                        Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY), e.getDetails()));
                         .forEach(e -> chart.addMarkerLine(e.getDate(), colorEventSplit, e.getRatioString()));
     }
 

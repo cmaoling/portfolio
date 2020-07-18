@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -35,7 +36,7 @@ public final class UpdateDividendsJob extends AbstractClientJob
 
     public UpdateDividendsJob(Client client, List<Security> securities)
     {
-        super(client, Messages.JobLabelUpdateDividends);
+        super(client, Messages.JobLabelUpdatingDividendEvents);
 
         this.securities = new ArrayList<>(securities);
     }
@@ -43,7 +44,7 @@ public final class UpdateDividendsJob extends AbstractClientJob
     @Override
     protected IStatus run(IProgressMonitor monitor)
     {
-        monitor.beginTask(Messages.JobLabelUpdating, IProgressMonitor.UNKNOWN);
+        monitor.beginTask(Messages.JobLabelUpdatingDividendEvents, IProgressMonitor.UNKNOWN);
 
         DividendFeed feed = Factory.getDividendFeed(DivvyDiaryDividendFeed.class);
 
@@ -57,9 +58,24 @@ public final class UpdateDividendsJob extends AbstractClientJob
 
                 if (!dividends.isEmpty())
                 {
-                    security.removeEventIf(event -> event.getType() == SecurityEvent.Type.STOCK_DIVIDEND);
-                    dividends.forEach(dividend -> security.addEvent(dividend));
-                    isDirty = true;
+                    List<SecurityEvent> current = security.getEvents().stream()
+                                    .filter(event -> event.getType() == SecurityEvent.Type.STOCK_DIVIDEND)
+                                    .map(event -> (SecurityEvent) event).collect(Collectors.toList());
+
+                    for (SecurityEvent dividendEvent : dividends)
+                    {
+                        if (current.contains(dividendEvent))
+                            current.remove(dividendEvent);
+                        else
+                        {
+                            security.addEvent(dividendEvent);
+                            isDirty = true;
+                        }
+                    }
+
+                    security.removeEventIf(event -> current.contains(event));
+
+                    isDirty = isDirty || !current.isEmpty();
                 }
             }
             catch (IOException e)

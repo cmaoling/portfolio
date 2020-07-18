@@ -1212,7 +1212,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         column.setSorter(ColumnViewerSorter.create(e -> ((SecurityEvent) e).getType()), SWT.UP);
         support.addColumn(column);
 
-        column = new Column("Zahltag", SWT.NONE, 80);
+        column = new Column(Messages.ColumnPaymentDate, SWT.NONE, 80);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1221,7 +1221,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 if (element instanceof SecurityEvent)
                 {
                     SecurityEvent event = (SecurityEvent) element;
-                    return event.getPayDate() != null? Values.Date.format(event.getPayDate())
+                    return event.getPaymentDate() != null ? Values.Date.format(event.getPaymentDate())
                                 : null;
                 }
                 else
@@ -1230,7 +1230,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         });
 //        column.setSorter(
 //                        ColumnViewerSorter.create(
-//                                        e -> e instanceof DividendPayment ? ((DividendPayment) e).getPayDate() : null),
+//                                        e -> e instanceof DividendEvent ? ((DividendEvent) e).getPaymentDate() : null),
 //                        SWT.UP);
         support.addColumn(column);
 
@@ -1241,15 +1241,15 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 //            @Override
 //            public String getText(Object element)
 //            {
-//                return element instanceof DividendPayment
-//                                ? Values.Money.format(((DividendPayment) element).getAmount(),
+//                return element instanceof DividendEvent
+//                                ? Values.Money.format(((DividendEvent) element).getAmount(),
 //                                                getClient().getBaseCurrency())
 //                                : null;
 //            }
 //        });
 //        column.setSorter(
 //                        ColumnViewerSorter.create(
-//                                        e -> e instanceof DividendPayment ? ((DividendPayment) e).getAmount() : null),
+//                                        e -> e instanceof DividendEvent ? ((DividendEvent) e).getAmount() : null),
 //                        SWT.UP);
 //        support.addColumn(column);
 

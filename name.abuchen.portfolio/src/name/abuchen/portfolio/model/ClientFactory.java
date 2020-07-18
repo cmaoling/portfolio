@@ -1204,7 +1204,7 @@ public class ClientFactory
             xstream.useAttributeFor(Dashboard.Widget.class, "type");
 
             xstream.alias("event", SecurityEvent.class);
-//            xstream.alias("dividendPayment", SecurityEvent.DividendPayment.class); // cmaoling-edition: no extra class
+//            xstream.alias("dividendEvent", SecurityEvent.DividendEvent.class); // cmaoling-edition: no extra class
             xstream.alias("config-set", ConfigurationSet.class);
             xstream.alias("config", ConfigurationSet.Configuration.class);
 
