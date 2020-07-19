@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import name.abuchen.portfolio.Messages;
@@ -78,6 +79,21 @@ public class ClientSettings
 
     private void addDefaultAttributeTypes()
     {
+        Function<Class<? extends Attributable>, AttributeType> factory = target -> {
+            AttributeType logoType = new AttributeType("logo"); //$NON-NLS-1$
+            logoType.setName(Messages.AttributesLogoName);
+            logoType.setColumnLabel(Messages.AttributesLogoColumn);
+            logoType.setTarget(target);
+            logoType.setType(String.class);
+            logoType.setConverter(ImageConverter.class);
+            return logoType;
+        };
+
+        addAttributeType(factory.apply(Security.class));
+        addAttributeType(factory.apply(Account.class));
+        addAttributeType(factory.apply(Portfolio.class));
+        addAttributeType(factory.apply(InvestmentPlan.class));
+
         AttributeType ter = new AttributeType("ter"); //$NON-NLS-1$
         ter.setName(Messages.AttributesTERName);
         ter.setColumnLabel(Messages.AttributesTERColumn);
@@ -117,14 +133,6 @@ public class ClientSettings
         managementFee.setType(Double.class);
         managementFee.setConverter(PercentConverter.class);
         addAttributeType(managementFee);
-        
-        AttributeType logoType = new AttributeType("logo"); //$NON-NLS-1$
-        logoType.setName(Messages.AttributesLogoName);
-        logoType.setColumnLabel(Messages.AttributesLogoColumn);
-        logoType.setTarget(Security.class);
-        logoType.setType(String.class);
-        logoType.setConverter(ImageConverter.class);
-        addAttributeType(logoType);
     }
    
     public List<Bookmark> getBookmarks()
@@ -207,12 +215,10 @@ public class ClientSettings
     }
 
     @SuppressWarnings("unchecked")
-    public Optional<AttributeType> getOptionalLogoAttributeType(Class<? extends Object> type) 
+    public Optional<AttributeType> getOptionalLogoAttributeType(Class<? extends Object> type)
     {
-        return getAttributeTypes()
-                        .filter(t -> t.getConverter() instanceof AttributeType.ImageConverter 
-                                     && t.getName().equalsIgnoreCase("logo") //$NON-NLS-1$
-                                     && t.supports((Class<? extends Attributable>) type))
-                        .findFirst();
+        return getAttributeTypes().filter(t -> t.getConverter() instanceof AttributeType.ImageConverter
+                        && t.getName().equalsIgnoreCase("logo") //$NON-NLS-1$
+                        && t.supports((Class<? extends Attributable>) type)).findFirst();
     }
 }
