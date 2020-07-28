@@ -68,6 +68,8 @@ public interface Extractor
         private Portfolio portfolioPrimary;
 
         private Portfolio portfolioSecondary;
+        
+        private boolean investmentPlanItem = false;
 
         public abstract Annotated getSubject();
 
@@ -115,7 +117,7 @@ public interface Extractor
         {
             this.data = data;
         }
-
+        
         public Account getAccountPrimary()
         {
             return accountPrimary;
@@ -154,6 +156,16 @@ public interface Extractor
         public void setPortfolioSecondary(Portfolio portfolio)
         {
             portfolioSecondary = portfolio;
+        }
+
+        public boolean isInvestmentPlanItem()
+        {
+            return investmentPlanItem;
+        }
+
+        public void setInvestmentPlanItem(boolean flag)
+        {
+            investmentPlanItem = flag;
         }
 
     }
@@ -398,7 +410,7 @@ public interface Extractor
         {
             return entry.getAccountTransaction().getSecurity();
         }
-
+        
         @Override
         public String getNote()
         {
@@ -426,7 +438,14 @@ public interface Extractor
             if (portfolio == null)
                 portfolio = context.getPortfolio();
 
-            return action.process(entry, account, portfolio);
+            Status status = action.process(entry, account, portfolio);
+
+            // check if message was set in DetectDuplicatesAction
+            if (Messages.InvestmentPlanItemImportToolTip.equals(status.getMessage()))  
+            { 
+                super.setInvestmentPlanItem(true);
+            }
+            return status;
         }
 
         @Override
