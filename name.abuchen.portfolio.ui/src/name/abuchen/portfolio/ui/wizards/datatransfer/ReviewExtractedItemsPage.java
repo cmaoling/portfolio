@@ -680,7 +680,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 for (Object element : tableViewer.getStructuredSelection().toList())
                     applier.accept(((ExtractedEntry) element).getItem(), subject);
 
-                tableViewer.refresh();
+                checkEntriesAndRefresh(allEntries);
             }));
         }
     }
