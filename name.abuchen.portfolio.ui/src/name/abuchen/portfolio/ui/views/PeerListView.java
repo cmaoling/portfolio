@@ -47,6 +47,7 @@ import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransferDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.OpenDialogAction;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransactionDialog;
 import name.abuchen.portfolio.ui.util.DropDown;
+import name.abuchen.portfolio.ui.util.LogoManager;
 import name.abuchen.portfolio.ui.util.SimpleAction;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnEditingSupport;
@@ -261,6 +262,15 @@ public class PeerListView extends AbstractListView implements ModificationListen
                 boolean isRetired = a.isRetired();
                 return isRetired ? Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY) : null;
             }
+
+            @Override
+            public Image getImage(Object e)
+            {
+                Account a = ((Peer) e).getAccount();
+                if (a == null)
+                    return null;
+                return LogoManager.instance().getDefaultColumnImage(a, getClient().getSettings());
+            }
         });
         ColumnViewerSorter.create(Peer.class, "account").attachTo(column); //$NON-NLS-1$
         List<Account> accounts = getClient().getAccounts(false);
@@ -426,6 +436,13 @@ public class PeerListView extends AbstractListView implements ModificationListen
             {
                 return colorFor((AccountTransaction) ((DedicatedTransaction) element).getTransaction());
             }
+
+            @Override
+            public Image getImage(Object e)
+            {
+                Account a = (Account) ((DedicatedTransaction) e).getAccount();
+                return LogoManager.instance().getDefaultColumnImage(a, getClient().getSettings());
+            }
         });
         transactionsColumns.addColumn(column);
 
@@ -444,6 +461,15 @@ public class PeerListView extends AbstractListView implements ModificationListen
             public Color getForeground(Object element)
             {
                 return colorFor((AccountTransaction) ((DedicatedTransaction) element).getTransaction());
+            }
+
+            @Override
+            public Image getImage(Object e)
+            {
+                AccountTransaction t = (AccountTransaction) ((DedicatedTransaction) e).getTransaction();
+                return t.getCrossEntry() != null
+                                ? LogoManager.instance().getDefaultColumnImage(t.getCrossEntry().getCrossOwner(t), getClient().getSettings())
+                                : null;
             }
         });
         transactionsColumns.addColumn(column);

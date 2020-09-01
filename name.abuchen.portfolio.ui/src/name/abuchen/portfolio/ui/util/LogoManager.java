@@ -11,6 +11,7 @@ import name.abuchen.portfolio.model.Classification;
 import name.abuchen.portfolio.model.ClientSettings;
 import name.abuchen.portfolio.model.ImageManager;
 import name.abuchen.portfolio.model.InvestmentPlan;
+import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.ui.Images;
@@ -52,6 +53,8 @@ public final class LogoManager
             return Images.ACCOUNT.image();
         else if (object instanceof Security)
             return ((Security) object).isRetired() ? Images.SECURITY_RETIRED.image() : Images.SECURITY.image();
+        else if (object instanceof Peer)
+            return Images.PEER.image();
         else if (object instanceof Portfolio)
             return Images.PORTFOLIO.image();
         else if (object instanceof InvestmentPlan)
