@@ -844,14 +844,17 @@ public class ShowHideColumnHelper implements IMenuListener, ConfigurationStoreOw
         {
             Widget col = policy.getColumn(index);
             Column column = (Column) col.getData(Column.class.getName());
-            buf.append(column.getId()).append('=');
+            if (column != null)
+            {
+                buf.append(column.getId()).append('=');
 
-            if (column.hasOptions())
-                buf.append(column.getOptions().toString(col.getData(OPTIONS_KEY))).append('|');
-            if (col.equals(sortedColumn))
-                buf.append(policy.getSortDirection()).append('$');
+                if (column.hasOptions())
+                    buf.append(column.getOptions().toString(col.getData(OPTIONS_KEY))).append('|');
+                if (col.equals(sortedColumn))
+                    buf.append(policy.getSortDirection()).append('$');
 
-            buf.append(policy.getWidth(col)).append(';');
+                buf.append(policy.getWidth(col)).append(';');
+            }
         }
         return buf.toString();
     }
