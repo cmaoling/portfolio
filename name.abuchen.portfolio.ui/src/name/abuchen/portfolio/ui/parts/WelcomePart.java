@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.ui.parts;
 
+import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,7 @@ import org.eclipse.core.commands.Parameterization;
 import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.e4.core.commands.ECommandService;
 import org.eclipse.e4.core.commands.EHandlerService;
 import org.eclipse.e4.core.di.annotations.Optional;
@@ -86,6 +88,12 @@ public class WelcomePart
 
         createHeader(container);
         createContent(container);
+
+        String[] arguments = Platform.getApplicationArgs();
+        for (String argument : arguments) {
+            PortfolioPlugin.info("WelcomePart - command line argument found: " + argument); //$NON-NLS-1$
+            linkActivated(argument);
+        }
     }
 
     private void createHeader(Composite container)
@@ -166,7 +174,7 @@ public class WelcomePart
 
         for (String file : recentFiles.getRecentFiles())
         {
-            String name = Path.fromOSString(file).lastSegment();
+            String name = Path.fromOSString(file).toPortableString();
             addLink(recentFilesComposite, OPEN + file, name, null);
         }
     }
@@ -239,7 +247,12 @@ public class WelcomePart
             if (part.isPresent())
                 partService.activate(part.get());
             else
-                executeCommand(UIConstants.Command.OPEN_RECENT_FILE, UIConstants.Parameter.FILE, file);
+            {
+                if ((new File(file)).exists())
+                    executeCommand(UIConstants.Command.OPEN_RECENT_FILE, UIConstants.Parameter.FILE, file);
+                else
+                    PortfolioPlugin.log("WelcomePart:linkActivated - File not found: " + file);  //$NON-NLS-1$
+            }
         }
         else if ("action:open".equals(target)) //$NON-NLS-1$
         {
