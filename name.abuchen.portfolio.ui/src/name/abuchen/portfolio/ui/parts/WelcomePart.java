@@ -90,7 +90,8 @@ public class WelcomePart
         createContent(container);
 
         String[] arguments = Platform.getApplicationArgs();
-        for (String argument : arguments) {
+        for (String argument : arguments)
+        {
             PortfolioPlugin.info("WelcomePart - command line argument found: " + argument); //$NON-NLS-1$
             linkActivated(argument);
         }

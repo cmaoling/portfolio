@@ -8,9 +8,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import name.abuchen.portfolio.model.AttributeType;
-import name.abuchen.portfolio.model.ClientAttribute;
-
 public class ClientAttribute extends AttributeType
 {
     public ClientAttribute(String id)
