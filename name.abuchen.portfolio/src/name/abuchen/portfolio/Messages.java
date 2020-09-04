@@ -202,6 +202,10 @@ public class Messages extends NLS
     public static String LabelXwithCurrencyY;
     public static String MsgAlphaVantageAPIKeyMissing;
     public static String MsgAlphaVantageRateLimitExceeded;
+    public static String MsgArivaDelayAccess;
+    public static String MsgArivaLoadMissingMonths;
+    public static String MsgArivaNoMissingMonths;
+    public static String MsgArivaWarningHTTP;
     public static String MsgCheckDividendsMustHaveASecurity;
     public static String MsgCheckInvalidTransactionType;
     public static String MsgCheckGrossValueUnitMissing;
