@@ -367,8 +367,8 @@
         <account-transaction>
           <date>2015-07-01</date>
           <currencyCode>EUR</currencyCode>
-          <amount>30000</amount>
-          <security reference="../../../../../securities/security"/>
+          <amount>40000</amount>
+          <security reference="../../../../../securities/security"></security>
           <shares>100000000</shares>
           <type>DIVIDEND_CHARGE</type>
         </account-transaction>
@@ -376,7 +376,7 @@
           <date>2015-07-01</date>
           <currencyCode>EUR</currencyCode>
           <amount>1000000</amount>
-          <security reference="../../../../../securities/security"/>
+          <security reference="../../../../../securities/security"></security>
           <crossEntry class="buysell">
             <portfolio>
               <uuid>15f917a6-d738-48d9-a9bb-859aa3fcd09a</uuid>
@@ -399,14 +399,14 @@
             <account reference="../../../.."/>
             <accountTransaction reference="../.."/>
           </crossEntry>
-          <shares>0</shares>
+          <shares>100000000</shares>
           <type>BUY</type>
         </account-transaction>
         <account-transaction>
           <date>2016-02-15</date>
           <currencyCode>EUR</currencyCode>
           <amount>120000</amount>
-          <security reference="../../../../../securities/security"/>
+          <security reference="../../../../../securities/security"></security>
           <shares>100000000</shares>
           <type>DIVIDENDS</type>
         </account-transaction>

@@ -33,6 +33,9 @@ import name.abuchen.portfolio.ui.UIConstants;
         {
             Client client = ClientFactory.load(clientInput.getFile(), password, progressProvider.createMonitor());
 
+            if (client.getBackupDirectory().toString().equals("")) //$NON-NLS-1$
+                client.setBackupDirectory(clientInput.getFile().toPath().getParent().toString());
+
             Display.getDefault().asyncExec(() -> clientInput.setClient(client));
 
             clientInput.createBackupAfterOpen();

@@ -15,6 +15,8 @@ public class Messages extends NLS
     public static String AttributesTERName;
     public static String AttributesVendorColumn;
     public static String AttributesVendorName;
+    public static String AttributesLogoName;
+    public static String AttributesLogoColumn;
     public static String ColumnCapitalGains;
     public static String ColumnCurrencyGains;
     public static String ColumnEarnings;
@@ -80,6 +82,7 @@ public class Messages extends NLS
     public static String CSVFormatNumberGermany;
     public static String CSVFormatNumberUS;
     public static String CSVFormatYYYYMMDD;
+    public static String CSVFormatYYYYMMDDSlashes;
     public static String CSVImportedSecurityLabel;
     public static String CSVImportGenericColumnLabel;
     public static String CSVImportSecurityExists;
@@ -111,6 +114,7 @@ public class Messages extends NLS
     public static String FormatNoteStr;
     public static String IBXML_Label;
     public static String InvestmentPlanAutoNoteLabel;
+    public static String InvestmentPlanItemImportToolTip;
     public static String IssueBuySellWithoutSecurity;
     public static String IssueDividendWithoutSecurity;
     public static String IssueInconsistentSharesHeld;
@@ -125,6 +129,11 @@ public class Messages extends NLS
     public static String IssuePortfolioTransactionWithoutSecurity;
     public static String LabelAnyPeer;
     public static String LabelAssetAllocation;
+    public static String LabelBooleanFalse;
+    public static String LabelBooleanTrue;
+    public static String LabelClientAttributeAutosaveDatestamp;
+    public static String LabelClientAttributeAutosavePeriod;
+    public static String LabelClientAttributeBackupDirectory;
     public static String LabelCreditSuisseHTMLTable;
     public static String LabelDefaultReferenceAccountName;
     public static String LabelDeposits;
@@ -178,6 +187,7 @@ public class Messages extends NLS
     public static String LabelTradeCalendarSix;
     public static String LabelTradeCalendarUseDefault;
     public static String LabelTradeCalendarEmpty;
+    public static String LabelTrailTransferFromXtoY;
     public static String LabelTrailWithoutTaxesAndFees;
     public static String LabelTrailXofYShares;
     public static String LabelTransferAccount;
@@ -192,6 +202,10 @@ public class Messages extends NLS
     public static String LabelXwithCurrencyY;
     public static String MsgAlphaVantageAPIKeyMissing;
     public static String MsgAlphaVantageRateLimitExceeded;
+    public static String MsgArivaDelayAccess;
+    public static String MsgArivaLoadMissingMonths;
+    public static String MsgArivaNoMissingMonths;
+    public static String MsgArivaWarningHTTP;
     public static String MsgCheckDividendsMustHaveASecurity;
     public static String MsgCheckInvalidTransactionType;
     public static String MsgCheckGrossValueUnitMissing;
@@ -303,7 +317,7 @@ public class Messages extends NLS
         NLS.initializeMessages(BUNDLE_NAME, Messages.class);
     }
 
-    private Messages()
+    protected Messages()
     {
     }
 }

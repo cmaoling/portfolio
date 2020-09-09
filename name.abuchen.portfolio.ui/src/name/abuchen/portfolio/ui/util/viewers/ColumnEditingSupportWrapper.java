@@ -28,7 +28,9 @@ public class ColumnEditingSupportWrapper extends EditingSupport
     @Override
     protected CellEditor getCellEditor(Object element)
     {
-        if (editor == null)
+        if (proxy instanceof AttributeEditingSupport)
+            editor = ((AttributeEditingSupport) proxy).createEditor((Composite) viewer.getControl(), element);
+        else if (editor == null)
             editor = proxy.createEditor((Composite) viewer.getControl());
         proxy.prepareEditor(element);
         return editor;

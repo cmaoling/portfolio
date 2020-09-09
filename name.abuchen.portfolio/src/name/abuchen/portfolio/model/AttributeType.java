@@ -169,11 +169,33 @@ public class AttributeType
         }
     }
 
-    private static class DoubleConverter implements Converter
+    public static class PeriodConverter extends LongConverter
+    {
+        private Values<Long> values;
+
+        public PeriodConverter()
+        {
+            super(Values.TimePeriod);
+            this.values = Values.TimePeriod;
+        }
+
+        @Override
+        public String toString(Object object)
+        {
+            return object != null ? values.format((Long) object) : ""; //$NON-NLS-1$
+        }
+    }
+
+    public static class DoubleConverter implements Converter
     {
         private final NumberFormat full = new DecimalFormat("#,###.##"); //$NON-NLS-1$
 
         private Values<Double> values;
+
+        public DoubleConverter()
+        {
+            this(Values.Double);
+        }
 
         public DoubleConverter(Values<Double> values)
         {
@@ -270,25 +292,6 @@ public class AttributeType
         }
     }
 
-    public static class BooleanConverter implements Converter
-    {
-
-        @Override
-        public String toString(Object object)
-        {
-            return object != null ? ((Boolean) object).toString() : ""; //$NON-NLS-1$
-        }
-
-        @Override
-        public Object fromString(String value)
-        {
-            if (value.trim().length() == 0)
-                return null;
-
-            return Boolean.valueOf(value);
-        }
-    }
-
     public static class BookmarkConverter implements Converter
     {
         public static final Pattern PLAIN = Pattern.compile("^(?<link>https?\\:\\/\\/[^ \\t\\r\\n]+)$", //$NON-NLS-1$
@@ -333,6 +336,24 @@ public class AttributeType
 
             throw new IllegalArgumentException(MessageFormat.format(Messages.MsgErrorInvalidURL, trimmed));
         }
+    }
+
+    public static class ImageConverter implements Converter
+    {
+        public static final int MAXIMUM_SIZE_EMBEDDED_IMAGE = 64;
+
+        @Override
+        public String toString(Object object)
+        {
+            return object != null ? (String) object : ""; //$NON-NLS-1$
+        }
+
+        @Override
+        public Object fromString(String value)
+        {
+            return value;
+        }
+
     }
 
     private final String id;

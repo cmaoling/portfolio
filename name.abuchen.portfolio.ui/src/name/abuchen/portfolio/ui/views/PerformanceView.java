@@ -53,6 +53,7 @@ import name.abuchen.portfolio.ui.selection.SecuritySelection;
 import name.abuchen.portfolio.ui.selection.SelectionService;
 import name.abuchen.portfolio.ui.util.ClientFilterDropDown;
 import name.abuchen.portfolio.ui.util.DropDown;
+import name.abuchen.portfolio.ui.util.LogoManager;
 import name.abuchen.portfolio.ui.util.SimpleAction;
 import name.abuchen.portfolio.ui.util.TableViewerCSVExporter;
 import name.abuchen.portfolio.ui.util.TreeViewerCSVExporter;
@@ -206,7 +207,7 @@ public class PerformanceView extends AbstractHistoricView
         ShowHideColumnHelper support = new ShowHideColumnHelper(getClass().getSimpleName() + "-calculation@v2", //$NON-NLS-1$
                         getPreferenceStore(), calculation, layout);
 
-        Column column = new NameColumn("label", Messages.ColumnLabel, SWT.NONE, 350); //$NON-NLS-1$
+        Column column = new NameColumn("label", Messages.ColumnLabel, SWT.NONE, 350, getClient()); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -236,15 +237,20 @@ public class PerformanceView extends AbstractHistoricView
                 {
                     ClientPerformanceSnapshot.Position position = (ClientPerformanceSnapshot.Position) element;
 
-                    if (position.getSecurity() != null)
+                    Security security = position.getSecurity();
+                    if (security != null)
                     {
                         ClientPerformanceSnapshot snapshot = ((PerformanceContentProvider) calculation
                                         .getContentProvider()).getSnapshot();
 
                         boolean hasHoldings = snapshot.getEndClientSnapshot().getPositionsByVehicle()
-                                        .get(position.getSecurity()) != null;
+                                        .get(security) != null;
 
-                        return hasHoldings ? Images.SECURITY.image() : Images.SECURITY_RETIRED.image();
+                        if(hasHoldings) 
+                        {
+                            return LogoManager.instance().getDefaultColumnImage(security, getClient().getSettings());
+                        }
+                        return Images.SECURITY_RETIRED.image();
                     }
                     else
                     {
@@ -265,7 +271,7 @@ public class PerformanceView extends AbstractHistoricView
         });
         support.addColumn(column);
 
-        column = new NameColumn("value", Messages.ColumnValue, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new NameColumn("value", Messages.ColumnValue, SWT.RIGHT, 80, getClient()); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -307,7 +313,7 @@ public class PerformanceView extends AbstractHistoricView
         });
         support.addColumn(column);
 
-        column = new NameColumn("forex", Messages.ColumnThereofForeignCurrencyGains, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new NameColumn("forex", Messages.ColumnThereofForeignCurrencyGains, SWT.RIGHT, 80, getClient()); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -537,7 +543,7 @@ public class PerformanceView extends AbstractHistoricView
             public Image getImage(Object element)
             {
                 Security security = ((TransactionPair<?>) element).getTransaction().getSecurity();
-                return security != null ? Images.SECURITY.image() : null;
+                return security != null ? LogoManager.instance().getDefaultColumnImage(security, getClient().getSettings()) : null;
             }
         });
         column.setSorter(ColumnViewerSorter.create(e -> {
@@ -567,7 +573,7 @@ public class PerformanceView extends AbstractHistoricView
                 Portfolio portfolio = ((TransactionPair<?>) element).getOwner() instanceof Portfolio
                                 ? (Portfolio) ((TransactionPair<?>) element).getOwner()
                                 : null;
-                return portfolio != null ? Images.PORTFOLIO.image() : null;
+                return portfolio != null ? LogoManager.instance().getDefaultColumnImage(portfolio, getClient().getSettings()) : null;
             }
         });
         column.setSorter(ColumnViewerSorter.create(e -> {
@@ -610,7 +616,7 @@ public class PerformanceView extends AbstractHistoricView
             public Image getImage(Object element)
             {
                 Account account = getAccount.apply(element);
-                return account != null ? Images.ACCOUNT.image() : null;
+                return account != null ? LogoManager.instance().getDefaultColumnImage(account, getClient().getSettings()) : null;
             }
         });
         column.setSorter(ColumnViewerSorter.create(e -> {
@@ -645,7 +651,8 @@ public class PerformanceView extends AbstractHistoricView
             @Override
             public Image getImage(Object element)
             {
-                return Images.ACCOUNT.image();
+                GroupEarningsByAccount.Item item = (GroupEarningsByAccount.Item) element;
+                return LogoManager.instance().getDefaultColumnImage(item.getAccount(), getClient().getSettings());
             }
         });
         column.setSorter(ColumnViewerSorter.create(GroupEarningsByAccount.Item.class, "account")); //$NON-NLS-1$

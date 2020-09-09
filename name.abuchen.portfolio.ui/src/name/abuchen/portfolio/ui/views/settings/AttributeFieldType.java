@@ -2,22 +2,27 @@ package name.abuchen.portfolio.ui.views.settings;
 
 import java.time.LocalDate;
 import java.util.ResourceBundle;
+import java.nio.file.Path;
 
 import name.abuchen.portfolio.model.Attributable;
 import name.abuchen.portfolio.model.AttributeType;
 import name.abuchen.portfolio.model.AttributeType.AmountConverter;
 import name.abuchen.portfolio.model.AttributeType.AmountPlainConverter;
 import name.abuchen.portfolio.model.AttributeType.BookmarkConverter;
-import name.abuchen.portfolio.model.AttributeType.BooleanConverter;
 import name.abuchen.portfolio.model.AttributeType.Converter;
 import name.abuchen.portfolio.model.AttributeType.DateConverter;
+import name.abuchen.portfolio.model.AttributeType.DoubleConverter;
 import name.abuchen.portfolio.model.AttributeType.LimitPriceConverter;
 import name.abuchen.portfolio.model.AttributeType.PercentConverter;
 import name.abuchen.portfolio.model.AttributeType.PercentPlainConverter;
+import name.abuchen.portfolio.model.AttributeType.PeriodConverter;
 import name.abuchen.portfolio.model.AttributeType.QuoteConverter;
 import name.abuchen.portfolio.model.AttributeType.ShareConverter;
 import name.abuchen.portfolio.model.AttributeType.StringConverter;
+import name.abuchen.portfolio.model.AttributeType.ImageConverter;
 import name.abuchen.portfolio.model.Bookmark;
+import name.abuchen.portfolio.model.ClientAttribute.BooleanConverter;
+import name.abuchen.portfolio.model.ClientAttribute.PathConverter;
 import name.abuchen.portfolio.model.LimitPrice;
 import name.abuchen.portfolio.model.Security;
 
@@ -26,14 +31,18 @@ public enum AttributeFieldType
     STRING(String.class, StringConverter.class), //
     AMOUNT(Long.class, AmountConverter.class), //
     AMOUNTPLAIN(Long.class, AmountPlainConverter.class), //
+    PATH(Path.class, PathConverter.class), //
     PERCENT(Double.class, PercentConverter.class), //
     PERCENTPLAIN(Double.class, PercentPlainConverter.class), //
+    PERIOD(Long.class, PeriodConverter.class), //
     QUOTE(Long.class, QuoteConverter.class), //
     SHARE(Long.class, ShareConverter.class), //
     DATE(LocalDate.class, DateConverter.class), //
+    DOUBLE(Double.class, DoubleConverter.class), //
     BOOLEAN(Boolean.class, BooleanConverter.class), //
     LIMIT_PRICE(LimitPrice.class, LimitPriceConverter.class, Security.class), //
-    BOOKMARK(Bookmark.class, BookmarkConverter.class);
+    BOOKMARK(Bookmark.class, BookmarkConverter.class), //
+    IMAGE(String.class, ImageConverter.class);
 
     private static final ResourceBundle RESOURCES = ResourceBundle
                     .getBundle("name.abuchen.portfolio.ui.views.settings.labels"); //$NON-NLS-1$

@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.model.AttributeType.AmountPlainConverter;
+import name.abuchen.portfolio.model.AttributeType.ImageConverter;
 import name.abuchen.portfolio.model.AttributeType.PercentConverter;
 import name.abuchen.portfolio.model.AttributeType.StringConverter;
 
@@ -16,6 +19,7 @@ public class ClientSettings
     private List<Bookmark> bookmarks;
     private List<AttributeType> attributeTypes;
     private Map<String, ConfigurationSet> configurationSets;
+    private List<ClientAttribute> clientAttributes;
 
     public ClientSettings()
     {
@@ -38,6 +42,11 @@ public class ClientSettings
 
         if (configurationSets == null)
             configurationSets = new HashMap<>();
+
+        if (clientAttributes == null)
+        {
+            this.clientAttributes = new ArrayList<>();
+        }
     }
 
     public static List<Bookmark> getDefaultBookmarks()
@@ -62,19 +71,38 @@ public class ClientSettings
                         "https://extraetf.com/etf-profile/{isin}")); //$NON-NLS-1$
         answer.add(new Bookmark("Alle Aktien Kennzahlen", //$NON-NLS-1$
                         "https://www.alleaktien.de/quantitativ/{isin}/")); //$NON-NLS-1$
+        answer.add(new Bookmark("Comdirect (Aktien)", //$NON-NLS-1$
+                        "https://www.comdirect.de/inf/aktien/{isin}")); //$NON-NLS-1$
+        answer.add(new Bookmark("DivvyDiary", //$NON-NLS-1$
+                        "https://divvydiary.com/symbols/{isin}")); //$NON-NLS-1$
 
         return answer;
     }
 
     private void addDefaultAttributeTypes()
     {
+        Function<Class<? extends Attributable>, AttributeType> factory = target -> {
+            AttributeType logoType = new AttributeType("logo"); //$NON-NLS-1$
+            logoType.setName(Messages.AttributesLogoName);
+            logoType.setColumnLabel(Messages.AttributesLogoColumn);
+            logoType.setTarget(target);
+            logoType.setType(String.class);
+            logoType.setConverter(ImageConverter.class);
+            return logoType;
+        };
+
+        addAttributeType(factory.apply(Security.class));
+        addAttributeType(factory.apply(Account.class));
+        addAttributeType(factory.apply(Portfolio.class));
+        addAttributeType(factory.apply(InvestmentPlan.class));
+
         AttributeType ter = new AttributeType("ter"); //$NON-NLS-1$
         ter.setName(Messages.AttributesTERName);
         ter.setColumnLabel(Messages.AttributesTERColumn);
         ter.setTarget(Security.class);
         ter.setType(Double.class);
         ter.setConverter(PercentConverter.class);
-        attributeTypes.add(ter);
+        addAttributeType(ter);
 
         AttributeType aum = new AttributeType("aum"); //$NON-NLS-1$
         aum.setName(Messages.AttributesAUMName);
@@ -82,7 +110,7 @@ public class ClientSettings
         aum.setTarget(Security.class);
         aum.setType(Long.class);
         aum.setConverter(AmountPlainConverter.class);
-        attributeTypes.add(aum);
+        addAttributeType(aum);
 
         AttributeType vendor = new AttributeType("vendor"); //$NON-NLS-1$
         vendor.setName(Messages.AttributesVendorName);
@@ -90,7 +118,7 @@ public class ClientSettings
         vendor.setTarget(Security.class);
         vendor.setType(String.class);
         vendor.setConverter(StringConverter.class);
-        attributeTypes.add(vendor);
+        addAttributeType(vendor);
 
         AttributeType fee = new AttributeType("acquisitionFee"); //$NON-NLS-1$
         fee.setName(Messages.AttributesAcquisitionFeeName);
@@ -98,7 +126,7 @@ public class ClientSettings
         fee.setTarget(Security.class);
         fee.setType(Double.class);
         fee.setConverter(PercentConverter.class);
-        attributeTypes.add(fee);
+        addAttributeType(fee);
 
         AttributeType managementFee = new AttributeType("managementFee"); //$NON-NLS-1$
         managementFee.setName(Messages.AttributesManagementFeeName);
@@ -106,9 +134,9 @@ public class ClientSettings
         managementFee.setTarget(Security.class);
         managementFee.setType(Double.class);
         managementFee.setConverter(PercentConverter.class);
-        attributeTypes.add(managementFee);
+        addAttributeType(managementFee);
     }
-
+   
     public List<Bookmark> getBookmarks()
     {
         return bookmarks;
@@ -168,5 +196,31 @@ public class ClientSettings
     public ConfigurationSet getConfigurationSet(String key)
     {
         return configurationSets.computeIfAbsent(key, k -> new ConfigurationSet());
+    }
+
+    public void addClientAttributes(ClientAttribute attribute)
+    {
+        clientAttributes.add(attribute);        
+    }
+
+    public List<ClientAttribute> getClientAttributes()
+    {
+        return clientAttributes;
+    }
+
+    public ClientAttribute getClientAttribute(String id)
+    {
+        return clientAttributes.stream()
+                        .filter(attribute -> id.equals(attribute.getId()))
+                        .findAny()
+                        .orElse(null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Optional<AttributeType> getOptionalLogoAttributeType(Class<? extends Object> type)
+    {
+        return getAttributeTypes().filter(t -> t.getConverter() instanceof AttributeType.ImageConverter
+                        && t.getName().equalsIgnoreCase("logo") //$NON-NLS-1$
+                        && t.supports((Class<? extends Attributable>) type)).findFirst();
     }
 }

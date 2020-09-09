@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.ui.wizards.datatransfer;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnPixelData;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -31,6 +33,7 @@ import org.eclipse.jface.viewers.StyledString.Styler;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.jface.window.ToolTip;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.TextStyle;
@@ -111,6 +114,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
     private Portfolio portfolio;
 
     private List<ExtractedEntry> allEntries = new ArrayList<>();
+
+    private List<Exception> extractionErrors = new ArrayList<>();
 
     public ReviewExtractedItemsPage(Client client, Extractor extractor, IPreferenceStore preferences,
                     List<Extractor.InputFile> files, String pageId)
@@ -254,6 +259,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         tableViewer = new TableViewer(compositeTable, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
         tableViewer.setContentProvider(ArrayContentProvider.getInstance());
 
+        ColumnViewerToolTipSupport.enableFor(tableViewer, ToolTip.NO_RECREATE);
+
         Table table = tableViewer.getTable();
         table.setHeaderVisible(true);
         table.setLinesVisible(true);
@@ -325,10 +332,10 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         column.setLabelProvider(new FormattedLabelProvider() // NOSONAR
         {
             @Override
-            public Image getImage(ExtractedEntry element)
+            public Image getImage(ExtractedEntry entry)
             {
                 Images image = null;
-                switch (element.getMaxCode())
+                switch (entry.getMaxCode())
                 {
                     case WARNING:
                         image = Images.WARNING;
@@ -340,6 +347,27 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                     default:
                 }
                 return image != null ? image.image() : null;
+            }
+
+            @Override
+            public String getToolTipText(Object entry)
+            {
+                List<String> messages = new ArrayList<String>();
+                ((ExtractedEntry) entry).getStatus() //
+                                .filter(s -> s.getCode() != ImportAction.Status.Code.OK) //
+                                .forEach(s -> {
+                                    if (s.getMessage() != null)
+                                        messages.add(s.getMessage());
+                                });
+                String message = null;
+                for (String m : messages)
+                {
+                    if (message != null && message.length() > 0)
+                        message = message.concat("\n").concat(m); //$NON-NLS-1$
+                    else
+                        message = m;
+                }
+                return message;
             }
 
             @Override
@@ -371,6 +399,27 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
             public String getText(ExtractedEntry entry)
             {
                 return entry.getItem().getTypeInformation();
+            }
+
+            @Override
+            public String getToolTipText(Object entry)
+            {
+                List<String> messages = new ArrayList<String>();
+                ((ExtractedEntry) entry).getStatus() //
+                                .filter(s -> s.getCode() != ImportAction.Status.Code.OK) //
+                                .forEach(s -> {
+                                    if (s.getMessage() != null)
+                                        messages.add(s.getMessage());
+                                });
+                String message = null;
+                for (String m : messages)
+                {
+                    if (message != null && message.length() > 0)
+                        message = message.concat("\n").concat(m); //$NON-NLS-1$
+                    else
+                        message = m;
+                }
+                return message;
             }
 
             @Override
@@ -631,7 +680,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 for (Object element : tableViewer.getStructuredSelection().toList())
                     applier.accept(((ExtractedEntry) element).getItem(), subject);
 
-                tableViewer.refresh();
+                checkEntriesAndRefresh(allEntries);
             }));
         }
     }
@@ -736,7 +785,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
 
         allEntries.addAll(entries);
         tableViewer.setInput(allEntries);
-        errorTableViewer.setInput(errors);
+        extractionErrors.addAll(errors);
+        errorTableViewer.setInput(extractionErrors);
 
         for (ExtractedEntry entry : entries)
         {
@@ -764,16 +814,25 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         List<ImportAction> actions = new ArrayList<>();
         actions.add(new CheckValidTypesAction());
         actions.add(new CheckSecurityRelatedValuesAction());
-        actions.add(new DetectDuplicatesAction());
+        actions.add(new DetectDuplicatesAction(client));
         actions.add(new CheckCurrenciesAction());
         actions.add(new MarkNonImportableAction());
+
+        List<Exception> allErrors = new ArrayList<>(extractionErrors);
 
         for (ExtractedEntry entry : entries)
         {
             entry.clearStatus();
             Extractor.Item item = entry.getItem();
             for (ImportAction action : actions)
-                entry.addStatus(item.apply(action, this));
+            {
+                ImportAction.Status actionStatus = entry.getItem().apply(action, this);
+                entry.addStatus(actionStatus);
+                if (actionStatus.getCode() == ImportAction.Status.Code.ERROR)
+                    allErrors.add(new IOException(
+                                    entry.getItem().getSubject().getNote() + ": " + actionStatus.getMessage())); //$NON-NLS-1$
+            
+            }
             if (extractor.getSubject() instanceof CSVExtractor)
                 if (((CSVExtractor) extractor.getSubject()).proposeShares(client, getPortfolio(), item))
                     if (item.getNote() == null)
@@ -781,6 +840,8 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                     else if (!item.getNote().startsWith(Messages.LabelImportWarning.substring(0, Messages.LabelImportWarning.indexOf('{') - 1)))
                         item.getSubject().setNote("[" + Messages.LabelImportWarning + "]" + item.getNote()); //$NON-NLS-1$ //$NON-NLS-2$
         }
+
+        errorTableViewer.setInput(allErrors);
     }
 
     abstract static class FormattedLabelProvider extends StyledCellLabelProvider // NOSONAR

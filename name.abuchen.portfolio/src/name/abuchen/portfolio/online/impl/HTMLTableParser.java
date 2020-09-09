@@ -157,7 +157,7 @@ abstract class HTMLTableParser
 
                 Document document = Jsoup.parse(html);
                 List<Object>  oList = parse(url, document, data);
-                answer = new Pair<>(collectRawResponse ? html : "", oList);
+                answer = new Pair<>(collectRawResponse ? html : "", oList); //$NON-NLS-1$
                 if (!answer.getRight().isEmpty())
                     cache.put(url, answer);
             }

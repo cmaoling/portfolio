@@ -1,7 +1,6 @@
 package name.abuchen.portfolio.ui.handlers;
 
 import java.io.File;
-import java.util.Optional;
 import java.util.ArrayList;
 import java.util.List;
 

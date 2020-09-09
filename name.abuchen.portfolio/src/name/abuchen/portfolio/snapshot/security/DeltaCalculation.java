@@ -20,46 +20,52 @@ import name.abuchen.portfolio.money.MutableMoney;
     }
 
     @Override
-    public void visit(CurrencyConverter converter, DividendInitialTransaction t)
+    public void visit(CurrencyConverter converter, CalculationLineItem.ValuationAtStart t)
     {
-        Money amount = t.getMonetaryAmount().with(converter.at(t.getDateTime()));
+        Money amount = t.getValue().with(converter.at(t.getDateTime()));
         delta.subtract(amount);
         cost.add(amount);
     }
 
     @Override
-    public void visit(CurrencyConverter converter, DividendFinalTransaction t)
+    public void visit(CurrencyConverter converter, CalculationLineItem.ValuationAtEnd t)
     {
-        delta.add(t.getMonetaryAmount().with(converter.at(t.getDateTime())));
+        delta.add(t.getValue().with(converter.at(t.getDateTime())));
     }
 
     @Override
-    public void visit(CurrencyConverter converter, DividendTransaction t)
+    public void visit(CurrencyConverter converter, CalculationLineItem.DividendPayment t)
     {
-        delta.add(t.getMonetaryAmount().with(converter.at(t.getDateTime())));
+        if (t.getType() == AccountTransaction.Type.DIVIDENDS)
+            delta.add(t.getValue().with(converter.at(t.getDateTime())));
+        else if (t.getType() == AccountTransaction.Type.DIVIDEND_CHARGE)
+            delta.subtract(t.getValue().with(converter.at(t.getDateTime())));
+        else
+            throw new IllegalArgumentException(t.getType().toString());
     }
 
     @Override
-    public void visit(CurrencyConverter converter, AccountTransaction t)
+    public void visit(CurrencyConverter converter, CalculationLineItem.TransactionItem item, AccountTransaction t)
     {
-        switch(t.getType())
+        switch (t.getType())
         {
             case TAXES:
             case FEES:
+            case INTEREST:
                 delta.subtract(t.getMonetaryAmount().with(converter.at(t.getDateTime())));
                 break;
             case TAX_REFUND:
             case FEES_REFUND:
+            case INTEREST_CHARGE:
                 delta.add(t.getMonetaryAmount().with(converter.at(t.getDateTime())));
                 break;
             default:
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException(t.getType().toString());
         }
-        
     }
 
     @Override
-    public void visit(CurrencyConverter converter, PortfolioTransaction t)
+    public void visit(CurrencyConverter converter, CalculationLineItem.TransactionItem item, PortfolioTransaction t)
     {
         switch (t.getType())
         {

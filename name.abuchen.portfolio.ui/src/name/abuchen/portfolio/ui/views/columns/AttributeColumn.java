@@ -19,9 +19,11 @@ import org.eclipse.swt.graphics.Image;
 import name.abuchen.portfolio.model.Adaptor;
 import name.abuchen.portfolio.model.Attributable;
 import name.abuchen.portfolio.model.AttributeType;
+import name.abuchen.portfolio.model.AttributeType.ImageConverter;
 import name.abuchen.portfolio.model.Attributes;
 import name.abuchen.portfolio.model.Bookmark;
 import name.abuchen.portfolio.model.Client;
+import name.abuchen.portfolio.model.ImageManager;
 import name.abuchen.portfolio.model.LimitPrice;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
@@ -34,6 +36,7 @@ import name.abuchen.portfolio.ui.util.viewers.BooleanAttributeEditingSupport;
 import name.abuchen.portfolio.ui.util.viewers.CellItemImageClickedListener;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnViewerSorter;
+import name.abuchen.portfolio.ui.util.viewers.ImageAttributeEditingSupport;
 
 public class AttributeColumn extends Column
 {
@@ -84,8 +87,35 @@ public class AttributeColumn extends Column
 
             Attributes attributes = attributable.getAttributes();
 
-            Object value = attributes.get(attribute);
+            Object value = attributes.get(attribute);     
             return attribute.getConverter().toString(value);
+        }
+    }
+    
+    private static final class ImageLabelProvider extends ColumnLabelProvider
+    {
+        private final AttributeType attribute;
+
+        private ImageLabelProvider(AttributeType attribute)
+        {
+            this.attribute = attribute;
+        }
+
+        @Override
+        public String getText(Object element)
+        {
+            return ""; //$NON-NLS-1$
+        }
+        
+        @Override
+        public Image getImage(Object element) 
+        {
+            if(attribute.getConverter() instanceof ImageConverter) 
+            {
+                Attributable attributable = Adaptor.adapt(Attributable.class, element);
+                return ImageManager.instance().getImage(attributable, attribute);
+            }
+            return null;
         }
     }
 
@@ -229,11 +259,10 @@ public class AttributeColumn extends Column
     {
         super(ID + attribute.getId(), attribute.getColumnLabel(), // $NON-NLS-1$
                         attribute.isNumber() ? SWT.RIGHT : SWT.LEFT, 80);
-
         setMenuLabel(attribute.getName());
         setGroupLabel(Messages.GroupLabelAttributes);
         setSorter(ColumnViewerSorter.create(new AttributeComparator(attribute)));
-
+        
         if (attribute.getType() == Boolean.class)
         {
             setLabelProvider(new BooleanLabelProvider(attribute));
@@ -250,6 +279,11 @@ public class AttributeColumn extends Column
             setLabelProvider(new BookmarkLabelProvider(attribute));
             new AttributeEditingSupport(attribute).attachTo(this);
         }
+        else if (attribute.getConverter() instanceof ImageConverter)
+        {
+            setLabelProvider(new ImageLabelProvider(attribute));
+            new ImageAttributeEditingSupport(attribute).attachTo(this);
+        }
         else
         {
             setLabelProvider(new AttributeLabelProvider(attribute));
@@ -258,29 +292,37 @@ public class AttributeColumn extends Column
 
     }
 
+    public AttributeColumn(String uuid, String label, int style, int defaultWidth)
+    {
+        super(ID + uuid, label, style, defaultWidth);
+    }
+
     public static Stream<Column> createFor(Client client, Class<? extends Attributable> target)
     {
-        return client.getSettings() //
-                        .getAttributeTypes() //
-                        .filter(a -> a.supports(target)) //
-                        .flatMap(attribute -> {
+        return createFor(client.getSettings().getAttributeTypes(), target);
+    }
 
-                            List<Column> columns = new ArrayList<>();
+    public static Stream<Column> createFor(Stream<? extends AttributeType> stream, Class<? extends Attributable> target)
+    {
+        return stream.filter(a -> a.supports(target)) //
+                .flatMap(attribute -> {
 
-                            // primary column
-                            Column column = new AttributeColumn(attribute);
-                            column.setVisible(false);
-                            columns.add(column);
+                    List<Column> columns = new ArrayList<>();
 
-                            // secondary column - if applicable
-                            if (attribute.getType() == LocalDate.class)
-                            {
-                                column = createDaysLeftColumn(attribute);
-                                columns.add(column);
-                            }
+                    // primary column
+                    Column column = new AttributeColumn(attribute);
+                    column.setVisible(false);
+                    columns.add(column);
 
-                            return columns.stream();
-                        });
+                    // secondary column - if applicable
+                    if (attribute.getType() == LocalDate.class)
+                    {
+                        column = createDaysLeftColumn(attribute);
+                        columns.add(column);
+                    }
+
+                    return columns.stream();
+                });
     }
 
     private static Column createDaysLeftColumn(AttributeType attribute)

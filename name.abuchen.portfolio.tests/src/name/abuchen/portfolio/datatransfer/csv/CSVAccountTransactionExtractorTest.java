@@ -139,9 +139,6 @@ public class CSVAccountTransactionExtractorTest
                         Arrays.<String[]>asList(new String[] {"2015-03-11", "", "DE0123456781", "Anleihe", "", "-200", "EUR", "DIVIDEND_CHARGE", "", "100", "Notiz"}),
                         buildField2Column(extractor), errors);
 
-        System.err.println("testDividendChargeTransaction errors: " +  errors.toString());
-        System.err.println("testDividendChargeTransaction results: " +  results.toString());
-
         assertThat(errors, empty());
         assertThat(results.size(), is(1));
         new AssertImportActions().check(results, CurrencyUnit.EUR);
@@ -167,8 +164,6 @@ public class CSVAccountTransactionExtractorTest
         List<Item> results = extractor.extract(0, Arrays.<String[]>asList(
                         new String[] { "2013-04-01", "", "", "", "100", "EUR", "DIVIDEND_CHARGE", "", "10", "Notiz" }),
                         buildField2Column(extractor), errors);
-
-        System.err.println("testDividendChargeTransaction_whenSecurityIsMissing errors: " +  errors.toString());
 
         assertThat(errors.size(), is(1));
         assertThat(results, empty());

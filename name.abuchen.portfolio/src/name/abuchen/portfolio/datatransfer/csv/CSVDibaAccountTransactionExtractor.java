@@ -68,7 +68,7 @@ import name.abuchen.portfolio.model.Client;
     @Override   
     public String[] getDefaultHeader()
     {
-        String[] defaultHeader = {  Messages.CSVColumn_IBAN, //0 //$NON-NLS-1$
+        String[] defaultHeader = {  Messages.CSVColumn_IBAN, //0
                                     Messages.CSVColumn_Date, //1
                                     Messages.CSVColumn_Note, //2
                                     Messages.CSVColumn_Type, //3

@@ -104,7 +104,7 @@ public class Iban
 
     public static final String suggestIban(String iban)
     {
-        if ((iban.substring(2, 4).equals("..") || iban.substring(2, 4).equals("??")) && (iban.length() >= IBANNUMBER_MIN_SIZE && iban.length() <= IBANNUMBER_MAX_SIZE)) //$NON-NLS-1$ //$NON-NLS-2$
+        if ((iban.length() >= IBANNUMBER_MIN_SIZE && iban.length() <= IBANNUMBER_MAX_SIZE) && (iban.substring(2, 4).equals("..") || iban.substring(2, 4).equals("??"))) //$NON-NLS-1$ //$NON-NLS-2$
             iban = (iban.substring(0, 2) + calculateCheckDigit(iban) + iban.substring(4, 22)).toUpperCase();
         return iban;
     }

@@ -4,9 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -14,12 +17,10 @@ import java.util.function.Consumer;
 
 import javax.inject.Inject;
 
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.EclipseContextFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
@@ -31,7 +32,6 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferenceStore;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.widgets.Display;
@@ -49,6 +49,7 @@ import name.abuchen.portfolio.ui.dialogs.PasswordDialog;
 import name.abuchen.portfolio.ui.jobs.AutoSaveJob;
 import name.abuchen.portfolio.ui.jobs.CreateInvestmentPlanTxJob;
 import name.abuchen.portfolio.ui.jobs.SyncOnlineSecuritiesJob;
+import name.abuchen.portfolio.ui.jobs.UpdateDividendsJob;
 import name.abuchen.portfolio.ui.jobs.UpdateQuotesJob;
 import name.abuchen.portfolio.ui.wizards.client.ClientMigrationDialog;
 
@@ -203,7 +204,7 @@ public class ClientInput
             catch (IOException e)
             {
                 ErrorDialog.openError(shell, Messages.LabelError, e.getMessage(),
-                                new Status(IStatus.ERROR, PortfolioPlugin.PLUGIN_ID, e.getMessage(), e));
+                                new Status(Status.ERROR, PortfolioPlugin.PLUGIN_ID, e.getMessage(), e));
             }
         });
     }
@@ -250,11 +251,13 @@ public class ClientInput
         if (ClientFactory.isEncrypted(localFile))
         {
             PasswordDialog pwdDialog = new PasswordDialog(shell);
-            if (pwdDialog.open() != Window.OK)
+            if (pwdDialog.open() != PasswordDialog.OK)
                 return;
             password = pwdDialog.getPassword().toCharArray();
         }
 
+        if (clientFile == null || Paths.get(clientFile.toURI()).getParent().equals(client.getBackupDirectory()))
+            client.setBackupDirectory(Paths.get(localFile.toURI()).getParent());
         clientFile = localFile;
         label = localFile.getName();
         char[] pwd = password;
@@ -273,25 +276,35 @@ public class ClientInput
             {
                 PortfolioPlugin.log(e);
                 ErrorDialog.openError(shell, Messages.LabelError, e.getMessage(),
-                                new Status(IStatus.ERROR, PortfolioPlugin.PLUGIN_ID, e.getMessage(), e));
+                                new Status(Status.ERROR, PortfolioPlugin.PLUGIN_ID, e.getMessage(), e));
             }
         });
     }
 
     /**
-     * autoSave is called from AutoSaveJob and uses the file generated during
+     * autoSave and getAutoSaveFilename are called from AutoSaveJob and uses the file generated during
      * startup, if set in preferences
      */
+    public File getAutoSaveFile()
+    {
+        // generate the same name used when creating the initial autosave
+        // file
+        // see @scheduleAutoSaveJob
+
+        LocalDate localDate = LocalDate.now();
+        String suffix = "autosave"; //$NON-NLS-1$
+        if (client.getAutosaveWithDatestamp())
+            suffix = suffix + "-" + DateTimeFormatter.ofPattern("yyyyMMdd").format(localDate);  //$NON-NLS-1$  //$NON-NLS-2$
+        String backupName = constructFilename(clientFile, suffix);
+        File autosaveFile = clientFile.toPath().resolveSibling(backupName).toFile();
+        return autosaveFile;
+    }
+
     public void autoSave()
     {
         if (clientFile != null)
         {
-            // generate the same name used when creating the initial autosave
-            // file
-            // see @scheduleAutoSaveJob
-
-            String backupName = constructFilename(clientFile, "autosave"); //$NON-NLS-1$
-            File autosaveFile = clientFile.toPath().resolveSibling(backupName).toFile();
+            File autosaveFile = getAutoSaveFile();
 
             try
             {
@@ -306,14 +319,15 @@ public class ClientInput
 
     private long getAutoSavePrefs()
     {
-        int delay = preferences.getInt(UIConstants.Preferences.AUTO_SAVE_FILE, 0);
-        return delay > 0 ? 1000 * 60 * delay : 0;
+        //int delay = preferences.getInt(UIConstants.Preferences.AUTOSAVE_PERIOD, 0);
+        //return delay > 0 ? 1000 * 60 * delay : 0;
+        return client.getAutosavePeriod();
     }
 
     public void createBackupAfterOpen()
     {
         if (clientFile != null && preferences.getBoolean(UIConstants.Preferences.CREATE_BACKUP_BEFORE_SAVING, true)
-                        && preferences.getInt(UIConstants.Preferences.AUTO_SAVE_FILE, 0) == 0)
+                        && preferences.getInt(UIConstants.Preferences.AUTOSAVE_PERIOD, 0) == 0)
             createBackup(clientFile, "backup-after-open"); //$NON-NLS-1$
     }
 
@@ -326,7 +340,12 @@ public class ClientInput
             String backupName = constructFilename(file, suffix);
 
             Path sourceFile = file.toPath();
-            Path backupFile = sourceFile.resolveSibling(backupName);
+            Path backupPath; 
+            if (client != null && client.getBackupDirectory() != null && client.getBackupDirectory().toString().length() > 1)
+                backupPath = Paths.get(client.getBackupDirectory().toAbsolutePath().toString(), sourceFile.getFileName().toString());
+            else
+                backupPath = sourceFile; 
+            Path backupFile = backupPath.resolveSibling(backupName);
             Files.copy(sourceFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
         }
         catch (IOException e)
@@ -504,34 +523,34 @@ public class ClientInput
             regularJobs.add(job);
 
             new SyncOnlineSecuritiesJob(client).schedule(2000);
+            new UpdateDividendsJob(getClient()).schedule(5000);
         }
     }
 
     private void scheduleAutoSaveJob()
     {
-        IPreferenceChangeListener listener = event -> {
-            if (event.getKey().contentEquals(UIConstants.Preferences.AUTO_SAVE_FILE))
-            {
-                for (Job j : regularJobs)
-                {
-                    if (j instanceof AutoSaveJob)
-                    {
-                        ((AutoSaveJob) j).setDelay(getAutoSavePrefs());
-                        ((AutoSaveJob) j).schedule(getAutoSavePrefs());
-                        ((AutoSaveJob) j).wakeUp(getAutoSavePrefs());
-                    }
-                }
-            }
-        };
-        preferences.addPreferenceChangeListener(listener);
-        this.disposeJobs.add(() -> preferences.removePreferenceChangeListener(listener));
+//        IPreferenceChangeListener listener = event -> {
+//            if (event.getKey().contentEquals(UIConstants.Preferences.AUTOSAVE_PERIOD))
+//            {
+//                for (Job j : regularJobs)
+//                {
+//                    if (j instanceof AutoSaveJob)
+//                    {
+//                        ((AutoSaveJob) j).setDelay(getAutoSavePrefs());
+//                        ((AutoSaveJob) j).schedule(getAutoSavePrefs());
+//                        ((AutoSaveJob) j).wakeUp(getAutoSavePrefs());
+//                    }
+//                }
+//            }
+//        };
+//        preferences.addPreferenceChangeListener(listener);
+//        this.disposeJobs.add(() -> preferences.removePreferenceChangeListener(listener));
 
         long delay = getAutoSavePrefs();
-
-        Job job = new AutoSaveJob(this, delay);
+        long sixMinutes = 1000 * 60 * 6;
+        AutoSaveJob job = new AutoSaveJob(this, client);
+        job.setHeartbeat(sixMinutes).scheduleMinutes(delay);
         regularJobs.add(job);
-        if (delay > 0)
-            job.schedule(delay);
     }
 
     /* package */ void setErrorMessage(String message)

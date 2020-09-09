@@ -460,12 +460,10 @@ public class AccountTransactionModel extends AbstractModel
         return date;
     }
 
-    @SuppressWarnings("nls")
     public void setDate(LocalDate date)
     {
         firePropertyChange(Properties.date.name(), this.date, this.date = date);
         cutoffDate = date.minusDays((long) (EMPTY_SECURITY.equals(this.security) || !supportsShares()? 0 : this.security.getDelayedDividend()));
-        System.err.println(">>>> AccountTransactionModel::setDate() date : " + date + " cutoff: " + cutoffDate);
         updateShares();
         updateExchangeRate();
     }

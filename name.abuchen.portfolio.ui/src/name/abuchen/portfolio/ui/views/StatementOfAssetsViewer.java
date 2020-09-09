@@ -209,8 +209,8 @@ public class StatementOfAssetsViewer
                         e -> ((Element) e).isSecurity() ? ((Element) e).getSecurityPosition().getShares() : null)));
         support.addColumn(column);
 
-        column = new NameColumn("1"); //$NON-NLS-1$
-        column.setLabelProvider(new NameColumnLabelProvider() // NOSONAR
+        column = new NameColumn(client, "1"); //$NON-NLS-1$
+        column.setLabelProvider(new NameColumnLabelProvider(client) // NOSONAR
         {
             @Override
             public String getText(Object e)
@@ -818,7 +818,7 @@ public class StatementOfAssetsViewer
         }
         else if (element.isSecurity())
         {
-            Portfolio portfolio = portfolioSnapshot != null ? portfolioSnapshot.getPortfolio() : null;
+            Portfolio portfolio = portfolioSnapshot != null ? portfolioSnapshot.unwrapPortfolio() : null;
             new SecurityContextMenu(view).menuAboutToShow(manager, element.getSecurity(), portfolio);
         }
     }
@@ -1352,7 +1352,7 @@ public class StatementOfAssetsViewer
             if (value instanceof Money)
                 return Values.Money.format((Money) value, client.getBaseCurrency());
             else if (value instanceof Double)
-                return Values.Percent.format((Double) value);
+                return Values.Percent2.format((Double) value);
 
             return null;
         }

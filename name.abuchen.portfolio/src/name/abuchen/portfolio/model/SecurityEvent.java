@@ -6,6 +6,7 @@ import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 import name.abuchen.portfolio.Messages;
@@ -16,9 +17,29 @@ public class SecurityEvent extends SecurityElement
 {
     public enum Type
     {
-        STOCK_SPLIT, STOCK_DIVIDEND, STOCK_RIGHT, STOCK_OTHER, NONE;
+        STOCK_SPLIT(false, false), STOCK_DIVIDEND(true, false), STOCK_RIGHT(true, false), STOCK_OTHER(true, false), NONE(false, false), NOTE(true, true);
+        // upstream STOCK_DIVIDEND is called DIVIDEND_PAYMENT
 
         private static final ResourceBundle RESOURCES = ResourceBundle.getBundle("name.abuchen.portfolio.model.labels"); //$NON-NLS-1$
+
+        private boolean isUserEditable;
+        private boolean isFlexible;
+
+        private Type(boolean isFlexible, boolean isUserEditable)
+        {
+            this.isUserEditable = isUserEditable;
+            this.isFlexible = isFlexible;
+        }
+
+        public boolean isUserEditable()
+        {
+            return isUserEditable;
+        }
+
+        public boolean isFlexible()
+        {
+            return isFlexible;
+        }
 
         @Override
         public String toString()
@@ -33,19 +54,117 @@ public class SecurityEvent extends SecurityElement
 
     private LocalDate exDate = null;
 
+    private LocalDate paymentDate = null;
+
     private double[] ratio = null;
 
     private String typeStr = null;
 
     private boolean isVisible = true;
 
-    @Deprecated
     protected String details = null;
+
+    private String source = null;
+
     @Deprecated
     protected long value;
 
+//+    public static class DividendEvent extends SecurityEvent
+//+    {
+//+        private LocalDate paymentDate;
+//+        private Money amount;
+//+        private String source;
+//+
+//+        public DividendEvent()
+//+        {
+//+            super(null, Type.DIVIDEND_PAYMENT, null);
+//+        }
+//+
+//+        public DividendEvent(LocalDate exDate, LocalDate payDate, Money amount, String source)
+//+        {
+//+            super(exDate, Type.DIVIDEND_PAYMENT, null);
+//+            this.paymentDate = payDate;
+//+            this.amount = amount;
+//+            this.source = source;
+//+        }
+//+
+//+        @Override
+//+        public void setType(Type type)
+//+        {
+//+            if (type != Type.DIVIDEND_PAYMENT)
+//+                throw new IllegalArgumentException();
+//+        }
+//+
+//+        public LocalDate getPaymentDate()
+//+        {
+//+            return paymentDate;
+//+        }
+//+
+//+        public void setPaymentDate(LocalDate payDate)
+//+        {
+//+            this.paymentDate = payDate;
+//+        }
+//+
+//+        public Money getAmount()
+//+        {
+//+            return amount;
+//+        }
+//+
+//+        public void setAmount(Money amount)
+//+        {
+//+            this.amount = amount;
+//+        }
+//+
+//+        public String getSource()
+//+        {
+//+            return source;
+//+        }
+//+
+//+        public void setSource(String source)
+//+        {
+//+            this.source = source;
+//+        }
+//+
+//+        @Override
+//+        public int hashCode()
+//+        {
+//+            final int prime = 31;
+//+            int result = super.hashCode();
+//+            result = prime * result + Objects.hash(amount, paymentDate, source);
+//+            return result;
+//+        }
+//+
+//+        @Override
+//+        public boolean equals(Object obj)
+//+        {
+//+            if (this == obj)
+//+                return true;
+//+            if (!super.equals(obj))
+//+                return false;
+//+            if (getClass() != obj.getClass())
+//+                return false;
+//+            DividendEvent other = (DividendEvent) obj;
+//+            return Objects.equals(amount, other.amount) && Objects.equals(paymentDate, other.paymentDate)
+//+                            && Objects.equals(source, other.source);
+//+        }
+//+    }
+
     public SecurityEvent()
     {
+    }
+
+    public SecurityEvent(LocalDate exDate, LocalDate payDate, Monetary monetary, String source)
+    {
+        this(exDate, Type.STOCK_DIVIDEND, null);
+        this.paymentDate = payDate;
+        this.amount = monetary;
+        setSource(source);
+    }
+
+    public SecurityEvent(LocalDate date, Type type, String details)
+    {
+        this(date, type);
+        this.details = details;
     }
 
     public SecurityEvent(LocalDate date, Type type)
@@ -82,9 +201,7 @@ public class SecurityEvent extends SecurityElement
     public SecurityEvent clearAmount()
     {
         if (amount != null && amount.getCurrency().equals(Messages.LabelNoCurrencyCode))
-        {
             amount = null;
-        }
         return this;
     }
 
@@ -99,6 +216,16 @@ public class SecurityEvent extends SecurityElement
         if (exDate == null)
             return this.date;
         return this.exDate;
+    }
+
+    public LocalDate getPaymentDate()
+    {
+        return paymentDate;
+    }
+
+    public void setPaymentDate(LocalDate payDate)
+    {
+        this.paymentDate = payDate;
     }
 
     public SecurityEvent setRatio(double enumerator, double denumerator)
@@ -146,6 +273,19 @@ public class SecurityEvent extends SecurityElement
     {
         ratio = null;
         return this;
+    }
+
+    public void setSource(String source)
+    {
+        this.source = source;
+    }
+
+    public String getSource()
+    {
+        if (source != null)
+            return source;
+        else
+            return Messages.LabelNothing;
     }
 
     public void setType(Type type)
@@ -205,6 +345,10 @@ public class SecurityEvent extends SecurityElement
         {
             return getTypeStr() + ": " + (ratio == null ? "" : getRatioString()) + (amount == null? "" : " @ " + getAmount().toString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         }
+        else if (type.equals(Type.NOTE))
+        {
+            return (details == null? "" : details); //$NON-NLS-1$ 
+        }
         else
         {
             return Type.NONE.toString();
@@ -237,17 +381,19 @@ public class SecurityEvent extends SecurityElement
     @Override
     public String toString()
     {
-        return String.format("[%s] EVENT %tF (ex: %tF): [%s-%s] amount: <%s> ratio: <%s> => [%08x] deprecated: value %,10.2f details: <%s>", //$NON-NLS-1$ 
-                        (isVisible ? "+"                                           : "o" ), //$NON-NLS-1$ //$NON-NLS-2$
+        return String.format("[%s] EVENT %tF (ex: %tF / pay: %tF): [%s-%s] amount: <%s> ratio: <%s> source; <%s> => [%08x] deprecated: value %,10.2f details: <%s>", //$NON-NLS-1$
+                        (isVisible ? "+"                                              : "o" ), //$NON-NLS-1$ //$NON-NLS-2$
                         date,
-                        (exDate == null  ? LocalDate.of(1900, Month.JANUARY, 1)  : exDate),
+                        (exDate == null  ? LocalDate.of(1900, Month.JANUARY, 1)       : exDate),
+                        (paymentDate == null  ? LocalDate.of(1970, Month.JANUARY, 1)  : paymentDate),
                          type.toString(),
-                        (typeStr == null ? ""                                    : typeStr), //$NON-NLS-1$
-                        (amount == null  ? new Monetary()                        :  amount).toString(),
-                        (ratio  == null ? Messages.LabelNoRatio                  :  getRatioString()),
+                        (typeStr == null ? ""                                         : typeStr), //$NON-NLS-1$
+                        (amount == null  ? new Monetary()                             :  amount).toString(),
+                        (ratio  == null ? Messages.LabelNoRatio                       :  getRatioString()),
+                        (source == null  ? ""                                         :  source).toString(), //$NON-NLS-1$
                         this.hashCode(),
                         value / Values.Quote.divider(),
-                        (details == null ? "?"                                   : details.toString()) //$NON-NLS-1$
+                        (details == null ? "?"                                        : details.toString()) //$NON-NLS-1$
                         );
     }
 
@@ -276,7 +422,9 @@ public class SecurityEvent extends SecurityElement
           int result = 1;
           result = prime * result + ((date    == null) ? 0                     : date.hashCode());
           result = prime * result + ((exDate  == null) ? 0                     : exDate.hashCode());
+          result = prime * result + ((paymentDate  == null) ? 0                : paymentDate.hashCode());
           result = prime * result + ((details == null) ? "?"                   : details).hashCode(); //$NON-NLS-1$
+          result = prime * result + ((source == null) ? "=/="                  : source).hashCode(); //$NON-NLS-1$
           result = prime * result + ((ratio == null)   ? Messages.LabelNoRatio : getRatioString()).hashCode();
           result = prime * result + type.hashCode();
           result = prime * result + getTypeStr().hashCode();
@@ -306,11 +454,23 @@ public class SecurityEvent extends SecurityElement
             if (other.date != null)
                 return false;
         }
+        else if (other.date == null)
+            return false;
         else if (!date.equals(other.date))
+            return false;
+        if (amount == null)
+        {
+            if (other.amount != null)
+                return false;
+        }
+        else if (other.amount == null)
+            return false;
+        else if (!amount.toString().equals(other.amount.toString()))
             return false;
         if (hashCode() != other.hashCode())
             return false;
-        return true;
+        return Objects.equals(date, other.date) && Objects.equals(details, other.details) && type == other.type 
+                        && Objects.equals(exDate, other.exDate)&& Objects.equals(paymentDate, other.paymentDate)
+                        && Objects.equals(source, other.source);
     }
-
 }

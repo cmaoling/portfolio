@@ -249,9 +249,13 @@ public final class UpdateQuotesJob extends AbstractClientJob
         // small; otherwise entries would be evicted in order
         Collections.shuffle(securities);
 
+        int jobCounter = 0;
+        
         for (Security security : securities)
         {
-            Job job = new Job(security.getName())
+            jobCounter++;
+            
+            Job job = new Job("#" + jobCounter + " / " + security.getName())  //$NON-NLS-1$//$NON-NLS-2$
             {
                 @Override
                 protected IStatus run(IProgressMonitor monitor)
@@ -261,7 +265,6 @@ public final class UpdateQuotesJob extends AbstractClientJob
                         QuoteFeed feed = Factory.getQuoteFeedProvider(security.getFeed());
                         if (feed == null)
                             return Status.OK_STATUS;
-
                         FeedData data = feed.getHistoricalQuotes(security, false);
 
                         if (security.addAllPrices(data.getPrices()))

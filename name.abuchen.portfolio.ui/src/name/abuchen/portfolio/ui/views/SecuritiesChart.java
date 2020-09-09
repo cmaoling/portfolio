@@ -248,6 +248,7 @@ public class SecuritiesChart
     private Color colorEventSplit  = Colors.getColor(26, 52, 150);
     private Color colorEventRight  = Colors.getColor(150, 220, 220);
     private Color colorEventOther  = Colors.getColor(140, 90, 200);
+    private Color colorEventNote  = Colors.getColor(66, 66, 66);
 
     private Color colorFifoPurchasePrice = Colors.getColor(226, 122, 121);
     private Color colorMovingAveragePurchasePrice = Colors.getColor(150, 82, 81);
@@ -330,18 +331,18 @@ public class SecuritiesChart
             return new ChartInterval(now.minus(temporalAmount), now);
         };
 
-        addButton(buttons, Messages.SecurityTabChart1M, s -> nowMinus.apply(Period.ofMonths(1)));
-        addButton(buttons, Messages.SecurityTabChart2M, s -> nowMinus.apply(Period.ofMonths(2)));
-        addButton(buttons, Messages.SecurityTabChart6M, s -> nowMinus.apply(Period.ofMonths(6)));
-        addButton(buttons, Messages.SecurityTabChart1Y, s -> nowMinus.apply(Period.ofYears(1)));
-        addButton(buttons, Messages.SecurityTabChart2Y, s -> nowMinus.apply(Period.ofYears(2)));
-        addButton(buttons, Messages.SecurityTabChart3Y, s -> nowMinus.apply(Period.ofYears(3)));
-        addButton(buttons, Messages.SecurityTabChart5Y, s -> nowMinus.apply(Period.ofYears(5)));
-        addButton(buttons, Messages.SecurityTabChart10Y, s -> nowMinus.apply(Period.ofYears(10)));
-        addButton(buttons, Messages.SecurityTabChartYTD,
+        addButton(buttons, Messages.SecurityTabChart1M, Messages.SecurityTabChart1MToolTip, s -> nowMinus.apply(Period.ofMonths(1)));
+        addButton(buttons, Messages.SecurityTabChart2M, Messages.SecurityTabChart2MToolTip, s -> nowMinus.apply(Period.ofMonths(2)));
+        addButton(buttons, Messages.SecurityTabChart6M, Messages.SecurityTabChart6MToolTip, s -> nowMinus.apply(Period.ofMonths(6)));
+        addButton(buttons, Messages.SecurityTabChart1Y, Messages.SecurityTabChart1YToolTip, s -> nowMinus.apply(Period.ofYears(1)));
+        addButton(buttons, Messages.SecurityTabChart2Y, Messages.SecurityTabChart2YToolTip, s -> nowMinus.apply(Period.ofYears(2)));
+        addButton(buttons, Messages.SecurityTabChart3Y, Messages.SecurityTabChart3YToolTip, s -> nowMinus.apply(Period.ofYears(3)));
+        addButton(buttons, Messages.SecurityTabChart5Y, Messages.SecurityTabChart5YToolTip, s -> nowMinus.apply(Period.ofYears(5)));
+        addButton(buttons, Messages.SecurityTabChart10Y, Messages.SecurityTabChart10YToolTip, s -> nowMinus.apply(Period.ofYears(10)));
+        addButton(buttons, Messages.SecurityTabChartYTD, Messages.SecurityTabChartYTDToolTip,
                         s -> nowMinus.apply(Period.ofDays(LocalDate.now().getDayOfYear() - 1)));
 
-        addButton(buttons, Messages.SecurityTabChartHoldingPeriod, s -> {
+        addButton(buttons, Messages.SecurityTabChartHoldingPeriod, Messages.SecurityTabChartHoldingPeriodToolTip, s -> {
             List<TransactionPair<?>> tx = s.getTransactions(client);
             if (tx.isEmpty())
                 return null;
@@ -356,7 +357,7 @@ public class SecuritiesChart
 
         });
 
-        addButton(buttons, Messages.SecurityTabChartAll, s -> {
+        addButton(buttons, Messages.SecurityTabChartAll, Messages.SecurityTabChartAllToolTip, s -> {
             List<SecurityPrice> prices = s.getPricesIncludingLatest();
             return prices.isEmpty() ? null
                             : new ChartInterval(prices.get(0).getDate(), prices.get(prices.size() - 1).getDate());
@@ -604,10 +605,11 @@ public class SecuritiesChart
         return (action);
     }
 
-    private void addButton(Composite buttons, String label, Function<Security, ChartInterval> interval)
+    private void addButton(Composite buttons, String label, String toolTip, Function<Security, ChartInterval> interval)
     {
         Button b = new Button(buttons, SWT.FLAT);
         b.setText(label);
+        b.setToolTipText(toolTip);
         b.addSelectionListener(SelectionListener.widgetSelectedAdapter(event -> {
             chartIntervalFunction = interval;
             updateChart();
@@ -1146,6 +1148,9 @@ public class SecuritiesChart
         security.getEvents(SecurityEvent.Type.STOCK_OTHER).stream() //
                         .filter(e -> chartInterval.contains(e.getDate())) //
                         .forEach(e -> chart.addMarkerLine(e.getDate(), colorEventOther, e.getExplaination()));
+        security.getEvents(SecurityEvent.Type.NOTE).stream() //
+                        .filter(e -> chartInterval.contains(e.getDate())) //
+                        .forEach(e -> chart.addMarkerLine(e.getDate(), colorEventNote, e.getExplaination()));
     }
 
     private void addRightMarkerLines(ChartInterval chartInterval)
@@ -1159,6 +1164,10 @@ public class SecuritiesChart
     {
         security.getEvents(SecurityEvent.Type.STOCK_SPLIT).stream() //
                         .filter(e -> chartInterval.contains(e.getDate())) //
+// (cmaoling-edition): obsolete, because mapped to STOCK_DIVIDEND instead
+//                        .filter(e -> e.getType() != SecurityEvent.Type.DIVIDEND_PAYMENT) //
+//                        .forEach(e -> chart.addMarkerLine(e.getDate(),
+//                                        Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY), e.getDetails()));
                         .forEach(e -> chart.addMarkerLine(e.getDate(), colorEventSplit, e.getRatioString()));
     }
 
