@@ -375,7 +375,7 @@ public class HTMLTableQuoteFeed implements QuoteFeed
         String ariva = "www.ariva.de"; //$NON-NLS-1$
         if (feedURL.startsWith("http://" + ariva)) //$NON-NLS-1$
             PortfolioLog.warning(MessageFormat.format(Messages.MsgArivaWarningHTTP, feedURL));
-        if ((feedURL.startsWith("https://" + ariva)) //$NON-NLS-1$
+        if ((feedURL.contains("://" + ariva + "/") || feedURL.startsWith("http")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             && feedURL.endsWith("month=")) //$NON-NLS-1$
         {
             maxFailedAttempts = 5;
@@ -392,7 +392,7 @@ public class HTMLTableQuoteFeed implements QuoteFeed
             {
                 urls.add(feedURL + missingMonth + "-31"); //$NON-NLS-1$
                 urlCount += 1;
-                if (urlCount > 5)
+                if (urlCount > 10)
                     break;
             }
         }
@@ -438,7 +438,7 @@ public class HTMLTableQuoteFeed implements QuoteFeed
             if (isPreview && newPricesByDate.size() >= 100)
                 break;
             int delay = (newPricesByDate.size() - sizeBefore) * 100;
-            if ((feedURL.startsWith("https://" + ariva))) //$NON-NLS-1$
+            if (feedURL.contains("://" + ariva + "/") || feedURL.startsWith("http")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             {
                 try
                 {
@@ -450,8 +450,9 @@ public class HTMLTableQuoteFeed implements QuoteFeed
                 }
             }
         }
+        PortfolioLog.info(MessageFormat.format(Messages.MsgArivaLoadMissingMonths, security.toString(), newPricesByDate.size()));
         data.addAllPrices(newPricesByDate);
-        if ((feedURL.startsWith("https://" + ariva)) //$NON-NLS-1$
+        if (feedURL.contains("://" + ariva + "/") || feedURL.startsWith("http") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                         && feedURL.endsWith("month=")) //$NON-NLS-1$
         {
             if (missingMonths.size() == 0)
