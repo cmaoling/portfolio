@@ -96,6 +96,7 @@ abstract class HTMLTableParser
                             DateTimeFormatter.ofPattern("d. MMM. y"), //$NON-NLS-1$
                             DateTimeFormatter.ofPattern("MMM d, y", Locale.ENGLISH), //$NON-NLS-1$
                             DateTimeFormatter.ofPattern("MMM dd, y", Locale.ENGLISH), //$NON-NLS-1$
+                            DateTimeFormatter.ofPattern("MMM dd y", Locale.ENGLISH), //$NON-NLS-1$
                             DateTimeFormatter.ofPattern("EEEE, MMMM dd, yEEE, MMM dd, y", Locale.ENGLISH) //$NON-NLS-1$
             };
         }
