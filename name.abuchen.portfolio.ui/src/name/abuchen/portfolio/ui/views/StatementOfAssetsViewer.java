@@ -1,5 +1,7 @@
 package name.abuchen.portfolio.ui.views;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -203,6 +206,53 @@ public class StatementOfAssetsViewer
             {
                 Element element = (Element) e;
                 return element.isSecurity() ? element.getSecurityPosition().getShares() : null;
+            }
+
+            @Override
+            public String getToolTipText(Object e)
+            {
+                NumberFormat format = new DecimalFormat("#,##0.#####"); //$NON-NLS-1$
+                Element element = (Element) e;
+                if (element.isSecurity())
+                {
+                    Security security = element.getSecurity();
+                    List<PortfolioSnapshot> Lps= clientSnapshot.getPortfolios();
+                    HashMap<String, String> list = new HashMap<String, String>();
+                    int maxLs = 0;
+                    int maxLp = 0;
+                    for (PortfolioSnapshot ps : Lps)
+                    {
+                        Optional<SecurityPosition> securityposition = ps.getPositions().stream().filter(sp -> sp.getSecurity() != null)
+                            .filter(sp -> {
+                                            return sp.getSecurity().equals(security);
+                                          })
+                            .findFirst();
+                        if (securityposition.isPresent())
+                        {
+                            long shares = securityposition.get().getShares();
+                            String portfolio = ps.getPortfolio().toString();
+                            String share = format.format(shares / Values.Share.divider());
+                            if (share.length() > maxLs)
+                                    maxLs = share.length();
+                            if (portfolio.length() > maxLp)
+                                    maxLp = portfolio.length();
+                            list.put(portfolio, share);
+                        }
+                    }
+                    if (list.size() > 0)
+                    {
+                        List<String> tip = new ArrayList<>();
+                        for (Map.Entry<String, String> entry : list.entrySet())
+                        {
+                            String formatStr = "%-" + maxLp + "." + maxLp + "s - %-" + maxLs + "s " + maxLp + " " + maxLs; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                            tip.add(String.format(formatStr, entry.getKey(), entry.getValue()));
+                        }
+                        return String.join("\n", tip); //$NON-NLS-1$
+                    }
+                    else
+                        return "ERROR - This is a bug in StatementofAssetsViewer.java"; //$NON-NLS-1$
+                }
+                return null;
             }
         });
         column.setComparator(new ElementComparator(new AttributeComparator(
