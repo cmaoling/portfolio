@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.ErrorDialog;
@@ -419,17 +420,13 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
             tableViewer.setInput(input);
             tableViewer.refresh();
             tableViewer.getTable().pack();
-            int hack = 0;
-            for (TableColumn column : tableViewer.getTable().getColumns())
-            {
-                int saveWidth = 0;
-                if (hack > 0)
-                    saveWidth = tableViewer.getTable().getColumns()[0].getWidth();
-                column.pack();
-                if (hack > 0)
-                     tableViewer.getTable().getColumns()[0].setWidth(saveWidth);
-                hack += 1;
-            }
+
+            // see #1723 and #1536: under Linux, the first column is extended to
+            // the full size of the table
+
+            if (!Platform.getWS().equals(Platform.WS_GTK))
+                for (TableColumn column : tableViewer.getTable().getColumns())
+                    column.pack();
 
             doUpdateErrorMessages();
         }
