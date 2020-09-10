@@ -248,6 +248,7 @@ public class SecuritiesChart
     private Color colorEventSplit  = Colors.getColor(26, 52, 150);
     private Color colorEventRight  = Colors.getColor(150, 220, 220);
     private Color colorEventOther  = Colors.getColor(140, 90, 200);
+    private Color colorEventNote  = Colors.getColor(66, 66, 66);
 
     private Color colorFifoPurchasePrice = Colors.getColor(226, 122, 121);
     private Color colorMovingAveragePurchasePrice = Colors.getColor(150, 82, 81);
@@ -1147,6 +1148,9 @@ public class SecuritiesChart
         security.getEvents(SecurityEvent.Type.STOCK_OTHER).stream() //
                         .filter(e -> chartInterval.contains(e.getDate())) //
                         .forEach(e -> chart.addMarkerLine(e.getDate(), colorEventOther, e.getExplaination()));
+        security.getEvents(SecurityEvent.Type.NOTE).stream() //
+                        .filter(e -> chartInterval.contains(e.getDate())) //
+                        .forEach(e -> chart.addMarkerLine(e.getDate(), colorEventNote, e.getExplaination()));
     }
 
     private void addRightMarkerLines(ChartInterval chartInterval)

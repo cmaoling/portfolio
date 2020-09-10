@@ -79,4 +79,8 @@ public class PortfolioLog
         log(new Status(IStatus.WARNING, PLUGIN_ID, message));
     }
 
+    public static void info(String message)
+    {
+        log(new Status(IStatus.INFO, PLUGIN_ID, message));
+    }
 }

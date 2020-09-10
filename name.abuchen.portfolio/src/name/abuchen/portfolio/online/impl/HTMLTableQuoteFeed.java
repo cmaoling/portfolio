@@ -2,9 +2,14 @@ package name.abuchen.portfolio.online.impl;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -17,6 +22,8 @@ import name.abuchen.portfolio.online.QuoteFeed;
 import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.online.impl.variableurl.Factory;
 import name.abuchen.portfolio.online.impl.variableurl.urls.VariableURL;
+import name.abuchen.portfolio.snapshot.QuoteQualityMetrics;
+import name.abuchen.portfolio.util.Interval;
 import name.abuchen.portfolio.util.Pair;
 
 public class HTMLTableQuoteFeed implements QuoteFeed
@@ -362,10 +369,42 @@ public class HTMLTableQuoteFeed implements QuoteFeed
         long failedAttempts = 0;
         long maxFailedAttempts = variableURL.getMaxFailedAttempts();
 
-        for (String url : variableURL) // NOSONAR
+        List<String> urls = new ArrayList<>();
+        Set<String> missingMonths = new HashSet<>();
+
+        String ariva = "www.ariva.de"; //$NON-NLS-1$
+        if (feedURL.startsWith("http://" + ariva)) //$NON-NLS-1$
+            PortfolioLog.warning(MessageFormat.format(Messages.MsgArivaWarningHTTP, feedURL));
+        if ((feedURL.contains("://" + ariva + "/") || feedURL.startsWith("http")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            && feedURL.endsWith("month=")) //$NON-NLS-1$
+        {
+            maxFailedAttempts = 5;
+            QuoteQualityMetrics metrics = new QuoteQualityMetrics(security);
+            for(Interval interval: metrics.getMissingIntervals())
+            {
+                LocalDate start = interval.getStart();
+                missingMonths.add(String.format("%04d-%02d", start.getYear(), start.getMonthValue())); //$NON-NLS-1$
+                LocalDate stop = interval.getEnd();
+                missingMonths.add(String.format("%04d-%02d", stop.getYear(), stop.getMonthValue())); //$NON-NLS-1$
+            }
+            int urlCount = 0;
+            for (String missingMonth : missingMonths)
+            {
+                urls.add(feedURL + missingMonth + "-31"); //$NON-NLS-1$
+                urlCount += 1;
+                if (urlCount > 10)
+                    break;
+            }
+        }
+        else
+        {
+            for (String url : variableURL) // NOSONAR
+                urls.add(url);
+        }
+
+        for (String url : urls) // NOSONAR
         {
             // => name.abuchen.portfolio.online.impl/HTMLTableParser:_parseFromUrl
-            Pair<String, List<LatestSecurityPrice>> answer = Parser.parseFromURL(url, collectRawResponse, data);
             // Pair<String, List<LatestSecurityPrice>> answer = cache.lookup(url);
             //
             //if (answer == null || (collectRawResponse && answer.getLeft().isEmpty()))
@@ -378,6 +417,15 @@ public class HTMLTableQuoteFeed implements QuoteFeed
             //
             //if (collectRawResponse)
             //    data.addResponse(url, answer.getLeft());
+            Pair<String, List<LatestSecurityPrice>> answer = null;
+            try
+            {
+                answer = Parser.parseFromURL(url, collectRawResponse, data);
+            }
+            catch (Exception e)
+            {
+                continue;
+            }
 
             int sizeBefore = newPricesByDate.size();
             newPricesByDate.addAll(answer.getRight());
@@ -389,9 +437,31 @@ public class HTMLTableQuoteFeed implements QuoteFeed
 
             if (isPreview && newPricesByDate.size() >= 100)
                 break;
+            int delay = (newPricesByDate.size() - sizeBefore) * 100;
+            if (feedURL.contains("://" + ariva + "/") || feedURL.startsWith("http")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            {
+                try
+                {
+                    TimeUnit.MILLISECONDS.sleep(delay);
+                }
+                catch (InterruptedException ie)
+                {
+                    continue;
+                }
+            }
         }
-
+        PortfolioLog.info(MessageFormat.format(Messages.MsgArivaLoadMissingMonths, security.toString(), newPricesByDate.size()));
         data.addAllPrices(newPricesByDate);
+        if (feedURL.contains("://" + ariva + "/") || feedURL.startsWith("http") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        && feedURL.endsWith("month=")) //$NON-NLS-1$
+        {
+            if (missingMonths.size() == 0)
+                PortfolioLog.info(MessageFormat.format(Messages.MsgArivaNoMissingMonths, security.toString()));
+            else if (newPricesByDate.size() > 0)
+                PortfolioLog.info(MessageFormat.format(Messages.MsgArivaLoadMissingMonths, security.toString(), missingMonths));
+            else
+                PortfolioLog.warning(MessageFormat.format(Messages.MsgArivaLoadMissingMonths, security.toString(), missingMonths));
+        }
 
         return data;
     }

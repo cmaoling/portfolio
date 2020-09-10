@@ -77,7 +77,7 @@ public class QuoteQualityMetrics
 
         final LocalDate start = copy.get(0).getDate();
         final LocalDate end = QuoteFeed.MANUAL.equals(security.getFeed()) ? copy.get(copy.size() - 1).getDate()
-                        : LocalDate.now();
+                        : LocalDate.now().minusDays(1);
 
         this.checkInterval = Interval.of(start, end);
 
