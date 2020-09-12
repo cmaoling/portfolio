@@ -51,6 +51,7 @@ import name.abuchen.portfolio.money.MutableMoney;
 import name.abuchen.portfolio.money.Quote;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.ui.Images;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransferDialog;
@@ -87,7 +88,7 @@ import name.abuchen.portfolio.ui.views.columns.WknColumn;
 
 public class AccountListView extends AbstractListView implements ModificationListener
 {
-    private static final String FILTER_INACTIVE_ACCOUNTS = "filter-redired-accounts"; //$NON-NLS-1$
+    private static final String FILTER_INACTIVE_ACCOUNTS = "filter-retired-accounts"; //$NON-NLS-1$
 
     private TableViewer accounts;
     private TableViewer transactions;
@@ -243,7 +244,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         accountColumns = new ShowHideColumnHelper(AccountListView.class.getSimpleName() + "@top2", //$NON-NLS-1$
                         getPreferenceStore(), accounts, layout);
 
-        Column column = new NameColumn("0", Messages.ColumnAccount, SWT.None, 150, getClient()); //$NON-NLS-1$
+        Column column = new NameColumn("0", Messages.ColumnAccount, SWT.None, Dimensions.AccountColumnWidth, getClient(), Dimensions.AccountDirection); //$NON-NLS-1$
         column.setLabelProvider(new NameColumnLabelProvider(getClient()) // NOSONAR
         {
             @Override
@@ -256,7 +257,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         column.getEditingSupport().addListener(this);
         accountColumns.addColumn(column);
 
-        column = new Column("1", Messages.ColumnBalance, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("1", Messages.ColumnBalance, SWT.RIGHT, Dimensions.BalanceColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnBalance_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -395,7 +396,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         transactionsColumns = new ShowHideColumnHelper(AccountListView.class.getSimpleName() + "@bottom5", //$NON-NLS-1$
                         getPreferenceStore(), transactions, layout);
 
-        Column column = new Column("0", Messages.ColumnDate, SWT.None, 80); //$NON-NLS-1$
+        Column column = new Column("0", Messages.ColumnDate, SWT.None, Dimensions.DateColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -410,11 +411,11 @@ public class AccountListView extends AbstractListView implements ModificationLis
                 return colorFor((AccountTransaction) element);
             }
         });
-        ColumnViewerSorter.create(new AccountTransaction.ByDateAmountTypeAndHashCode()).attachTo(column, SWT.DOWN);
+        ColumnViewerSorter.create(new AccountTransaction.ByDateAmountTypeAndHashCode()).attachTo(column, Dimensions.DateDirection);
         new DateTimeEditingSupport(AccountTransaction.class, "dateTime").addListener(this).attachTo(column); //$NON-NLS-1$
         transactionsColumns.addColumn(column);
 
-        column = new Column("1", Messages.ColumnTransactionType, SWT.None, 100); //$NON-NLS-1$
+        column = new Column("1", Messages.ColumnTransactionType, SWT.None, Dimensions.TypeColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -434,7 +435,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         new TransactionTypeEditingSupport(getClient()).addListener(this).attachTo(column);
         transactionsColumns.addColumn(column);
 
-        column = new Column("2", Messages.ColumnAmount, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("2", Messages.ColumnAmount, SWT.RIGHT, Dimensions.AmountColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -466,7 +467,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         }));
         transactionsColumns.addColumn(column);
 
-        column = new Column("3", Messages.Balance, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("3", Messages.Balance, SWT.RIGHT, Dimensions.BalanceColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -484,7 +485,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         }));
         transactionsColumns.addColumn(column);
 
-        column = new Column("4", Messages.ColumnSecurity, SWT.None, 250); //$NON-NLS-1$
+        column = new Column("4", Messages.ColumnSecurity, SWT.None, Dimensions.SecurityColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -525,7 +526,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         column.getEditingSupport().addListener(this);
         transactionsColumns.addColumn(column);
 
-        column = new Column("5", Messages.ColumnShares, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("5", Messages.ColumnShares, SWT.RIGHT, Dimensions.SharesColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new SharesLabelProvider()
         {
             @Override
@@ -563,7 +564,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         }.addListener(this).attachTo(column);
         transactionsColumns.addColumn(column);
 
-        column = new Column("6", Messages.ColumnPerShare, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("6", Messages.ColumnPerShare, SWT.RIGHT, Dimensions.PerShareColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnPerShare_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -596,7 +597,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         });
         transactionsColumns.addColumn(column);
 
-        column = new Column("7", MessageFormat.format(Messages.ColumnPeerOrSomething, Messages.ColumnOffsetAccount, Messages.ColumnPeer), SWT.None, 120); //$NON-NLS-1$
+        column = new Column("7", MessageFormat.format(Messages.ColumnPeerOrSomething, Messages.ColumnOffsetAccount, Messages.ColumnPeer), SWT.None, Dimensions.AccountColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override

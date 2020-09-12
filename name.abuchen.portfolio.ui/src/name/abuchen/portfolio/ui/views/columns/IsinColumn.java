@@ -7,6 +7,7 @@ import org.eclipse.swt.SWT;
 
 import name.abuchen.portfolio.model.Adaptor;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnEditingSupport;
@@ -57,7 +58,7 @@ public class IsinColumn extends Column
 
     public IsinColumn(String id)
     {
-        super(id, Messages.ColumnISIN, SWT.LEFT, 100);
+        super(id, Messages.ColumnISIN, SWT.LEFT, Dimensions.IsinColumnWidth);
 
         setLabelProvider(new ColumnLabelProvider()
         {

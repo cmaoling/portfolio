@@ -71,6 +71,7 @@ import name.abuchen.portfolio.model.PortfolioTransferEntry;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
@@ -389,7 +390,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 return date != null ? Values.DateTime.format(date) : null;
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(80, true));
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(Dimensions.DateColumnWidth, true));
 
         column = new TableViewerColumn(viewer, SWT.NONE);
         column.getColumn().setText(Messages.ColumnTransactionType);
@@ -444,7 +445,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                     return null;
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(100, true));
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(Dimensions.TypeColumnWidth, true));
 
         column = new TableViewerColumn(viewer, SWT.RIGHT);
         column.getColumn().setText(Messages.ColumnAmount);
@@ -457,7 +458,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 return amount != null ? Values.Money.format(amount) : null;
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(80, true));
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(Dimensions.AmountColumnWidth, true));
 
         column = new TableViewerColumn(viewer, SWT.RIGHT);
         column.getColumn().setText(Messages.ColumnShares);
@@ -469,7 +470,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 return Values.Share.formatNonZero(entry.getItem().getShares());
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(80, true));
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(Dimensions.SharesColumnWidth, true));
 
         column = new TableViewerColumn(viewer, SWT.NONE);
         column.getColumn().setText(MessageFormat.format(Messages.ColumnPeerOrSomething, Messages.ColumnSecurity, Messages.ColumnPeer));
@@ -515,7 +516,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                     return entry.getItem().toString();
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(250, true));
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(Dimensions.IbanColumnWidth, true));
 
         column = new TableViewerColumn(viewer, SWT.NONE);
         column.getColumn().setText(Messages.ColumnNote);
@@ -528,7 +529,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 return note != null ? note : null;
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(250, true));
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(Dimensions.NoteColumnWidth, true));
 
         column = new TableViewerColumn(viewer, SWT.NONE);
         column.getColumn().setText(Messages.ColumnAccount);
@@ -541,7 +542,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 return account != null ? account.getName() : null;
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(100, true));
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(Dimensions.AccountColumnWidth, true));
 
         column = new TableViewerColumn(viewer, SWT.NONE);
         column.getColumn().setText(Messages.ColumnOffsetAccount);
@@ -554,7 +555,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 return account != null ? account.getName() : null;
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(100, true));
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(Dimensions.AccountColumnWidth, true));
 
         column = new TableViewerColumn(viewer, SWT.NONE);
         column.getColumn().setText(Messages.ColumnPortfolio);
@@ -567,7 +568,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 return portfolio != null ? portfolio.getName() : null;
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(100, true));
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(Dimensions.PortfolioColumnWidth, true));
 
         column = new TableViewerColumn(viewer, SWT.NONE);
         column.getColumn().setText(Messages.ColumnOffsetPortfolio);
@@ -580,7 +581,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
                 return portfolio != null ? portfolio.getName() : null;
             }
         });
-        layout.setColumnData(column.getColumn(), new ColumnPixelData(100, true));
+        layout.setColumnData(column.getColumn(), new ColumnPixelData(Dimensions.PortfolioColumnWidth, true));
     }
 
     private void attachContextMenu(final Table table)

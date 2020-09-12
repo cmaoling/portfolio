@@ -49,6 +49,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.ExchangeRate;
 import name.abuchen.portfolio.money.Values;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.UIConstants;
@@ -410,7 +411,7 @@ import name.abuchen.portfolio.ui.views.columns.NoteColumn;
 
     protected void addDimensionColumn(ShowHideColumnHelper support)
     {
-        Column column = new NameColumn("txname", Messages.ColumnLevels, SWT.NONE, 400, part.getClient()); //$NON-NLS-1$
+        Column column = new NameColumn("txname", Messages.ColumnLevels, SWT.NONE, Dimensions.TaxonomyLevelsColumnWidth, part.getClient()); //$NON-NLS-1$
         column.setLabelProvider(new NameColumnLabelProvider(part.getClient()) // NOSONAR
         {
             @Override
@@ -455,7 +456,7 @@ import name.abuchen.portfolio.ui.views.columns.NoteColumn;
     private void addWeightColumn(ShowHideColumnHelper support) // NOSONAR
     {
         Column column;
-        column = new Column("weight", Messages.ColumnWeight, SWT.RIGHT, 70); //$NON-NLS-1$
+        column = new Column("weight", Messages.ColumnWeight, SWT.RIGHT, Dimensions.WeightColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnWeight_Description);
         column.setLabelProvider(new ColumnLabelProvider() // NOSONAR
         {
@@ -505,7 +506,7 @@ import name.abuchen.portfolio.ui.views.columns.NoteColumn;
 
     protected void addActualColumns(ShowHideColumnHelper support)
     {
-        Column column = new Column("act%", Messages.ColumnActualPercent, SWT.RIGHT, 60); //$NON-NLS-1$
+        Column column = new Column("act%", Messages.ColumnActualPercent, SWT.RIGHT, Dimensions.PercentageColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -528,7 +529,7 @@ import name.abuchen.portfolio.ui.views.columns.NoteColumn;
 
         // Column which shows percentage of this asset class in relationship to
         // total assets
-        column = new Column("amGV%", Messages.ColumnPctOfTotal, SWT.RIGHT, 60); //$NON-NLS-1$
+        column = new Column("amGV%", Messages.ColumnPctOfTotal, SWT.RIGHT, Dimensions.PercentageColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnPctOfTotal_MenuLabel);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -549,7 +550,7 @@ import name.abuchen.portfolio.ui.views.columns.NoteColumn;
         });
         support.addColumn(column);
 
-        column = new Column("act", Messages.ColumnActualValue, SWT.RIGHT, 100); //$NON-NLS-1$
+        column = new Column("act", Messages.ColumnActualValue, SWT.RIGHT, Dimensions.BalanceColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -564,7 +565,7 @@ import name.abuchen.portfolio.ui.views.columns.NoteColumn;
 
     protected void addAdditionalColumns(ShowHideColumnHelper support) // NOSONAR
     {
-        Column column = new Column("exchangeRate", Messages.ColumnExchangeRate, SWT.RIGHT, 80); //$NON-NLS-1$
+        Column column = new Column("exchangeRate", Messages.ColumnExchangeRate, SWT.RIGHT, Dimensions.ExchangeRateColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.ColumnForeignCurrencies);
         column.setLabelProvider(new ColumnLabelProvider() // NOSONAR
         {
@@ -604,7 +605,7 @@ import name.abuchen.portfolio.ui.views.columns.NoteColumn;
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("actBaseCurrency", Messages.ColumnActualValue + Messages.BaseCurrencyCue, SWT.RIGHT, 100); //$NON-NLS-1$
+        column = new Column("actBaseCurrency", Messages.ColumnActualValue + Messages.BaseCurrencyCue, SWT.RIGHT, Dimensions.AmountColumnWidth + Dimensions.CurrencyColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnActualValueBaseCurrency);
         column.setGroupLabel(Messages.ColumnForeignCurrencies);
         column.setLabelProvider(new ColumnLabelProvider() // NOSONAR

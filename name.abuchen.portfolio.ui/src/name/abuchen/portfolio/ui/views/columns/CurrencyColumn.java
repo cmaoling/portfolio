@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import name.abuchen.portfolio.model.Adaptor;
 import name.abuchen.portfolio.model.InvestmentVehicle;
 import name.abuchen.portfolio.money.CurrencyUnit;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnViewerSorter;
@@ -38,7 +39,7 @@ public class CurrencyColumn extends Column
 
     public CurrencyColumn()
     {
-        this("currency", Messages.ColumnCurrency, SWT.LEFT, 60); //$NON-NLS-1$
+        this("currency", Messages.ColumnCurrency, SWT.LEFT, Dimensions.CurrencyColumnWidth); //$NON-NLS-1$
     }
 
     public CurrencyColumn(String id, String label, int style, int defaultWidth)

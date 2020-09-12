@@ -80,6 +80,7 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.HeaderSet;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.ui.Messages;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
 import name.abuchen.portfolio.ui.util.Colors;
 import name.abuchen.portfolio.ui.util.FormDataFactory;
@@ -259,8 +260,8 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         data.left = new FormAttachment(0, 0);
         data.right = new FormAttachment(100, 0);
         data.bottom = new FormAttachment(100, 0);
-        data.width = 100;
-        data.height = 100;
+        data.width = Dimensions.CSVImportDataHeight;
+        data.height = Dimensions.CSVImportDataHeight;
         compositeTable.setLayoutData(data);
 
         //

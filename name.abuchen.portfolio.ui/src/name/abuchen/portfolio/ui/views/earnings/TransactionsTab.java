@@ -29,6 +29,7 @@ import name.abuchen.portfolio.model.Transaction.Unit;
 import name.abuchen.portfolio.model.TransactionPair;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.selection.SecuritySelection;
@@ -114,7 +115,7 @@ public class TransactionsTab implements EarningsTab
 
     private void addColumns(ShowHideColumnHelper support)
     {
-        Column column = new Column(Messages.ColumnDate, SWT.None, 80);
+        Column column = new Column(Messages.ColumnDate, SWT.None, Dimensions.DateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -134,7 +135,7 @@ public class TransactionsTab implements EarningsTab
                                         : ((PortfolioTransaction) ((TransactionPair<?>) element).getTransaction())
                                                         .getType().toString();
 
-        column = new Column(Messages.ColumnTransactionType, SWT.LEFT, 80);
+        column = new Column(Messages.ColumnTransactionType, SWT.LEFT, Dimensions.TypeColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -152,7 +153,7 @@ public class TransactionsTab implements EarningsTab
         ColumnViewerSorter.create(tx2type).attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnSecurity, SWT.None, 250);
+        column = new Column(Messages.ColumnSecurity, SWT.None, Dimensions.SecurityColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -175,7 +176,7 @@ public class TransactionsTab implements EarningsTab
         }).attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnShares, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnShares, SWT.RIGHT, Dimensions.SharesColumnWidth);
         column.setLabelProvider(new SharesLabelProvider()
         {
             @Override
@@ -193,7 +194,7 @@ public class TransactionsTab implements EarningsTab
         ColumnViewerSorter.create(e -> ((TransactionPair<?>) e).getTransaction().getShares()).attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnGrossValue, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnGrossValue, SWT.RIGHT, Dimensions.BalanceColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -223,7 +224,7 @@ public class TransactionsTab implements EarningsTab
                         .attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnTaxes, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnTaxes, SWT.RIGHT, Dimensions.TaxesColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -252,7 +253,7 @@ public class TransactionsTab implements EarningsTab
                         .attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnFees, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnFees, SWT.RIGHT, Dimensions.FeesColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -281,7 +282,7 @@ public class TransactionsTab implements EarningsTab
                         .attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnAmount, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnAmount, SWT.RIGHT, Dimensions.AmountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -300,7 +301,7 @@ public class TransactionsTab implements EarningsTab
         ColumnViewerSorter.create(e -> ((TransactionPair<?>) e).getTransaction().getMonetaryAmount()).attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnOffsetAccount, SWT.None, 120);
+        column = new Column(Messages.ColumnOffsetAccount, SWT.None, Dimensions.AccountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -319,7 +320,7 @@ public class TransactionsTab implements EarningsTab
         ColumnViewerSorter.create(e -> ((TransactionPair<?>) e).getOwner().toString()).attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnNote, SWT.None, 200);
+        column = new Column(Messages.ColumnNote, SWT.None, Dimensions.NoteColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override

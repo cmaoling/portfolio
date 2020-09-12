@@ -8,6 +8,7 @@ import name.abuchen.portfolio.model.Adaptor;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Named;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.LogoManager;
 import name.abuchen.portfolio.ui.util.viewers.Column;
@@ -59,15 +60,20 @@ public class NameColumn extends Column
 
     public NameColumn(Client client, String id)
     {
-        this(id, Messages.ColumnName, SWT.LEFT, 300, client);
+        this(id, Messages.ColumnName, SWT.LEFT, Dimensions.NamedColumnWidth, client, Dimensions.NamedDirection);
     }
 
     public NameColumn(String id, String label, int style, int defaultWidth, Client client)
     {
+        this(id, label, style, defaultWidth, client, SWT.None);
+    }
+
+    public NameColumn(String id, String label, int style, int defaultWidth, Client client, int direction)
+    {
         super(id, label, style, defaultWidth);
 
         setLabelProvider(new NameColumnLabelProvider(client));
-        setSorter(ColumnViewerSorter.create(Named.class, "name")); //$NON-NLS-1$
+        setSorter(ColumnViewerSorter.create(Named.class, "name"), direction); //$NON-NLS-1$
         new StringEditingSupport(Named.class, "name").setMandatory(true).attachTo(this); //$NON-NLS-1$
     }
 }

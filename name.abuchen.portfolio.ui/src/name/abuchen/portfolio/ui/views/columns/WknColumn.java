@@ -5,6 +5,7 @@ import org.eclipse.swt.SWT;
 
 import name.abuchen.portfolio.model.Adaptor;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnViewerSorter;
@@ -19,7 +20,7 @@ public class WknColumn extends Column
 
     public WknColumn(String id)
     {
-        super(id, Messages.ColumnWKN, SWT.LEFT, 80);
+        super(id, Messages.ColumnWKN, SWT.LEFT, Dimensions.WknColumnWidth);
 
         setLabelProvider(new ColumnLabelProvider()
         {

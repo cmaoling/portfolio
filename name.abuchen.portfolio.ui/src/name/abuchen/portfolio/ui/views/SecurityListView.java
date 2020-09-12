@@ -67,6 +67,7 @@ import name.abuchen.portfolio.money.Quote;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.QuoteFeed;
 import name.abuchen.portfolio.online.impl.EurostatHICPQuoteFeed;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.UIConstants;
@@ -624,7 +625,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         ShowHideColumnHelper support = new ShowHideColumnHelper(SecurityListView.class.getSimpleName() + "@prices", //$NON-NLS-1$
                         getPreferenceStore(), prices, layout);
 
-        Column column = new Column(Messages.ColumnDate, SWT.None, 80);
+        Column column = new Column(Messages.ColumnDate, SWT.None, Dimensions.DateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -659,11 +660,11 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 return hasMissing ? Colors.WARNING : null;
             }
         });
-        ColumnViewerSorter.create(SecurityPrice.class, "date").attachTo(column, SWT.UP); //$NON-NLS-1$
+        ColumnViewerSorter.create(SecurityPrice.class, "date").attachTo(column, Dimensions.DateDirection); //$NON-NLS-1$
         new DateEditingSupport(SecurityPrice.class, "date").addListener(this).attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnQuote, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnQuote, SWT.RIGHT, Dimensions.QuoteColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -796,7 +797,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                         SecurityListView.class.getSimpleName() + "@transactions4", getPreferenceStore(), transactions, //$NON-NLS-1$
                         layout);
 
-        Column column = new Column(Messages.ColumnDate, SWT.None, 100);
+        Column column = new Column(Messages.ColumnDate, SWT.None, Dimensions.DateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -806,10 +807,10 @@ public class SecurityListView extends AbstractListView implements ModificationLi
             }
         });
         column.setSorter(ColumnViewerSorter.create((o1, o2) -> ((TransactionPair<?>) o1).getTransaction().getDateTime()
-                        .compareTo(((TransactionPair<?>) o2).getTransaction().getDateTime())), SWT.UP);
+                        .compareTo(((TransactionPair<?>) o2).getTransaction().getDateTime())), Dimensions.DateDirection);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnTransactionType, SWT.None, 80);
+        column = new Column(Messages.ColumnTransactionType, SWT.None, Dimensions.TypeColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -827,7 +828,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         new TransactionTypeEditingSupport(getClient()).addListener(this).attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnShares, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnShares, SWT.RIGHT, Dimensions.SharesColumnWidth);
         column.setLabelProvider(new SharesLabelProvider() // NOSONAR
         {
             @Override
@@ -848,7 +849,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         });
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnAmount, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnAmount, SWT.RIGHT, Dimensions.AmountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -865,7 +866,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         }));
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnPerShare, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnPerShare, SWT.RIGHT, Dimensions.PerShareColumnWidth);
         column.setDescription(Messages.ColumnPerShare_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -893,7 +894,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         });
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnFees, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnFees, SWT.RIGHT, Dimensions.FeesColumnWidth);
         column.setDescription(Messages.ColumnFees_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -906,7 +907,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         });
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnTaxes, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnTaxes, SWT.RIGHT, Dimensions.TaxesColumnWidth);
         column.setDescription(Messages.ColumnTaxes_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -919,7 +920,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         });
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnPortfolio, SWT.NONE, 120);
+        column = new Column(Messages.ColumnPortfolio, SWT.NONE, Dimensions.AccountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -944,7 +945,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                         .addListener(this).attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnOffsetAccount, SWT.NONE, 120);
+        column = new Column(Messages.ColumnOffsetAccount, SWT.NONE, Dimensions.AccountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1182,7 +1183,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         ShowHideColumnHelper support = new ShowHideColumnHelper(SecurityListView.class.getSimpleName() + "@events2", //$NON-NLS-1$
                         getPreferenceStore(), events, layout);
 
-        Column column = new Column(Messages.ColumnDate, SWT.None, 80);
+        Column column = new Column(Messages.ColumnDate, SWT.None, Dimensions.DateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1191,7 +1192,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 return Values.Date.format(((SecurityEvent) element).getDate());
             }
         });
-        column.setSorter(ColumnViewerSorter.create(e -> ((SecurityEvent) e).getDate()), SWT.UP);
+        column.setSorter(ColumnViewerSorter.create(e -> ((SecurityEvent) e).getDate()), Dimensions.DateDirection);
         column.setEditingSupport(new DateEditingSupport(SecurityEvent.class, "date") //$NON-NLS-1$
         {
             @Override
@@ -1202,7 +1203,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         });
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnTransactionType, SWT.None, 120);
+        column = new Column(Messages.ColumnTransactionType, SWT.None, Dimensions.TypeColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1233,7 +1234,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
         column.setSorter(ColumnViewerSorter.create(e -> ((SecurityEvent) e).getType()), SWT.UP);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnPaymentDate, SWT.NONE, 80);
+        column = new Column(Messages.ColumnPaymentDate, SWT.NONE, Dimensions.DateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1274,7 +1275,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 //                        SWT.UP);
 //        support.addColumn(column);
 
-        column = new Column(Messages.ColumnDetails, SWT.None, 300);
+        column = new Column(Messages.ColumnDetails, SWT.None, Dimensions.DetailsColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override

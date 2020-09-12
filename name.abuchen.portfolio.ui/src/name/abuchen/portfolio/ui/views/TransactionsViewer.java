@@ -45,6 +45,7 @@ import name.abuchen.portfolio.model.Transaction;
 import name.abuchen.portfolio.model.TransactionPair;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionDialog;
@@ -263,14 +264,14 @@ public final class TransactionsViewer implements ModificationListener
 
     private void addColumns()
     {
-        Column column = new Column("0", Messages.ColumnDate, SWT.None, 80); //$NON-NLS-1$
+        Column column = new Column("0", Messages.ColumnDate, SWT.None, Dimensions.DateColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new TransactionLabelProvider(t -> Values.DateTime.format(t.getDateTime())));
         ColumnViewerSorter.create(e -> ((TransactionPair<?>) e).getTransaction().getDateTime()).attachTo(column,
-                        SWT.UP);
+                        Dimensions.DateDirection);
         new DateTimeEditingSupport(Transaction.class, "dateTime").addListener(this).attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column("1", Messages.ColumnTransactionType, SWT.None, 80); //$NON-NLS-1$
+        column = new Column("1", Messages.ColumnTransactionType, SWT.None, Dimensions.TypeColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new TransactionLabelProvider(t -> {
             if (t instanceof PortfolioTransaction)
                 return ((PortfolioTransaction) t).getType().toString();
@@ -291,7 +292,7 @@ public final class TransactionsViewer implements ModificationListener
         new TransactionTypeEditingSupport(owner.getClient()).addListener(this).attachTo(column);
         support.addColumn(column);
 
-        column = new Column("2", Messages.ColumnSecurity, SWT.None, 250); //$NON-NLS-1$
+        column = new Column("2", Messages.ColumnSecurity, SWT.None, Dimensions.SecurityColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(
                         new TransactionLabelProvider(t -> t.getSecurity() != null ? t.getSecurity().getName() : null,
                                         t -> t.getTransaction().getSecurity()));
@@ -319,7 +320,7 @@ public final class TransactionsViewer implements ModificationListener
         column.getEditingSupport().addListener(this);
         support.addColumn(column);
 
-        column = new Column("3", Messages.ColumnShares, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("3", Messages.ColumnShares, SWT.RIGHT, Dimensions.SharesColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new SharesLabelProvider() // NOSONAR
         {
             private TransactionLabelProvider colors = new TransactionLabelProvider(t -> null);
@@ -353,7 +354,7 @@ public final class TransactionsViewer implements ModificationListener
                         .addListener(this).attachTo(column);
         support.addColumn(column);
 
-        column = new Column("4", Messages.ColumnQuote, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("4", Messages.ColumnQuote, SWT.RIGHT, Dimensions.QuoteColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new TransactionLabelProvider(t -> {
             if (t instanceof PortfolioTransaction)
                 return t.getShares() != 0 ? Values.Quote.format(((PortfolioTransaction) t).getGrossPricePerShare(),
@@ -367,7 +368,7 @@ public final class TransactionsViewer implements ModificationListener
         }).attachTo(column);
         support.addColumn(column);
 
-        column = new Column("5", Messages.ColumnAmount, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("5", Messages.ColumnAmount, SWT.RIGHT, Dimensions.AmountColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new TransactionLabelProvider(t -> {
             Money m;
             if (t instanceof PortfolioTransaction)
@@ -382,27 +383,27 @@ public final class TransactionsViewer implements ModificationListener
         }).attachTo(column);
         support.addColumn(column);
 
-        column = new Column("6", Messages.ColumnFees, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("6", Messages.ColumnFees, SWT.RIGHT, Dimensions.FeesColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new TransactionLabelProvider(t -> Values.Money
                         .formatNonZero(t.getUnitSum(Transaction.Unit.Type.FEE), owner.getClient().getBaseCurrency())));
         ColumnViewerSorter.create(e -> ((TransactionPair<?>) e).getTransaction().getUnitSum(Transaction.Unit.Type.FEE))
                         .attachTo(column);
         support.addColumn(column);
 
-        column = new Column("7", Messages.ColumnTaxes, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("7", Messages.ColumnTaxes, SWT.RIGHT, Dimensions.TaxesColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new TransactionLabelProvider(t -> Values.Money
                         .formatNonZero(t.getUnitSum(Transaction.Unit.Type.TAX), owner.getClient().getBaseCurrency())));
         ColumnViewerSorter.create(e -> ((TransactionPair<?>) e).getTransaction().getUnitSum(Transaction.Unit.Type.TAX))
                         .attachTo(column);
         support.addColumn(column);
 
-        column = new Column("8", Messages.ColumnNetValue, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("8", Messages.ColumnNetValue, SWT.RIGHT, Dimensions.NetValueColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new TransactionLabelProvider(
                         t -> Values.Money.format(t.getMonetaryAmount(), owner.getClient().getBaseCurrency())));
         ColumnViewerSorter.create(e -> ((TransactionPair<?>) e).getTransaction().getMonetaryAmount()).attachTo(column);
         support.addColumn(column);
 
-        column = new Column("account", Messages.ColumnAccount, SWT.None, 120); //$NON-NLS-1$
+        column = new Column("account", Messages.ColumnAccount, SWT.None, Dimensions.AccountColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new TransactionLabelProvider(t -> null, t -> t.getOwner()) // NOSONAR
         {
             @Override
@@ -416,7 +417,7 @@ public final class TransactionsViewer implements ModificationListener
         ColumnViewerSorter.create(e -> ((TransactionPair<?>) e).getOwner().toString()).attachTo(column);
         support.addColumn(column);
 
-        column = new Column("9", Messages.ColumnOffsetAccount, SWT.None, 120); //$NON-NLS-1$
+        column = new Column("9", Messages.ColumnOffsetAccount, SWT.None, Dimensions.AccountColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new TransactionLabelProvider(
                         t -> t.getCrossEntry() != null ? t.getCrossEntry().getCrossOwner(t).toString() : null,
                         t -> t.getTransaction().getCrossEntry() != null
@@ -430,7 +431,7 @@ public final class TransactionsViewer implements ModificationListener
         }).attachTo(column);
         support.addColumn(column);
 
-        column = new Column("10", Messages.ColumnNote, SWT.None, 200); //$NON-NLS-1$
+        column = new Column("10", Messages.ColumnNote, SWT.None, Dimensions.NoteColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new TransactionLabelProvider(Transaction::getNote) // NOSONAR
         {
             @Override

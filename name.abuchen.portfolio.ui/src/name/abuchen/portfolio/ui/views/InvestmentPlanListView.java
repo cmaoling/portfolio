@@ -35,6 +35,7 @@ import name.abuchen.portfolio.money.CurrencyConverterImpl;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.dialogs.transactions.InvestmentPlanDialog;
@@ -170,11 +171,11 @@ public class InvestmentPlanListView extends AbstractListView implements Modifica
     
     private void addColumns(ShowHideColumnHelper support)
     {
-        Column column = new NameColumn("0", Messages.ColumnName, SWT.None, 100, part.getClient()); //$NON-NLS-1$
+        Column column = new NameColumn("0", Messages.ColumnName, SWT.None, Dimensions.InvestmentPlanNameColumnWidth, part.getClient(), Dimensions.InvestmentPlanNameDirection); //$NON-NLS-1$
         column.getEditingSupport().addListener(this);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnSecurity, SWT.NONE, 250);
+        column = new Column(Messages.ColumnSecurity, SWT.NONE, Dimensions.SecurityColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -194,7 +195,7 @@ public class InvestmentPlanListView extends AbstractListView implements Modifica
         ColumnViewerSorter.create(Security.class, "name").attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnPortfolio, SWT.None, 120);
+        column = new Column(Messages.ColumnPortfolio, SWT.None, Dimensions.PortfolioColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -215,7 +216,7 @@ public class InvestmentPlanListView extends AbstractListView implements Modifica
         ColumnViewerSorter.create(InvestmentPlan.class, "portfolio").attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnAccount, SWT.None, 120);
+        column = new Column(Messages.ColumnAccount, SWT.None, Dimensions.AccountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -235,7 +236,7 @@ public class InvestmentPlanListView extends AbstractListView implements Modifica
         ColumnViewerSorter.create(Account.class, "name").attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnStartDate, SWT.None, 80);
+        column = new Column(Messages.ColumnStartDate, SWT.None, Dimensions.DateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -248,7 +249,7 @@ public class InvestmentPlanListView extends AbstractListView implements Modifica
         new DateEditingSupport(InvestmentPlan.class, "start").addListener(this).attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnLastDate, SWT.None, 80);
+        column = new Column(Messages.ColumnLastDate, SWT.None, Dimensions.DateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -261,7 +262,7 @@ public class InvestmentPlanListView extends AbstractListView implements Modifica
         ColumnViewerSorter.create(InvestmentPlan.class, "LastDate").attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnNextDate, SWT.None, 80);
+        column = new Column(Messages.ColumnNextDate, SWT.None, Dimensions.DateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -273,7 +274,7 @@ public class InvestmentPlanListView extends AbstractListView implements Modifica
         ColumnViewerSorter.create(InvestmentPlan.class, "DateOfNextTransactionToBeGenerated").attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnInterval, SWT.None, 80);
+        column = new Column(Messages.ColumnInterval, SWT.None, Dimensions.IntervalColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -289,7 +290,7 @@ public class InvestmentPlanListView extends AbstractListView implements Modifica
         new ListEditingSupport(InvestmentPlan.class, "interval", available).addListener(this).attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnAmount, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnAmount, SWT.RIGHT, Dimensions.AmountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -316,7 +317,7 @@ public class InvestmentPlanListView extends AbstractListView implements Modifica
         ColumnViewerSorter.create(InvestmentPlan.class, "fees").attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnAutoGenerate, SWT.LEFT, 80);
+        column = new Column(Messages.ColumnAutoGenerate, SWT.LEFT, Dimensions.AutogenerateLogoColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override

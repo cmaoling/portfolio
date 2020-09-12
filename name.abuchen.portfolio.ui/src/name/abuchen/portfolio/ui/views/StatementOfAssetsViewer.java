@@ -71,6 +71,7 @@ import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.snapshot.filter.ClientFilter;
 import name.abuchen.portfolio.snapshot.security.SecurityPerformanceRecord;
 import name.abuchen.portfolio.snapshot.security.SecurityPerformanceSnapshot;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.UIConstants;
@@ -195,7 +196,7 @@ public class StatementOfAssetsViewer
 
         support = new ShowHideColumnHelper(StatementOfAssetsViewer.class.getName(), client, preference, assets, layout);
 
-        Column column = new Column("0", Messages.ColumnSharesOwned, SWT.RIGHT, 80); //$NON-NLS-1$
+        Column column = new Column("0", Messages.ColumnSharesOwned, SWT.RIGHT, Dimensions.SharesColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new SharesLabelProvider() // NOSONAR
         {
             @Override
@@ -267,7 +268,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("4", Messages.ColumnQuote, SWT.RIGHT, 60); //$NON-NLS-1$
+        column = new Column("4", Messages.ColumnQuote, SWT.RIGHT, Dimensions.QuoteColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -292,7 +293,7 @@ public class StatementOfAssetsViewer
         })));
         support.addColumn(column);
 
-        column = new Column("qdate", Messages.ColumnDateOfQuote, SWT.LEFT, 80); //$NON-NLS-1$
+        column = new Column("qdate", Messages.ColumnDateOfQuote, SWT.LEFT, Dimensions.DateColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -309,7 +310,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("5", Messages.ColumnMarketValue, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("5", Messages.ColumnMarketValue, SWT.RIGHT, Dimensions.MarketValueColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -328,7 +329,7 @@ public class StatementOfAssetsViewer
         column.setSorter(ColumnViewerSorter.create(Element.class, "valuation").wrap(ElementComparator::new)); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column("6", Messages.ColumnShareInPercent, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("6", Messages.ColumnShareInPercent, SWT.RIGHT, Dimensions.ShareInPercentColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -352,7 +353,7 @@ public class StatementOfAssetsViewer
         column.setSorter(ColumnViewerSorter.create(Element.class, "valuation").wrap(ElementComparator::new)); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column("7", Messages.ColumnPurchasePrice, SWT.RIGHT, 60); //$NON-NLS-1$
+        column = new Column("7", Messages.ColumnPurchasePrice, SWT.RIGHT, Dimensions.PurchasePriceColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnPurchasePrice_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -374,7 +375,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("ppmvavg", Messages.ColumnPurchasePriceMovingAverage, SWT.RIGHT, 60); //$NON-NLS-1$
+        column = new Column("ppmvavg", Messages.ColumnPurchasePriceMovingAverage, SWT.RIGHT, Dimensions.PurchasePriceMovingAverageColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnPurchasePriceMovingAverage_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -396,7 +397,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("8", Messages.ColumnPurchaseValue, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("8", Messages.ColumnPurchaseValue, SWT.RIGHT, Dimensions.PurchaseValueColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnPurchaseValue_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -419,7 +420,7 @@ public class StatementOfAssetsViewer
                         .wrap(ElementComparator::new));
         support.addColumn(column);
 
-        column = new Column("pvmvavg", Messages.ColumnPurchaseValueMovingAverage, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("pvmvavg", Messages.ColumnPurchaseValueMovingAverage, SWT.RIGHT, Dimensions.PurchaseValueMovingAverageColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnPurchaseValueMovingAverage_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -442,7 +443,7 @@ public class StatementOfAssetsViewer
                         .wrap(ElementComparator::new));
         support.addColumn(column);
 
-        column = new Column("9", Messages.ColumnProfitLoss, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("9", Messages.ColumnProfitLoss, SWT.RIGHT, Dimensions.ProfitLossColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider() // NOSONAR
         {
             @Override
@@ -515,7 +516,7 @@ public class StatementOfAssetsViewer
     {
         ReportingPeriodLabelProvider labelProvider;
 
-        Column column = new Column("ttwror", Messages.ColumnTWROR, SWT.RIGHT, 80); //$NON-NLS-1$
+        Column column = new Column("ttwror", Messages.ColumnTWROR, SWT.RIGHT, Dimensions.TWRORColumnWidth  + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getTrueTimeWeightedRateOfReturn);
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnTTWROR_Option, options));
         column.setGroupLabel(Messages.GroupLabelPerformance);
@@ -525,7 +526,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("irr", Messages.ColumnIRR, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("irr", Messages.ColumnIRR, SWT.RIGHT, Dimensions.IRRColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getIrr);
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnIRRPerformanceOption, options));
         column.setMenuLabel(Messages.ColumnIRR_MenuLabel);
@@ -538,7 +539,7 @@ public class StatementOfAssetsViewer
         Function<Stream<Object>, Object> sum = elements -> elements.map(e -> (Money) e)
                         .collect(MoneyCollectors.sum(getCurrencyConverter().getTermCurrency()));
 
-        column = new Column("capitalgains", Messages.ColumnCapitalGains, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("capitalgains", Messages.ColumnCapitalGains, SWT.RIGHT, Dimensions.CapitalGainsColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getCapitalGainsOnHoldings, sum,
                         true);
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnCapitalGains_Option, options));
@@ -549,7 +550,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("capitalgains%", Messages.ColumnCapitalGainsPercent, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("capitalgains%", Messages.ColumnCapitalGainsPercent, SWT.RIGHT, Dimensions.CapitalGainsPercentColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getCapitalGainsOnHoldingsPercent);
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnCapitalGainsPercent_Option, options));
         column.setGroupLabel(Messages.GroupLabelPerformance);
@@ -559,7 +560,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("capitalgainsmvavg", Messages.ColumnCapitalGainsMovingAverage, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("capitalgainsmvavg", Messages.ColumnCapitalGainsMovingAverage, SWT.RIGHT, Dimensions.CapitalGainsMovingAverageColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(
                         SecurityPerformanceRecord::getCapitalGainsOnHoldingsMovingAverage, sum, true);
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnCapitalGainsMovingAverage_Option, options));
@@ -570,7 +571,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("capitalgainsmvavg%", Messages.ColumnCapitalGainsMovingAveragePercent, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("capitalgainsmvavg%", Messages.ColumnCapitalGainsMovingAveragePercent, SWT.RIGHT, Dimensions.CapitalGainsMovingAveragePercentColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(
                         SecurityPerformanceRecord::getCapitalGainsOnHoldingsMovingAveragePercent);
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnCapitalGainsMovingAveragePercent_Option,
@@ -582,7 +583,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("delta", Messages.ColumnAbsolutePerformance_MenuLabel, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("delta", Messages.ColumnAbsolutePerformance_MenuLabel, SWT.RIGHT, Dimensions.AbsolutePerformanceColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getDelta, sum, true);
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnAbsolutePerformance_Option, options));
         column.setGroupLabel(Messages.GroupLabelPerformance);
@@ -592,7 +593,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("delta%", Messages.ColumnAbsolutePerformancePercent_MenuLabel, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("delta%", Messages.ColumnAbsolutePerformancePercent_MenuLabel, SWT.RIGHT, Dimensions.AbsolutePerformancePercentColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getDeltaPercent);
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnAbsolutePerformancePercent_Option, options));
         column.setGroupLabel(Messages.GroupLabelPerformance);
@@ -607,7 +608,7 @@ public class StatementOfAssetsViewer
     {
         ReportingPeriodLabelProvider labelProvider;
 
-        Column column = new Column("sumdiv", Messages.ColumnDividendSum, SWT.RIGHT, 80); //$NON-NLS-1$
+        Column column = new Column("sumdiv", Messages.ColumnDividendSum, SWT.RIGHT, Dimensions.DividendSumColumnWidth); //$NON-NLS-1$
 
         Function<Stream<Object>, Object> collector = elements -> elements.map(e -> (Money) e)
                         .collect(MoneyCollectors.sum(getCurrencyConverter().getTermCurrency()));
@@ -622,7 +623,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("d%", Messages.ColumnDividendTotalRateOfReturn, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("d%", Messages.ColumnDividendTotalRateOfReturn, SWT.RIGHT, Dimensions.DividendRateOfReturnColumnWidth); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(SecurityPerformanceRecord::getTotalRateOfReturnDiv, null,
                         false);
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnDividendTotalRateOfReturn + " {0}", options)); //$NON-NLS-1$
@@ -633,7 +634,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("d%mvavg", Messages.ColumnDividendMovingAverageTotalRateOfReturn, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("d%mvavg", Messages.ColumnDividendMovingAverageTotalRateOfReturn, SWT.RIGHT, Dimensions.DividendMovingAverageRateOfReturnColumnWidth); //$NON-NLS-1$
         labelProvider = new ReportingPeriodLabelProvider(
                         SecurityPerformanceRecord::getTotalRateOfReturnDivMovingAverage, null, false);
         column.setOptions(new ReportingPeriodColumnOptions(
@@ -671,7 +672,7 @@ public class StatementOfAssetsViewer
 
     private void addCurrencyColumns() // NOSONAR
     {
-        Column column = new Column("baseCurrency", Messages.ColumnCurrency, SWT.LEFT, 80); //$NON-NLS-1$
+        Column column = new Column("baseCurrency", Messages.ColumnCurrency, SWT.LEFT, Dimensions.CurrencyColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.ColumnForeignCurrencies);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -691,7 +692,7 @@ public class StatementOfAssetsViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("exchangeRate", Messages.ColumnExchangeRate, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("exchangeRate", Messages.ColumnExchangeRate, SWT.RIGHT, Dimensions.ExchangeRateColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.ColumnForeignCurrencies);
         column.setLabelProvider(new ColumnLabelProvider() // NOSONAR
         {
@@ -729,7 +730,7 @@ public class StatementOfAssetsViewer
         support.addColumn(column);
 
         column = new Column("marketValueBaseCurrency", //$NON-NLS-1$
-                        Messages.ColumnMarketValue + Messages.BaseCurrencyCue, SWT.RIGHT, 80);
+                        Messages.ColumnMarketValue + Messages.BaseCurrencyCue, SWT.RIGHT, Dimensions.MarketValueColumnWidth);
         column.setDescription(Messages.ColumnMarketValueBaseCurrency);
         column.setGroupLabel(Messages.ColumnForeignCurrencies);
         column.setLabelProvider(new ColumnLabelProvider()
@@ -752,7 +753,7 @@ public class StatementOfAssetsViewer
         support.addColumn(column);
 
         column = new Column("purchaseValueBaseCurrency", //$NON-NLS-1$
-                        Messages.ColumnPurchaseValue + Messages.BaseCurrencyCue, SWT.RIGHT, 80);
+                        Messages.ColumnPurchaseValue + Messages.BaseCurrencyCue, SWT.RIGHT, Dimensions.PurchaseValueColumnWidth);
         column.setDescription(Messages.ColumnPurchaseValueBaseCurrency);
         column.setGroupLabel(Messages.ColumnForeignCurrencies);
         column.setLabelProvider(new ColumnLabelProvider()
@@ -775,7 +776,7 @@ public class StatementOfAssetsViewer
         support.addColumn(column);
 
         column = new Column("profitLossBaseCurrency", //$NON-NLS-1$
-                        Messages.ColumnProfitLoss + Messages.BaseCurrencyCue, SWT.RIGHT, 80);
+                        Messages.ColumnProfitLoss + Messages.BaseCurrencyCue, SWT.RIGHT, Dimensions.ProfitLossColumnWidth);
         column.setDescription(Messages.ColumnProfitLossBaseCurrency);
         column.setGroupLabel(Messages.ColumnForeignCurrencies);
         column.setLabelProvider(new ColumnLabelProvider()
