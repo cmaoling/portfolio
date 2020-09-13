@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.is;
 
 import static org.junit.Assert.assertThat;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -38,7 +39,7 @@ public class InvestmentPlanTest
     public void setup()
     {
         this.client = new Client();
-        this.security = new SecurityBuilder().addTo(client);
+        this.security = new SecurityBuilder().addPrice("2015-01-01", Values.Quote.factorize(10)).addTo(client);
         this.account = new AccountBuilder().addTo(client);
         this.portfolio = new PortfolioBuilder(account).addTo(client);
         this.investmentPlan = new InvestmentPlan();
@@ -47,7 +48,7 @@ public class InvestmentPlanTest
     }
 
     @Test
-    public void testGenerationOfBuyTransaction()
+    public void testGenerationOfBuyTransaction() throws IOException
     {
         investmentPlan.setAccount(account); // set both account and portfolio
         investmentPlan.setPortfolio(portfolio); // causes securities to be
@@ -96,7 +97,7 @@ public class InvestmentPlanTest
     }
 
     @Test
-    public void testGenerationOfDeliveryTransaction()
+    public void testGenerationOfDeliveryTransaction() throws IOException
     {
         // investmentPlan.setAccount(account); // set portfolio only
         investmentPlan.setPortfolio(portfolio); // causes securities to be delivered in
@@ -129,7 +130,7 @@ public class InvestmentPlanTest
     }
 
     @Test
-    public void testGenerationOfDepositTransaction()
+    public void testGenerationOfDepositTransaction() throws IOException
     {
         Client client = new Client();
         //Security security = new SecurityBuilder().addTo(client);
@@ -172,7 +173,7 @@ public class InvestmentPlanTest
     }
 
     @Test
-    public void testNoGenerationWithStartInFuture()
+    public void testNoGenerationWithStartInFuture() throws IOException
     {
         investmentPlan.setAccount(account);
         investmentPlan.setStart(LocalDate.now().minusMonths(6));
@@ -207,6 +208,19 @@ public class InvestmentPlanTest
             resumeDate = resumeDate.plusDays(1);
 
         assertThat(firstNewDate, is(resumeDate));
+    }
+
+    @Test(expected = IOException.class)
+    public void testErrorMessageWhenNoQuotesExist() throws IOException
+    {
+        security.removeAllPrices();
+
+        investmentPlan.setAccount(account);
+        investmentPlan.setPortfolio(portfolio);
+        investmentPlan.setSecurity(security);
+        investmentPlan.setStart(LocalDateTime.parse("2016-01-31T00:00:00"));
+
+        investmentPlan.generateTransactions(new TestCurrencyConverter());
     }
 
 }

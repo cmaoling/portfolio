@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 //REVISIT import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -366,7 +367,7 @@ public class InvestmentPlan implements Named, Adaptable, Attributable
         }
     }
 
-    public List<TransactionPair<?>> generateTransactions(CurrencyConverter converter)
+    public List<TransactionPair<?>> generateTransactions(CurrencyConverter converter) throws IOException
     {
         LocalDate transactionDate = getDateOfNextTransactionToBeGenerated();
         List<TransactionPair<?>> newlyCreated = new ArrayList<>();
@@ -386,7 +387,7 @@ public class InvestmentPlan implements Named, Adaptable, Attributable
         return newlyCreated;
     }
 
-    private TransactionPair<?> createTransaction(CurrencyConverter converter, LocalDate tDate)
+    private TransactionPair<?> createTransaction(CurrencyConverter converter, LocalDate tDate) throws IOException
     {
         Class<? extends Transaction> planType = getPlanType();
 
@@ -398,7 +399,7 @@ public class InvestmentPlan implements Named, Adaptable, Attributable
             throw new IllegalArgumentException();
     }
 
-    private TransactionPair<?> createSecurityTx(CurrencyConverter converter, LocalDate tDate)
+    private TransactionPair<?> createSecurityTx(CurrencyConverter converter, LocalDate tDate) throws IOException
     {
         if (account == null && portfolio == null)
             return null;
@@ -418,6 +419,10 @@ public class InvestmentPlan implements Named, Adaptable, Attributable
         if (security != null && portfolio != null)
         {
             long price = getSecurity().getSecurityPrice(tDate).getValue();
+            if (price == 0L)
+                throw new IOException(MessageFormat.format(
+                                Messages.MsgErrorInvestmentPlanMissingSecurityPricesToGenerateTransaction,
+                                getSecurity().getName()));
             boolean needsCurrencyConversion = !targetCurrencyCode.equals(security.getCurrencyCode());
             if (needsCurrencyConversion)
             {
