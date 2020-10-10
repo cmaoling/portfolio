@@ -24,6 +24,7 @@ import name.abuchen.portfolio.money.ExchangeRateProvider;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.ExchangeRateTimeSeries;
 import name.abuchen.portfolio.money.Values;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.UIConstants;
 import name.abuchen.portfolio.ui.util.Colors;
@@ -87,7 +88,7 @@ public class ExchangeRatesListTab implements AbstractTabbedView.Tab
         ShowHideColumnHelper support = new ShowHideColumnHelper(ExchangeRatesListTab.class.getSimpleName() + "@top2", //$NON-NLS-1$
                         preferences, indeces, layout);
 
-        Column column = new Column(Messages.ColumnBaseCurrency, SWT.None, 80);
+        Column column = new Column(Messages.ColumnBaseCurrency, SWT.None, Dimensions.CurrencyColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -100,7 +101,7 @@ public class ExchangeRatesListTab implements AbstractTabbedView.Tab
                         .attachTo(column, SWT.DOWN);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnTermCurrency, SWT.None, 80);
+        column = new Column(Messages.ColumnTermCurrency, SWT.None, Dimensions.CurrencyColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -113,7 +114,7 @@ public class ExchangeRatesListTab implements AbstractTabbedView.Tab
                         .attachTo(column);
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnCurrencyProvider, SWT.None, 150);
+        column = new Column(Messages.ColumnCurrencyProvider, SWT.None, Dimensions.CurrencyProviderColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -126,7 +127,7 @@ public class ExchangeRatesListTab implements AbstractTabbedView.Tab
         ColumnViewerSorter.create(ExchangeRateTimeSeries.class, "provider").attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column(Messages.ColumnDateLatestExchangeRate, SWT.None, 150);
+        column = new Column(Messages.ColumnDateLatestExchangeRate, SWT.None, Dimensions.ExchangeRateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override

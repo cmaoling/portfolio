@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import name.abuchen.portfolio.model.Adaptor;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Peer;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnEditingSupport;
@@ -87,7 +88,7 @@ public class IbanColumn extends Column
 
     public IbanColumn(String id)
     {
-        super(id, Messages.ColumnIBAN, SWT.LEFT, 160);
+        super(id, Messages.ColumnIBAN, SWT.LEFT, Dimensions.IbanColumnWidth);
 
         setLabelProvider(new ColumnLabelProvider()
         {

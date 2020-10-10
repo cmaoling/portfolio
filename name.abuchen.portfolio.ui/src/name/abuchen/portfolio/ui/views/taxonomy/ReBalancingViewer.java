@@ -21,6 +21,7 @@ import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.snapshot.AssetPosition;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.Colors;
@@ -58,7 +59,7 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
 
         addDesiredAllocationColumn(support);
 
-        Column column = new Column("targetvalue", Messages.ColumnTargetValue, SWT.RIGHT, 100); //$NON-NLS-1$
+        Column column = new Column("targetvalue", Messages.ColumnTargetValue, SWT.RIGHT, Dimensions.BalanceColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -73,7 +74,7 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
 
         addActualColumns(support);
 
-        column = new Column("delta%", Messages.ColumnDeltaPercent, SWT.RIGHT, 60); //$NON-NLS-1$
+        column = new Column("delta%", Messages.ColumnDeltaPercent, SWT.RIGHT, Dimensions.DeltaPercentColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -101,13 +102,13 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
         });
         support.addColumn(column);
 
-        column = new Column("delta%indicator", Messages.ColumnDeltaPercentIndicator, SWT.LEFT, 60); //$NON-NLS-1$
+        column = new Column("delta%indicator", Messages.ColumnDeltaPercentIndicator, SWT.LEFT, Dimensions.DeltaPercentIndicatorColumnWidth); //$NON-NLS-1$
 
         column.setLabelProvider(new DeltaPercentageIndicatorLabelProvider(getNodeViewer().getControl(),
                         getModel().getClient(), element -> (TaxonomyNode) element));
         support.addColumn(column);
 
-        column = new Column("delta%relative", Messages.ColumnDeltaPercentRelative, SWT.RIGHT, 100); //$NON-NLS-1$
+        column = new Column("delta%relative", Messages.ColumnDeltaPercentRelative, SWT.RIGHT, Dimensions.DeltaPercentRelativeColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnDeltaPercentRelative_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -145,7 +146,7 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("delta", Messages.ColumnDeltaValue, SWT.RIGHT, 100); //$NON-NLS-1$
+        column = new Column("delta", Messages.ColumnDeltaValue, SWT.RIGHT, Dimensions.BalanceColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -171,7 +172,7 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
         });
         support.addColumn(column);
 
-        column = new Column("quote", Messages.ColumnQuote, SWT.RIGHT, 60); //$NON-NLS-1$
+        column = new Column("quote", Messages.ColumnQuote, SWT.RIGHT, Dimensions.QuoteColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -189,7 +190,7 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
         });
         support.addColumn(column);
 
-        column = new Column("shares", Messages.ColumnSharesOwned, SWT.RIGHT, 60); //$NON-NLS-1$
+        column = new Column("shares", Messages.ColumnSharesOwned, SWT.RIGHT, Dimensions.SharesColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new SharesLabelProvider()
         {
             @Override
@@ -212,7 +213,7 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("deltashares", Messages.ColumnDeltaShares, SWT.RIGHT, 100); //$NON-NLS-1$
+        column = new Column("deltashares", Messages.ColumnDeltaShares, SWT.RIGHT, Dimensions.DeltaSharesColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -258,7 +259,7 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
 
     private void addDesiredAllocationColumn(ShowHideColumnHelper support)
     {
-        Column column = new Column("desiredAllocation", Messages.ColumnDesiredAllocation, SWT.RIGHT, 70); //$NON-NLS-1$
+        Column column = new Column("desiredAllocation", Messages.ColumnDesiredAllocation, SWT.RIGHT, Dimensions.DesiredAllocationColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnDesiredAllocation_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {

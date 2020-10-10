@@ -5,6 +5,7 @@ import org.eclipse.swt.SWT;
 
 import name.abuchen.portfolio.model.Adaptor;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnViewerSorter;
@@ -19,7 +20,7 @@ public class SymbolColumn extends Column
 
     public SymbolColumn(String id)
     {
-        super(id, Messages.ColumnTicker, SWT.LEFT, 80);
+        super(id, Messages.ColumnTicker, SWT.LEFT, Dimensions.SymbolColumnWidth);
 
         setLabelProvider(new ColumnLabelProvider()
         {

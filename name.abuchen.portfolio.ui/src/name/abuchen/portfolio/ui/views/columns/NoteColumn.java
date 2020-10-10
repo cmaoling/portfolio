@@ -7,6 +7,7 @@ import org.eclipse.swt.graphics.Image;
 import name.abuchen.portfolio.model.Adaptor;
 import name.abuchen.portfolio.model.Annotated;
 import name.abuchen.portfolio.model.Named;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.viewers.Column;
@@ -23,7 +24,7 @@ public class NoteColumn extends Column
 
     public NoteColumn(String id)
     {
-        super(id, Messages.ColumnNote, SWT.LEFT, 22);
+        super(id, Messages.ColumnNote, SWT.LEFT, Dimensions.NoteColumnWidth);
 
         setLabelProvider(new ColumnLabelProvider()
         {

@@ -14,6 +14,7 @@ import org.eclipse.swt.widgets.Composite;
 
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.ClientAttribute;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.viewers.AttributeEditingSupport;
@@ -60,7 +61,7 @@ public class ClientSettingsListTab implements AbstractTabbedView.Tab, Modificati
                         preferences, settings, layout);
 
         // Create Column for Setting
-        Column column = new Column(Messages.SettingsListView_setting, SWT.None, 180);
+        Column column = new Column(Messages.SettingsListView_setting, SWT.None, Dimensions.ParameterNameColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -78,7 +79,7 @@ public class ClientSettingsListTab implements AbstractTabbedView.Tab, Modificati
         });
         support.addColumn(column);
 
-        column = new Column("", Messages.SettingsListView_type, SWT.None, 150); //$NON-NLS-1$
+        column = new Column("", Messages.SettingsListView_type, SWT.None, Dimensions.ParameterTypeColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -89,7 +90,7 @@ public class ClientSettingsListTab implements AbstractTabbedView.Tab, Modificati
         });
         support.addColumn(column);
 
-        column = new AttributeColumn("-SettingList", Messages.SettingsListView_value, SWT.None, 500); //$NON-NLS-1$
+        column = new AttributeColumn("-SettingList", Messages.SettingsListView_value, SWT.None, Dimensions.ParameterValueColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override

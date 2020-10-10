@@ -57,6 +57,7 @@ import name.abuchen.portfolio.online.SecuritySearchProvider.ResultItem;
 import name.abuchen.portfolio.online.impl.PortfolioReportNet;
 import name.abuchen.portfolio.snapshot.QuoteQualityMetrics;
 import name.abuchen.portfolio.snapshot.ReportingPeriod;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionDialog;
@@ -223,7 +224,7 @@ public final class SecuritiesTable implements ModificationListener
 
     private void addMasterDataColumns()
     {
-        Column column = new Column("0", Messages.ColumnName, SWT.LEFT, 400); //$NON-NLS-1$
+        Column column = new Column("0", Messages.ColumnName, SWT.LEFT, Dimensions.SecurityColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -238,7 +239,7 @@ public final class SecuritiesTable implements ModificationListener
                 return LogoManager.instance().getDefaultColumnImage(e, getClient().getSettings());
             }
         });
-        ColumnViewerSorter.create(Security.class, "name").attachTo(column, SWT.DOWN); //$NON-NLS-1$
+        ColumnViewerSorter.create(Security.class, "name").attachTo(column, Dimensions.SecurityDirection); //$NON-NLS-1$
         new StringEditingSupport(Security.class, "name").setMandatory(true).addListener(this).attachTo(column); //$NON-NLS-1$
         support.addColumn(column);
 
@@ -258,7 +259,7 @@ public final class SecuritiesTable implements ModificationListener
         column.getEditingSupport().addListener(this);
         support.addColumn(column);
 
-        column = new Column("currency", Messages.ColumnCurrency, SWT.LEFT, 60); //$NON-NLS-1$
+        column = new Column("currency", Messages.ColumnCurrency, SWT.LEFT, Dimensions.CurrencyColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -271,7 +272,7 @@ public final class SecuritiesTable implements ModificationListener
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("targetCurrency", Messages.ColumnTargetCurrency, SWT.LEFT, 60); //$NON-NLS-1$
+        column = new Column("targetCurrency", Messages.ColumnTargetCurrency, SWT.LEFT, Dimensions.CurrencyColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnTargetCurrencyToolTip);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -285,7 +286,7 @@ public final class SecuritiesTable implements ModificationListener
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("8", Messages.ColumnRetired, SWT.LEFT, 40); //$NON-NLS-1$
+        column = new Column("8", Messages.ColumnRetired, SWT.LEFT, Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -308,7 +309,7 @@ public final class SecuritiesTable implements ModificationListener
 
     private void addColumnLatestPrice() // NOSONAR
     {
-        Column column = new Column("4", Messages.ColumnLatest, SWT.RIGHT, 60); //$NON-NLS-1$
+        Column column = new Column("4", Messages.ColumnLatest, SWT.RIGHT, Dimensions.QuoteColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnLatest_MenuLabel);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -344,7 +345,7 @@ public final class SecuritiesTable implements ModificationListener
     private void addDeltaColumn() // NOSONAR
     {
         Column column;
-        column = new Column("5", Messages.ColumnChangeOnPrevious, SWT.RIGHT, 60); //$NON-NLS-1$
+        column = new Column("5", Messages.ColumnChangeOnPrevious, Dimensions.PercentageColumnAlignment, (Dimensions.MiniLogoWidth + Dimensions.PercentageColumnWidth)); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnChangeOnPrevious_MenuLabel);
         column.setLabelProvider(new NumberColorLabelProvider<>(Values.Percent2, element -> {
             Optional<Pair<SecurityPrice, SecurityPrice>> previous = ((Security) element).getLatestTwoSecurityPrices();
@@ -405,7 +406,7 @@ public final class SecuritiesTable implements ModificationListener
     private void addColumnDateOfLatestPrice() // NOSONAR
     {
         Column column;
-        column = new Column("9", Messages.ColumnLatestDate, SWT.LEFT, 80); //$NON-NLS-1$
+        column = new Column("9", Messages.ColumnLatestDate, SWT.LEFT, Dimensions.DateColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnLatestDate_MenuLabel);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -448,7 +449,7 @@ public final class SecuritiesTable implements ModificationListener
 
     private void addColumnDateOfLatestHistoricalPrice() // NOSONAR
     {
-        Column column = new Column("10", Messages.ColumnLatestHistoricalDate, SWT.LEFT, 80); //$NON-NLS-1$
+        Column column = new Column("10", Messages.ColumnLatestHistoricalDate, Dimensions.DateColumnAlignment, Dimensions.DateColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnLatestHistoricalDate_MenuLabel);
         column.setGroupLabel(Messages.GroupLabelDataQuality);
         column.setLabelProvider(new ColumnLabelProvider() // NOSONAR
@@ -525,7 +526,7 @@ public final class SecuritiesTable implements ModificationListener
             return Double.valueOf((latest.getValue() - previous.getValue()) / (double) previous.getValue());
         };
 
-        Column column = new Column("delta-w-period", Messages.ColumnQuoteChange, SWT.RIGHT, 80); //$NON-NLS-1$
+        Column column = new Column("delta-w-period", Messages.ColumnQuoteChange, SWT.RIGHT, Dimensions.DateColumnWidth); //$NON-NLS-1$
         column.setOptions(new ReportingPeriodColumnOptions(Messages.ColumnQuoteChange_Option, options));
         column.setDescription(Messages.ColumnQuoteChange_Description);
         column.setLabelProvider(new QuoteReportingPeriodLabelProvider(valueProvider));
@@ -568,7 +569,7 @@ public final class SecuritiesTable implements ModificationListener
             return feed != null ? feed.getName() : null;
         };
 
-        Column column = new Column("qf-historic", Messages.ColumnQuoteFeedHistoric, SWT.LEFT, 200); //$NON-NLS-1$
+        Column column = new Column("qf-historic", Messages.ColumnQuoteFeedHistoric, Dimensions.URLColumnAlignment, Dimensions.URLColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelQuoteFeed);
         column.setVisible(false);
         column.setLabelProvider(new ColumnLabelProvider()
@@ -592,9 +593,9 @@ public final class SecuritiesTable implements ModificationListener
             return feed != null ? feed.getName() : null;
         };
 
-        column = new Column("qf-latest", Messages.ColumnQuoteFeedLatest, SWT.LEFT, 200); //$NON-NLS-1$
+        column = new Column("qf-latest", Messages.ColumnQuoteFeedLatest, Dimensions.URLColumnAlignment, Dimensions.URLColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelQuoteFeed);
-        column.setVisible(false);
+        column.setVisible(true);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -606,9 +607,9 @@ public final class SecuritiesTable implements ModificationListener
         column.setSorter(ColumnViewerSorter.create(latestQuoteFeed::apply));
         support.addColumn(column);
 
-        column = new Column("url-history", Messages.ColumnFeedURLHistoric, SWT.LEFT, 200); //$NON-NLS-1$
+        column = new Column("url-history", Messages.ColumnFeedURLHistoric, Dimensions.URLColumnAlignment, Dimensions.URLColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelQuoteFeed);
-        column.setVisible(false);
+        column.setVisible(true);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -621,7 +622,7 @@ public final class SecuritiesTable implements ModificationListener
         column.setSorter(ColumnViewerSorter.create(Security.class, "feedURL")); //$NON-NLS-1$
         support.addColumn(column);
 
-        column = new Column("url-latest", Messages.ColumnFeedURLLatest, SWT.LEFT, 200); //$NON-NLS-1$
+        column = new Column("url-latest", Messages.ColumnFeedURLLatest, Dimensions.URLColumnAlignment, Dimensions.URLColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelQuoteFeed);
         column.setVisible(false);
         column.setLabelProvider(new ColumnLabelProvider()
@@ -640,7 +641,7 @@ public final class SecuritiesTable implements ModificationListener
     private void addDataQualityColumns()
     {
         // ColumnLatestHistoricalDate
-        Column column = new Column("q-date-first-historic", Messages.ColumnDateFirstHistoricalQuote, SWT.LEFT, 80); //$NON-NLS-1$
+        Column column = new Column("q-date-first-historic", Messages.ColumnDateFirstHistoricalQuote, Dimensions.DateColumnAlignment, Dimensions.DateColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnDateFirstHistoricalQuote_MenuLabel);
         column.setGroupLabel(Messages.GroupLabelDataQuality);
         column.setLabelProvider(new ColumnLabelProvider() // NOSONAR
@@ -658,10 +659,10 @@ public final class SecuritiesTable implements ModificationListener
         }));
         support.addColumn(column);
 
-        column = new Column("qqm-completeness", Messages.ColumnMetricCompleteness, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("qqm-completeness", Messages.ColumnMetricCompleteness, Dimensions.PercentageColumnAlignment, Dimensions.PercentageColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelDataQuality);
         column.setDescription(Messages.ColumnMetricCompleteness_Description);
-        column.setVisible(false);
+        column.setVisible(true);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -673,7 +674,7 @@ public final class SecuritiesTable implements ModificationListener
         column.setSorter(ColumnViewerSorter.create(o -> metricsCache.get((Security) o).getCompleteness()));
         support.addColumn(column);
 
-        column = new Column("qqm-expected", Messages.ColumnMetricExpectedNumberOfQuotes, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("qqm-expected", Messages.ColumnMetricExpectedNumberOfQuotes, Dimensions.NumberColumnAlignment, Dimensions.NumberColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelDataQuality);
         column.setVisible(false);
         column.setLabelProvider(new ColumnLabelProvider()
@@ -687,7 +688,7 @@ public final class SecuritiesTable implements ModificationListener
         column.setSorter(ColumnViewerSorter.create(o -> metricsCache.get((Security) o).getExpectedNumberOfQuotes()));
         support.addColumn(column);
 
-        column = new Column("qqm-actual", Messages.ColumnMetricActualNumberOfQuotes, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("qqm-actual", Messages.ColumnMetricActualNumberOfQuotes, Dimensions.NumberColumnAlignment, Dimensions.NumberColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelDataQuality);
         column.setVisible(false);
         column.setLabelProvider(new ColumnLabelProvider()
@@ -701,7 +702,7 @@ public final class SecuritiesTable implements ModificationListener
         column.setSorter(ColumnViewerSorter.create(o -> metricsCache.get((Security) o).getActualNumberOfQuotes()));
         support.addColumn(column);
 
-        column = new Column("qqm-missing", Messages.ColumnMetricNumberOfMissingQuotes, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("qqm-missing", Messages.ColumnMetricNumberOfMissingQuotes, Dimensions.NumberColumnAlignment, Dimensions.NumberColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelDataQuality);
         column.setVisible(false);
         column.setLabelProvider(new ColumnLabelProvider()

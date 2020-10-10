@@ -60,6 +60,7 @@ import name.abuchen.portfolio.snapshot.security.SecurityPerformanceRecord;
 import name.abuchen.portfolio.snapshot.security.SecurityPerformanceSnapshot;
 import name.abuchen.portfolio.snapshot.trades.TradeCollector;
 import name.abuchen.portfolio.snapshot.trades.TradeCollectorException;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
@@ -357,7 +358,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
     private void createCommonColumns()
     {
         // shares held
-        Column column = new Column("shares", Messages.ColumnSharesOwned, SWT.RIGHT, 80); //$NON-NLS-1$
+        Column column = new Column("shares", Messages.ColumnSharesOwned, SWT.RIGHT, Dimensions.SharesColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new SharesLabelProvider() // NOSONAR
         {
             @Override
@@ -400,7 +401,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // cost value - moving average
-        column = new Column("pvmvavg", Messages.ColumnPurchaseValueMovingAverage, SWT.RIGHT, 75); //$NON-NLS-1$
+        column = new Column("pvmvavg", Messages.ColumnPurchaseValueMovingAverage, SWT.RIGHT, Dimensions.PurchaseValueMovingAverageColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnPurchaseValueMovingAverage_MenuLabel);
         column.setDescription(Messages.ColumnPurchaseValueMovingAverage_Description + TextUtil.PARAGRAPH_BREAK
                         + Messages.DescriptionDataRelativeToReportingPeriod);
@@ -419,7 +420,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // cost value per share - fifo
-        column = new Column("pp", Messages.ColumnPurchasePrice, SWT.RIGHT, 75); //$NON-NLS-1$
+        column = new Column("pp", Messages.ColumnPurchasePrice, SWT.RIGHT, Dimensions.PurchasePriceColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnPurchasePrice_Description + TextUtil.PARAGRAPH_BREAK
                         + Messages.DescriptionDataRelativeToReportingPeriod);
         column.setImage(Images.INTERVAL);
@@ -436,7 +437,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // cost value per share - moving average
-        column = new Column("ppmvavg", Messages.ColumnPurchasePriceMovingAverage, SWT.RIGHT, 75); //$NON-NLS-1$
+        column = new Column("ppmvavg", Messages.ColumnPurchasePriceMovingAverage, SWT.RIGHT, Dimensions.PurchasePriceMovingAverageColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnPurchasePriceMovingAverage_MenuLabel);
         column.setDescription(Messages.ColumnPurchasePriceMovingAverage_Description + TextUtil.PARAGRAPH_BREAK
                         + Messages.DescriptionDataRelativeToReportingPeriod);
@@ -455,7 +456,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // latest / current quote
-        column = new Column("quote", Messages.ColumnQuote, SWT.RIGHT, 75); //$NON-NLS-1$
+        column = new Column("quote", Messages.ColumnQuote, SWT.RIGHT, Dimensions.QuoteColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnQuote_DescriptionEndOfReportingPeriod);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -480,7 +481,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         
         
         // change to previous day
-        column = new Column("5", Messages.ColumnChangeOnPrevious, SWT.RIGHT, 60); //$NON-NLS-1$
+        column = new Column("5", Messages.ColumnChangeOnPrevious, SWT.RIGHT, Dimensions.PercentageColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnChangeOnPrevious_MenuLabel);
         column.setLabelProvider(new NumberColorLabelProvider<>(Values.Percent2, element -> {
             Optional<Pair<SecurityPrice, SecurityPrice>> previous = ((SecurityPerformanceRecord) element).getSecurity().getLatestTwoSecurityPrices();
@@ -539,7 +540,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
 
 
         // market value
-        column = new Column("mv", Messages.ColumnMarketValue, SWT.RIGHT, 75); //$NON-NLS-1$
+        column = new Column("mv", Messages.ColumnMarketValue, SWT.RIGHT, Dimensions.MarketValueColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -553,7 +554,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // fees paid
-        column = new Column("fees", Messages.ColumnFees, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("fees", Messages.ColumnFees, SWT.RIGHT, Dimensions.FeesColumnWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnFees_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -568,7 +569,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // taxes paid
-        column = new Column("taxes", Messages.ColumnTaxes, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("taxes", Messages.ColumnTaxes, SWT.RIGHT, Dimensions.TaxesColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -608,7 +609,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
 
     private void addPerformanceColumns()
     {
-        Column column = new Column("twror", Messages.ColumnTWROR, SWT.RIGHT, 80); //$NON-NLS-1$
+        Column column = new Column("twror", Messages.ColumnTWROR, SWT.RIGHT, Dimensions.TWRORColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelPerformance);
         column.setMenuLabel(Messages.ColumnTWROR_Description);
         column.setLabelProvider(new NumberColorLabelProvider<>(Values.Percent2,
@@ -617,7 +618,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // internal rate of return
-        column = new Column("izf", Messages.ColumnIRR, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("izf", Messages.ColumnIRR, SWT.RIGHT, Dimensions.IRRColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelPerformance);
         column.setMenuLabel(Messages.ColumnIRR_MenuLabel);
         column.setLabelProvider(
@@ -625,7 +626,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         column.setSorter(ColumnViewerSorter.create(SecurityPerformanceRecord.class, "irr")); //$NON-NLS-1$
         recordColumns.addColumn(column);
 
-        column = new Column("capitalgains", Messages.ColumnCapitalGains, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("capitalgains", Messages.ColumnCapitalGains, SWT.RIGHT, Dimensions.CapitalGainsColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelPerformance);
         column.setDescription(Messages.ColumnCapitalGains_Description);
         column.setLabelProvider(new MoneyColorLabelProvider(
@@ -634,7 +635,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         column.setSorter(ColumnViewerSorter.create(SecurityPerformanceRecord.class, "capitalGainsOnHoldings")); //$NON-NLS-1$
         recordColumns.addColumn(column);
 
-        column = new Column("capitalgains%", Messages.ColumnCapitalGainsPercent, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("capitalgains%", Messages.ColumnCapitalGainsPercent, SWT.RIGHT, Dimensions.CapitalGainsPercentColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelPerformance);
         column.setDescription(Messages.ColumnCapitalGainsPercent_Description);
         column.setLabelProvider(new NumberColorLabelProvider<>(Values.Percent2,
@@ -643,7 +644,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         column.setSorter(ColumnViewerSorter.create(SecurityPerformanceRecord.class, "capitalGainsOnHoldingsPercent")); //$NON-NLS-1$
         recordColumns.addColumn(column);
 
-        column = new Column("capitalgainsmvavg", Messages.ColumnCapitalGainsMovingAverage, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("capitalgainsmvavg", Messages.ColumnCapitalGainsMovingAverage, SWT.RIGHT, Dimensions.CapitalGainsMovingAverageColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelPerformance);
         column.setMenuLabel(Messages.ColumnCapitalGainsMovingAverage_MenuLabel);
         column.setDescription(Messages.ColumnCapitalGainsMovingAverage_Description);
@@ -655,7 +656,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
                         "capitalGainsOnHoldingsMovingAverage")); //$NON-NLS-1$
         recordColumns.addColumn(column);
 
-        column = new Column("capitalgainsmvavg%", Messages.ColumnCapitalGainsMovingAveragePercent, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("capitalgainsmvavg%", Messages.ColumnCapitalGainsMovingAveragePercent, SWT.RIGHT, Dimensions.CapitalGainsMovingAveragePercentColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelPerformance);
         column.setMenuLabel(Messages.ColumnCapitalGainsMovingAveragePercent_MenuLabel);
         column.setDescription(Messages.ColumnCapitalGainsMovingAveragePercent_Description);
@@ -667,7 +668,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // delta
-        column = new Column("delta", Messages.ColumnAbsolutePerformance, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("delta", Messages.ColumnAbsolutePerformance, SWT.RIGHT, Dimensions.AbsolutePerformanceColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnAbsolutePerformance_Description);
         column.setMenuLabel(Messages.ColumnAbsolutePerformance_MenuLabel);
         column.setGroupLabel(Messages.GroupLabelPerformance);
@@ -677,7 +678,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // delta percent
-        column = new Column("delta%", Messages.ColumnAbsolutePerformancePercent, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("delta%", Messages.ColumnAbsolutePerformancePercent, SWT.RIGHT, Dimensions.AbsolutePerformancePercentColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setDescription(Messages.ColumnAbsolutePerformancePercent_Description);
         column.setMenuLabel(Messages.ColumnAbsolutePerformancePercent_MenuLabel);
         column.setGroupLabel(Messages.GroupLabelPerformance);
@@ -691,7 +692,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
     private void addCapitalGainsColumns()
     {
         Column column = new Column("cg", //$NON-NLS-1$
-                        Messages.ColumnRealizedCapitalGains, SWT.RIGHT, 80);
+                        Messages.ColumnRealizedCapitalGains, SWT.RIGHT, Dimensions.CapitalGainsColumnWidth + Dimensions.MiniLogoWidth);
         column.setGroupLabel(Messages.LabelCapitalGains);
         column.setLabelProvider(new MoneyColorLabelProvider(
                         element -> ((SecurityPerformanceRecord) element).getRealizedCapitalGains().getCapitalGains(),
@@ -702,7 +703,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         column = new Column("cgforex", //$NON-NLS-1$
-                        Messages.ColumnCurrencyGains + " / " + Messages.ColumnRealizedCapitalGains, SWT.RIGHT, 80); //$NON-NLS-1$
+                        Messages.ColumnCurrencyGains + " / " + Messages.ColumnRealizedCapitalGains, SWT.RIGHT, Dimensions.ForexCapitalGainsColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.LabelCapitalGains);
         column.setLabelProvider(new MoneyColorLabelProvider(
                         element -> ((SecurityPerformanceRecord) element).getRealizedCapitalGains()
@@ -714,7 +715,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         column = new Column("ucg", //$NON-NLS-1$
-                        Messages.ColumnUnrealizedCapitalGains, SWT.RIGHT, 80);
+                        Messages.ColumnUnrealizedCapitalGains, SWT.RIGHT, Dimensions.CapitalGainsColumnWidth + Dimensions.MiniLogoWidth);
         column.setGroupLabel(Messages.LabelCapitalGains);
         column.setLabelProvider(new MoneyColorLabelProvider(
                         element -> ((SecurityPerformanceRecord) element).getUnrealizedCapitalGains().getCapitalGains(),
@@ -725,7 +726,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         column = new Column("ucgforex", //$NON-NLS-1$
-                        Messages.ColumnCurrencyGains + " / " + Messages.ColumnUnrealizedCapitalGains, SWT.RIGHT, 80); //$NON-NLS-1$
+                        Messages.ColumnCurrencyGains + " / " + Messages.ColumnUnrealizedCapitalGains, SWT.RIGHT, Dimensions.ForexCapitalGainsColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.LabelCapitalGains);
         column.setLabelProvider(new MoneyColorLabelProvider(
                         element -> ((SecurityPerformanceRecord) element).getUnrealizedCapitalGains()
@@ -740,7 +741,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
     private void createDividendColumns()
     {
         // Gesamtsumme der erhaltenen Dividenden
-        Column column = new Column("sumdiv", Messages.ColumnDividendSum, SWT.RIGHT, 80); //$NON-NLS-1$
+        Column column = new Column("sumdiv", Messages.ColumnDividendSum, SWT.RIGHT, Dimensions.DividendSumColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnDividendSum_MenuLabel);
         column.setGroupLabel(Messages.GroupLabelDividends);
         column.setLabelProvider(new ColumnLabelProvider()
@@ -756,7 +757,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // Rendite insgesamt
-        column = new Column("d%", Messages.ColumnDividendTotalRateOfReturn, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("d%", Messages.ColumnDividendTotalRateOfReturn, SWT.RIGHT, Dimensions.DividendRateOfReturnColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelDividends);
         column.setDescription(Messages.ColumnDividendTotalRateOfReturn_Description);
         column.setVisible(false);
@@ -772,7 +773,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // Rendite insgesamt, nach gleitendem Durchschnitt
-        column = new Column("d%mvavg", Messages.ColumnDividendMovingAverageTotalRateOfReturn, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("d%mvavg", Messages.ColumnDividendMovingAverageTotalRateOfReturn, SWT.RIGHT, Dimensions.DividendMovingAverageRateOfReturnColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelDividends);
         column.setMenuLabel(Messages.ColumnDividendMovingAverageTotalRateOfReturn_MenuLabel);
         column.setDescription(Messages.ColumnDividendMovingAverageTotalRateOfReturn_Description);
@@ -791,7 +792,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // Rendite pro Jahr
-        column = new Column("d%peryear", Messages.ColumnDividendRateOfReturnPerYear, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("d%peryear", Messages.ColumnDividendRateOfReturnPerYear, SWT.RIGHT, Dimensions.DividendRateOfReturnColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelDividends);
         column.setDescription(Messages.ColumnDividendRateOfReturnPerYear_Description);
         column.setVisible(false);
@@ -807,7 +808,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // Anzahl der Dividendenereignisse
-        column = new Column("dcount", Messages.ColumnDividendPaymentCount, SWT.RIGHT, 25); //$NON-NLS-1$
+        column = new Column("dcount", Messages.ColumnDividendPaymentCount, SWT.RIGHT, Dimensions.DividendPaymentCountColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelDividends);
         column.setMenuLabel(Messages.ColumnDividendPaymentCount_MenuLabel);
         column.setVisible(false);
@@ -823,7 +824,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // Datum der letzten Dividendenzahlung
-        column = new Column("dlast", Messages.ColumnLastDividendPayment, SWT.None, 75); //$NON-NLS-1$
+        column = new Column("dlast", Messages.ColumnLastDividendPayment, SWT.None, Dimensions.DateColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnLastDividendPayment_MenuLabel);
         column.setGroupLabel(Messages.GroupLabelDividends);
         column.setVisible(false);
@@ -840,7 +841,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         recordColumns.addColumn(column);
 
         // Periodizität der Dividendenzahlungen
-        column = new Column("dperiod", Messages.ColumnDividendPeriodicity, SWT.None, 100); //$NON-NLS-1$
+        column = new Column("dperiod", Messages.ColumnDividendPeriodicity, SWT.None, Dimensions.DividendPeriodicityColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.GroupLabelDividends);
         column.setDescription(Messages.ColumnDividendPeriodicity_Description);
         column.setVisible(false);
@@ -858,7 +859,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
 
     private void createRiskColumns()
     {
-        Column column = new Column("mdd", Messages.ColumnMaxDrawdown, SWT.RIGHT, 60); //$NON-NLS-1$
+        Column column = new Column("mdd", Messages.ColumnMaxDrawdown, SWT.RIGHT, Dimensions.PercentageColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.LabelMaxDrawdown);
         column.setGroupLabel(Messages.LabelRiskIndicators);
         column.setVisible(false);
@@ -873,7 +874,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         column.setSorter(ColumnViewerSorter.create(SecurityPerformanceRecord.class, "maxDrawdown")); //$NON-NLS-1$
         recordColumns.addColumn(column);
 
-        column = new Column("mddduration", Messages.ColumnMaxDrawdownDuration, SWT.RIGHT, 60); //$NON-NLS-1$
+        column = new Column("mddduration", Messages.ColumnMaxDrawdownDuration, SWT.RIGHT, Dimensions.DayCountColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.LabelMaxDrawdownDuration);
         column.setGroupLabel(Messages.LabelRiskIndicators);
         column.setVisible(false);
@@ -888,7 +889,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         column.setSorter(ColumnViewerSorter.create(SecurityPerformanceRecord.class, "maxDrawdownDuration")); //$NON-NLS-1$
         recordColumns.addColumn(column);
 
-        column = new Column("vola", Messages.LabelVolatility, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("vola", Messages.LabelVolatility, SWT.RIGHT, Dimensions.PercentageColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.LabelRiskIndicators);
         column.setVisible(false);
         column.setLabelProvider(new ColumnLabelProvider()
@@ -902,7 +903,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         column.setSorter(ColumnViewerSorter.create(SecurityPerformanceRecord.class, "volatility")); //$NON-NLS-1$
         recordColumns.addColumn(column);
 
-        column = new Column("semivola", Messages.LabelSemiVolatility, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("semivola", Messages.LabelSemiVolatility, SWT.RIGHT, Dimensions.PercentageColumnWidth); //$NON-NLS-1$
         column.setGroupLabel(Messages.LabelRiskIndicators);
         column.setVisible(false);
         column.setLabelProvider(new ColumnLabelProvider()
@@ -1025,7 +1026,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
     private void createTransactionColumns(ShowHideColumnHelper support)
     {
         // date
-        Column column = new Column(Messages.ColumnDate, SWT.None, 80);
+        Column column = new Column(Messages.ColumnDate, SWT.None, Dimensions.DateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1044,7 +1045,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         support.addColumn(column);
 
         // transaction type
-        column = new Column(Messages.ColumnTransactionType, SWT.None, 80);
+        column = new Column(Messages.ColumnTransactionType, SWT.None, Dimensions.TypeColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1056,7 +1057,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         support.addColumn(column);
 
         // shares
-        column = new Column(Messages.ColumnShares, SWT.None, 80);
+        column = new Column(Messages.ColumnShares, SWT.None, Dimensions.SharesColumnWidth);
         column.setLabelProvider(new SharesLabelProvider() // NOSONAR
         {
             @Override
@@ -1078,7 +1079,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         support.addColumn(column);
 
         // dividend amount
-        column = new Column(Messages.ColumnDividendPayment, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnDividendPayment, SWT.RIGHT, Dimensions.DividendPaymentColumnWidth);
         column.setDescription(Messages.ColumnGrossDividend);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -1096,7 +1097,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         support.addColumn(column);
 
         // dividend per share
-        column = new Column(Messages.ColumnDividendPerShare, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnDividendPerShare, SWT.RIGHT, Dimensions.PerShareColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1113,7 +1114,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         support.addColumn(column);
 
         // dividend per share
-        column = new Column(Messages.ColumnPersonalDividendYield, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnPersonalDividendYield, SWT.RIGHT, Dimensions.DividendYieldColumnWidth);
         column.setDescription(Messages.ColumnPersonalDividendYield_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -1131,7 +1132,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         support.addColumn(column);
 
         // dividend per share (moving average)
-        column = new Column(Messages.ColumnPersonalDividendYieldMovingAverage, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnPersonalDividendYieldMovingAverage, SWT.RIGHT, Dimensions.DividendYieldMovingAverageColumnWidth);
         column.setDescription(Messages.ColumnPersonalDividendYieldMovingAverage_Description);
         column.setLabelProvider(new ColumnLabelProvider()
         {
@@ -1149,7 +1150,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         support.addColumn(column);
 
         // einstandskurs / bewertung
-        column = new Column(Messages.ColumnAmount, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnAmount, SWT.RIGHT, Dimensions.AmountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1165,7 +1166,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         support.addColumn(column);
 
         // purchase quote
-        column = new Column(Messages.ColumnQuote, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnQuote, SWT.RIGHT, Dimensions.QuoteColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1187,7 +1188,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         support.addColumn(column);
 
         // gegenkonto
-        column = new Column(Messages.ColumnAccount, SWT.None, 120);
+        column = new Column(Messages.ColumnAccount, SWT.None, Dimensions.AccountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -1207,7 +1208,7 @@ public class SecuritiesPerformanceView extends AbstractListView implements Repor
         support.addColumn(column);
 
         // note
-        column = new Column("note", Messages.ColumnNote, SWT.LEFT, 22); //$NON-NLS-1$
+        column = new Column("note", Messages.ColumnNote, SWT.LEFT, Dimensions.NoteColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override

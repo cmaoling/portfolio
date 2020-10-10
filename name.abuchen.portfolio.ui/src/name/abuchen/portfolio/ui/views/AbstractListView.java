@@ -6,6 +6,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.editor.AbstractFinanceView;
 import name.abuchen.portfolio.ui.util.swt.SashLayout;
 import name.abuchen.portfolio.ui.util.swt.SashLayoutData;
@@ -37,7 +38,7 @@ public abstract class AbstractListView extends AbstractFinanceView
         {
             Control control = children.get(childIndex);
             int size = getPreferenceStore().getInt(identifier);
-            control.setLayoutData(new SashLayoutData(size != 0 ? size : 250));
+            control.setLayoutData(new SashLayoutData(size != 0 ? size : Dimensions.SashDefaultSize));
             sash.addDisposeListener(e -> getPreferenceStore().setValue(identifier,
                             ((SashLayoutData) control.getLayoutData()).getSize()));
         }

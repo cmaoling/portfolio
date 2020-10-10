@@ -36,6 +36,7 @@ import name.abuchen.portfolio.money.CurrencyConverterImpl;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.snapshot.PortfolioSnapshot;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.handlers.ImportPDFHandler;
@@ -199,7 +200,7 @@ public class PortfolioListView extends AbstractListView implements ModificationL
         portfolioColumns = new ShowHideColumnHelper(PortfolioListView.class.getSimpleName() + "@top2", //$NON-NLS-1$
                         getPreferenceStore(), portfolios, layout);
 
-        Column column = new NameColumn("0", Messages.ColumnPortfolio, SWT.None, 100, getClient()); //$NON-NLS-1$
+        Column column = new NameColumn("0", Messages.ColumnPortfolio, SWT.None, Dimensions.PortfolioColumnWidth, getClient(), Dimensions.PortfolioDirection); //$NON-NLS-1$
         column.setLabelProvider(new NameColumnLabelProvider(getClient()) // NOSONAR
         {
             @Override
@@ -212,7 +213,7 @@ public class PortfolioListView extends AbstractListView implements ModificationL
         column.getEditingSupport().addListener(this);
         portfolioColumns.addColumn(column);
 
-        column = new Column("1", Messages.ColumnReferenceAccount, SWT.None, 160); //$NON-NLS-1$
+        column = new Column("1", Messages.ColumnReferenceAccount, SWT.None, Dimensions.AccountColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -227,7 +228,7 @@ public class PortfolioListView extends AbstractListView implements ModificationL
                         .addListener(this).attachTo(column);
         portfolioColumns.addColumn(column);
 
-        column = new Column("volume", Messages.ColumnVolumeOfSecurityDeposits, SWT.RIGHT, 100); //$NON-NLS-1$
+        column = new Column("volume", Messages.ColumnVolumeOfSecurityDeposits, SWT.RIGHT, Dimensions.VolumeOfSecurityDepositsColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             CurrencyConverter converter = new CurrencyConverterImpl(factory, getClient().getBaseCurrency());

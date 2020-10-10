@@ -40,6 +40,7 @@ import name.abuchen.portfolio.model.PeerList;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.util.Iban;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionDialog;
@@ -221,7 +222,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
         peerColumns = new ShowHideColumnHelper(PeerListView.class.getSimpleName() + "@top2", //$NON-NLS-1$
                         getPreferenceStore(), peers, layout);
 
-        Column column = new NameColumn("0", Messages.ColumnPeer, SWT.None, 150, getClient()); //$NON-NLS-1$
+        Column column = new NameColumn("0", Messages.ColumnPeer, SWT.None, Dimensions.PeerColumnWidth, getClient(), Dimensions.PeerDirection); //$NON-NLS-1$
         column.setLabelProvider(new NameColumnLabelProvider(getClient()) // NOSONAR
         {
             @Override
@@ -237,7 +238,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
         column.getEditingSupport().addListener(this);
         peerColumns.addColumn(column);
 
-        column = new NameColumn("2", Messages.ColumnReferenceAccount, SWT.None, 180, getClient()); //$NON-NLS-1$
+        column = new NameColumn("2", Messages.ColumnReferenceAccount, SWT.None, Dimensions.AccountColumnWidth, getClient()); //$NON-NLS-1$
         column.setLabelProvider(new NameColumnLabelProvider(getClient()) // NOSONAR
         {
             @Override
@@ -360,7 +361,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
         transactionsColumns = new ShowHideColumnHelper(AccountListView.class.getSimpleName() + "@bottom5", //$NON-NLS-1$
                         getPreferenceStore(), transactions, layout);
 
-        Column column = new Column(Messages.ColumnDate, SWT.None, 80);
+        Column column = new Column(Messages.ColumnDate, SWT.None, Dimensions.DateColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -380,7 +381,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
         new DateTimeEditingSupport(AccountTransaction.class, "dateTime").addListener(this).attachTo(column); //$NON-NLS-1$
         transactionsColumns.addColumn(column);
 
-        column = new Column(Messages.ColumnTransactionType, SWT.None, 100);
+        column = new Column(Messages.ColumnTransactionType, SWT.None, Dimensions.TypeColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -399,7 +400,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
         column.setSorter(ColumnViewerSorter.create(AccountTransaction.class, "type")); //$NON-NLS-1$
         transactionsColumns.addColumn(column);
 
-        column = new Column(Messages.ColumnAmount, SWT.RIGHT, 80);
+        column = new Column(Messages.ColumnAmount, SWT.RIGHT, Dimensions.AmountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -421,7 +422,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
         column.setSorter(ColumnViewerSorter.create(AccountTransaction.class, "amount")); //$NON-NLS-1$
         transactionsColumns.addColumn(column);
 
-        column = new Column(Messages.ColumnAccount, SWT.None, 120);
+        column = new Column(Messages.ColumnAccount, SWT.None, Dimensions.AccountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -447,7 +448,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
         transactionsColumns.addColumn(column);
 
 
-        column = new Column(Messages.ColumnOffsetAccount, SWT.None, 120);
+        column = new Column(Messages.ColumnOffsetAccount, SWT.None, Dimensions.AccountColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -474,7 +475,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
         });
         transactionsColumns.addColumn(column);
 
-        column = new Column(Messages.ColumnNote, SWT.None, 200);
+        column = new Column(Messages.ColumnNote, SWT.None, Dimensions.NoteColumnWidth);
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override

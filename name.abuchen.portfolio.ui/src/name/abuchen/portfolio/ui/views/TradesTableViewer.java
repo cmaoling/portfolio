@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Control;
 import name.abuchen.portfolio.model.TransactionPair;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.snapshot.trades.Trade;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.editor.AbstractFinanceView;
@@ -77,7 +78,7 @@ public class TradesTableViewer
         if (viewMode == ViewMode.MULTIPLE_SECURITES)
             support.addColumn(new NameColumn(view.getClient()));
 
-        Column column = new Column("start", Messages.ColumnStartDate, SWT.None, 80); //$NON-NLS-1$
+        Column column = new Column("start", Messages.ColumnStartDate, SWT.None, Dimensions.DateColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -90,7 +91,7 @@ public class TradesTableViewer
         column.setSorter(ColumnViewerSorter.create(e -> ((Trade) e).getStart()), SWT.DOWN);
         support.addColumn(column);
 
-        column = new Column("end", Messages.ColumnEndDate, SWT.None, 80); //$NON-NLS-1$
+        column = new Column("end", Messages.ColumnEndDate, SWT.None, Dimensions.DateColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -112,7 +113,7 @@ public class TradesTableViewer
         }));
         support.addColumn(column);
 
-        column = new Column("tx", Messages.ColumnNumberOfTransactions, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("tx", Messages.ColumnNumberOfTransactions, SWT.RIGHT, Dimensions.TransactionCountColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -138,7 +139,7 @@ public class TradesTableViewer
         column.setSorter(ColumnViewerSorter.create(e -> ((Trade) e).getTransactions().size()));
         support.addColumn(column);
 
-        column = new Column("shares", Messages.ColumnShares, SWT.None, 80); //$NON-NLS-1$
+        column = new Column("shares", Messages.ColumnShares, SWT.None, Dimensions.SharesColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new SharesLabelProvider() // NOSONAR
         {
             @Override
@@ -151,7 +152,7 @@ public class TradesTableViewer
         column.setSorter(ColumnViewerSorter.create(e -> ((Trade) e).getShares()));
         support.addColumn(column);
 
-        column = new Column("entryvalue", Messages.ColumnEntryValue, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("entryvalue", Messages.ColumnEntryValue, SWT.RIGHT, Dimensions.EntryValueColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -164,7 +165,7 @@ public class TradesTableViewer
         column.setSorter(ColumnViewerSorter.create(e -> ((Trade) e).getEntryValue()));
         support.addColumn(column);
 
-        column = new Column("exitvalue", Messages.ColumnExitValue, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("exitvalue", Messages.ColumnExitValue, SWT.RIGHT, Dimensions.ExitValueColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -177,13 +178,13 @@ public class TradesTableViewer
         column.setSorter(ColumnViewerSorter.create(e -> ((Trade) e).getExitValue()));
         support.addColumn(column);
 
-        column = new Column("pl", Messages.ColumnProfitLoss, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("pl", Messages.ColumnProfitLoss, SWT.RIGHT, Dimensions.ProfitLossColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(
                         new MoneyColorLabelProvider(element -> ((Trade) element).getProfitLoss(), view.getClient()));
         column.setSorter(ColumnViewerSorter.create(e -> ((Trade) e).getProfitLoss()));
         support.addColumn(column);
 
-        column = new Column("holdingperiod", Messages.ColumnHoldingPeriod, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("holdingperiod", Messages.ColumnHoldingPeriod, SWT.RIGHT, Dimensions.HoldingPeriodColumnWidth); //$NON-NLS-1$
         column.setLabelProvider(new ColumnLabelProvider()
         {
             @Override
@@ -196,19 +197,19 @@ public class TradesTableViewer
         column.setSorter(ColumnViewerSorter.create(e -> ((Trade) e).getHoldingPeriod()));
         support.addColumn(column);
 
-        column = new Column("irr", Messages.ColumnIRR, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("irr", Messages.ColumnIRR, SWT.RIGHT, Dimensions.IRRColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnIRR_MenuLabel);
         column.setLabelProvider(new NumberColorLabelProvider<>(Values.Percent2, t -> ((Trade) t).getIRR()));
         column.setSorter(ColumnViewerSorter.create(e -> ((Trade) e).getIRR()));
         support.addColumn(column);
 
-        column = new Column("return", Messages.ColumnReturn, SWT.RIGHT, 80); //$NON-NLS-1$
+        column = new Column("return", Messages.ColumnReturn, SWT.RIGHT, Dimensions.PercentageColumnWidth + Dimensions.MiniLogoWidth); //$NON-NLS-1$
         column.setLabelProvider(new NumberColorLabelProvider<>(Values.Percent2, t -> ((Trade) t).getReturn()));
         column.setSorter(ColumnViewerSorter.create(e -> ((Trade) e).getReturn()));
         column.setVisible(false);
         support.addColumn(column);
 
-        column = new Column("portfolio", Messages.ColumnPortfolio, SWT.LEFT, 100); //$NON-NLS-1$
+        column = new Column("portfolio", Messages.ColumnPortfolio, SWT.LEFT, Dimensions.PortfolioColumnWidth); //$NON-NLS-1$
         column.setMenuLabel(Messages.ColumnPortfolio);
         column.setLabelProvider(new ColumnLabelProvider()
         {
