@@ -500,7 +500,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
             {
                 return colorFor((AccountTransaction) element);
             }
-            
+
             @Override
             public Image getImage(Object e)
             {
@@ -617,14 +617,13 @@ public class AccountListView extends AbstractListView implements ModificationLis
             {
                 return colorFor((AccountTransaction) element);
             }
-            
+
             @Override
             public Image getImage(Object e)
             {
                 AccountTransaction t = (AccountTransaction) e;
-                return t.getCrossEntry() != null 
-                                ? LogoManager.instance().getDefaultColumnImage(t.getCrossEntry().getCrossOwner(t), getClient().getSettings()) 
-                                : null;
+                return t.getCrossEntry() != null ? LogoManager.instance().getDefaultColumnImage(
+                                t.getCrossEntry().getCrossOwner(t), getClient().getSettings()) : null;
             }
         });
         new TransactionOwnerListEditingSupport(getClient(), TransactionOwnerListEditingSupport.EditMode.CROSSOWNER)
@@ -651,7 +650,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
 
     private Color colorFor(AccountTransaction t)
     {
-        return t.getType().isDebit() ? Colors.DARK_RED : Colors.DARK_GREEN;
+        return t.getType().isDebit() ? Colors.theme().redForeground() : Colors.theme().greenForeground();
     }
 
     private void hookKeyListener()
@@ -679,7 +678,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
         Account account = (Account) transactions.getData(Account.class.toString());
         if (account == null)
             return;
-        
+
         IStructuredSelection selection = (IStructuredSelection) transactions.getSelection();
         AccountTransaction transaction = (AccountTransaction) selection.getFirstElement();
 
@@ -693,15 +692,15 @@ public class AccountListView extends AbstractListView implements ModificationLis
 
         accountMenu.menuAboutToShow(manager, account, transaction != null ? transaction.getSecurity() : null);
 
-        if(!selection.isEmpty())
+        if (!selection.isEmpty())
         {
             fillTransactionsContextMenuList(manager, selection);
         }
-        
+
         if (transaction != null)
         {
             manager.add(new Separator());
-            
+
             manager.add(new Action(Messages.AccountMenuDeleteTransaction)
             {
                 @Override
@@ -725,7 +724,7 @@ public class AccountListView extends AbstractListView implements ModificationLis
             });
         }
     }
-    
+
     private void fillTransactionsContextMenuList(IMenuManager manager, IStructuredSelection selection)
     {
         // create collection with all selected transactions

@@ -104,7 +104,7 @@ public class TradesTableViewer
             @Override
             public Color getBackground(Object e)
             {
-                return ((Trade) e).getEnd().isPresent() ? null : Colors.WARNING;
+                return ((Trade) e).getEnd().isPresent() ? null : Colors.theme().warningBackground();
             }
 
             @Override

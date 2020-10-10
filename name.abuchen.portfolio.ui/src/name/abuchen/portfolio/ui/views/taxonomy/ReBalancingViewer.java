@@ -95,10 +95,8 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
                 TaxonomyNode node = (TaxonomyNode) element;
                 if (node.getTarget() == null)
                     return null;
-                return Display.getCurrent()
-                                .getSystemColor(node.getActual().isGreaterOrEqualThan(node.getTarget())
-                                                ? SWT.COLOR_DARK_GREEN
-                                                : SWT.COLOR_DARK_RED);
+                return node.getActual().isGreaterOrEqualThan(node.getTarget()) ? Colors.theme().greenForeground()
+                                : Colors.theme().redForeground();
             }
         });
         support.addColumn(column);
@@ -129,8 +127,8 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
                 TaxonomyNode node = (TaxonomyNode) element;
                 if (node.getTarget() == null)
                     return null;
-                return Display.getCurrent().getSystemColor(
-                                calculateRelativeDelta(node) >= 0 ? SWT.COLOR_DARK_GREEN : SWT.COLOR_DARK_RED);
+                return calculateRelativeDelta(node) >= 0 ? Colors.theme().greenForeground()
+                                : Colors.theme().redForeground();
             }
 
             private double calculateRelativeDelta(TaxonomyNode node)
@@ -165,10 +163,8 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
                 TaxonomyNode node = (TaxonomyNode) element;
                 if (node.getTarget() == null)
                     return null;
-                return Display.getCurrent()
-                                .getSystemColor(node.getActual().isGreaterOrEqualThan(node.getTarget())
-                                                ? SWT.COLOR_DARK_GREEN
-                                                : SWT.COLOR_DARK_RED);
+                return node.getActual().isGreaterOrEqualThan(node.getTarget()) ? Colors.theme().greenForeground()
+                                : Colors.theme().redForeground();
             }
         });
         support.addColumn(column);
@@ -285,7 +281,8 @@ public class ReBalancingViewer extends AbstractNodeTreeViewer
             public Color getBackground(Object element)
             {
                 TaxonomyNode node = (TaxonomyNode) element;
-                return node.isClassification() && getModel().hasWeightError(node) ? Colors.WARNING : null;
+                return node.isClassification() && getModel().hasWeightError(node) ? Colors.theme().warningBackground()
+                                : null;
             }
 
             @Override

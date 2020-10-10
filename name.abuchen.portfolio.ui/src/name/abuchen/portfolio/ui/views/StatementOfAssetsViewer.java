@@ -507,7 +507,7 @@ public class StatementOfAssetsViewer
             public Color getForeground(Object e)
             {
                 Money profitLoss = ((Element) e).getProfitLoss();
-                return (profitLoss.isNegative() ? Colors.DARK_RED : Colors.DARK_GREEN);
+                return profitLoss.isNegative() ? Colors.theme().redForeground() : Colors.theme().greenForeground();
             }
 
             @Override
@@ -1424,9 +1424,9 @@ public class StatementOfAssetsViewer
                 doubleValue = (Double) value;
 
             if (doubleValue < 0)
-                return Colors.DARK_RED;
+                return Colors.theme().redForeground();
             else if (doubleValue > 0)
-                return Colors.DARK_GREEN;
+                return Colors.theme().greenForeground();
             else
                 return null;
         }

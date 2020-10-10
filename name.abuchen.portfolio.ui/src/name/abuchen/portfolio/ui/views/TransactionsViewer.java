@@ -99,12 +99,12 @@ public final class TransactionsViewer implements ModificationListener
             if (tx instanceof PortfolioTransaction)
             {
                 PortfolioTransaction t = (PortfolioTransaction) tx;
-                return t.getType().isLiquidation() ? Colors.DARK_RED : Colors.DARK_GREEN;
+                return t.getType().isLiquidation() ? Colors.theme().redForeground() : Colors.theme().greenForeground();
             }
             else if (tx instanceof AccountTransaction)
             {
                 AccountTransaction t = (AccountTransaction) tx;
-                return t.getType().isDebit() ? Colors.DARK_RED : Colors.DARK_GREEN;
+                return t.getType().isDebit() ? Colors.theme().redForeground() : Colors.theme().greenForeground();
             }
 
             throw new IllegalArgumentException();
@@ -122,7 +122,7 @@ public final class TransactionsViewer implements ModificationListener
         @Override
         public Color getBackground(Object element)
         {
-            return marked.contains(element) ? Colors.WARNING : null;
+            return marked.contains(element) ? Colors.theme().warningBackground() : null;
         }
     }
 

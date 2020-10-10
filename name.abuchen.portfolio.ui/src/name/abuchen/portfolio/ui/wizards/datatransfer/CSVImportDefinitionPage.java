@@ -586,7 +586,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
             }
             catch (ParseException e)
             {
-                return column.getField().isOptional() ? Colors.WARNING : ERROR;
+                return column.getField().isOptional() ? Colors.theme().warningBackground() : ERROR;
             }
         }
     }

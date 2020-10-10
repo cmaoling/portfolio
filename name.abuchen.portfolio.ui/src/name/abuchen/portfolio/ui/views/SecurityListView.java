@@ -195,10 +195,10 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 
             int savedFilters;
             if (watchlist != null)
-                savedFilters = preferenceStore.getInt(this.getClass().getSimpleName() + "-filterSettings" + "-" + watchlist.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+                savedFilters = preferenceStore.getInt(
+                                this.getClass().getSimpleName() + "-filterSettings" + "-" + watchlist.getName()); //$NON-NLS-1$ //$NON-NLS-2$
             else
                 savedFilters = preferenceStore.getInt(this.getClass().getSimpleName() + "-filterSettings"); //$NON-NLS-1$
-                
 
             if ((savedFilters & (1 << 1)) != 0)
                 filter.add(securityIsNotInactive);
@@ -213,7 +213,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 
             if (!filter.isEmpty())
                 setImage(Images.FILTER_ON);
-            
+
             addDisposeListener(e -> {
 
                 int savedFilter = 0;
@@ -228,7 +228,9 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 if (filter.contains(sharesEqualZero))
                     savedFilter += (1 << 5);
                 if (watchlist != null)
-                    preferenceStore.setValue(this.getClass().getSimpleName() + "-filterSettings" + "-" + watchlist.getName(), savedFilter); //$NON-NLS-1$ //$NON-NLS-2$
+                    preferenceStore.setValue(
+                                    this.getClass().getSimpleName() + "-filterSettings" + "-" + watchlist.getName(), //$NON-NLS-1$ //$NON-NLS-2$
+                                    savedFilter);
                 else
                     preferenceStore.setValue(this.getClass().getSimpleName() + "-filterSettings", savedFilter); //$NON-NLS-1$
             });
@@ -236,7 +238,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
 
         /**
          * Collects all shares held for the given security.
-         * 
+         *
          * @param client
          *            {@link Client}
          * @param security
@@ -657,7 +659,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                     date = date.minusDays(1);
                 }
 
-                return hasMissing ? Colors.WARNING : null;
+                return hasMissing ? Colors.theme().warningBackground() : null;
             }
         });
         ColumnViewerSorter.create(SecurityPrice.class, "date").attachTo(column, Dimensions.DateDirection); //$NON-NLS-1$
@@ -931,7 +933,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                     return owner.toString();
                 return null;
             }
-            
+
             @Override
             public Image getImage(Object element)
             {
@@ -958,14 +960,15 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                 else
                     return pair.getOwner().toString();
             }
-            
+
             @Override
             public Image getImage(Object element)
             {
                 TransactionPair<?> pair = (TransactionPair<?>) element;
                 Transaction t = pair.getTransaction();
                 if (t instanceof PortfolioTransaction)
-                    return t.getCrossEntry() != null ? LogoManager.instance().getDefaultColumnImage(t.getCrossEntry().getCrossOwner(t), getClient().getSettings()) : null;
+                    return t.getCrossEntry() != null ? LogoManager.instance().getDefaultColumnImage(
+                                    t.getCrossEntry().getCrossOwner(t), getClient().getSettings()) : null;
                 else
                     return LogoManager.instance().getDefaultColumnImage(pair.getOwner(), getClient().getSettings());
             }
