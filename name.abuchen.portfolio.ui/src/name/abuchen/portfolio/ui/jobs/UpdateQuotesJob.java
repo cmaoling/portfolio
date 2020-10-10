@@ -265,7 +265,6 @@ public final class UpdateQuotesJob extends AbstractClientJob
                         QuoteFeed feed = Factory.getQuoteFeedProvider(security.getFeed());
                         if (feed == null)
                             return Status.OK_STATUS;
-
                         FeedData data = feed.getHistoricalQuotes(security, false);
 
                         if (security.addAllPrices(data.getPrices()))
