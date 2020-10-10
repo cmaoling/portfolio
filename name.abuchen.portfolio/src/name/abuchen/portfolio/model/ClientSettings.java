@@ -200,7 +200,14 @@ public class ClientSettings
 
     public void addClientAttributes(ClientAttribute attribute)
     {
-        clientAttributes.add(attribute);        
+        boolean defined = false;
+        for (ClientAttribute attr : clientAttributes)
+        {
+            if (attr.getId().equals(attribute.getId()))
+                defined = true;
+        }
+        if (!defined)
+            clientAttributes.add(attribute);
     }
 
     public List<ClientAttribute> getClientAttributes()

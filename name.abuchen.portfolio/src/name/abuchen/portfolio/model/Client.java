@@ -70,6 +70,7 @@ public class Client implements Attributable
 
     private Boolean autosaveWithDatestamp;
     private Long autosavePeriod;
+    private Boolean loadSettingsNextToFile;
 
     @Deprecated
     private String industryTaxonomyId;
@@ -120,8 +121,7 @@ public class Client implements Attributable
         else
         {
             settings.doPostLoadInitialization();
-            if (settings.getClientAttributes().size() < 1)
-                addDefaultClientAttributes();
+            addDefaultClientAttributes();
         }
         if (backupDirectory == null)
             setBackupDirectory(""); //$NON-NLS-1$
@@ -132,6 +132,8 @@ public class Client implements Attributable
         if (autosavePeriod == null)
             autosavePeriod = Long.valueOf(5);
 
+        if (loadSettingsNextToFile == null)
+            loadSettingsNextToFile = false;
     }
 
     private void addDefaultClientAttributes()
@@ -159,6 +161,16 @@ public class Client implements Attributable
         autosaveWithDatestamp.addOptions(new AttributeFieldOption(Messages.LabelBooleanTrue, true));
         autosaveWithDatestamp.setEdit(true);
         settings.addClientAttributes(autosaveWithDatestamp);
+
+        ClientAttribute loadSettingsNextToFile = new ClientAttribute("loadSettingsNextToFile"); //$NON-NLS-1$
+        loadSettingsNextToFile.setColumnLabel(Messages.LabelClientAttributeLoadSettings);
+        loadSettingsNextToFile.setParent(this);
+        loadSettingsNextToFile.setType(Boolean.class);
+        loadSettingsNextToFile.addOptions(new AttributeFieldOption(Messages.LabelBooleanFalse, false));
+        loadSettingsNextToFile.addOptions(new AttributeFieldOption(Messages.LabelBooleanTrue, true));
+        loadSettingsNextToFile.setEdit(true);
+        settings.addClientAttributes(loadSettingsNextToFile);
+
     }
  
     /* package */int getVersion()
@@ -264,6 +276,16 @@ public class Client implements Attributable
     public void setAutosaveWithDatestamp(Boolean enable)
     {
         autosaveWithDatestamp = enable;
+    }
+
+    public Boolean getLoadSettingsNextToFile()
+    {
+        return loadSettingsNextToFile;
+    }
+
+    public void setLoadSettingsNextToFile(Boolean enable)
+    {
+        loadSettingsNextToFile = enable;
     }
 
     public List<InvestmentPlan> getPlans()

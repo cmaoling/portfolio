@@ -42,6 +42,7 @@ import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.ClientFactory;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.snapshot.ReportingPeriod;
+import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
 import name.abuchen.portfolio.ui.UIConstants;
@@ -88,6 +89,7 @@ public class ClientInput
     {
         this.label = label;
         this.clientFile = clientFile;
+        Dimensions.initializePreferenceStore(preferenceStore);
     }
 
     /**
@@ -406,8 +408,7 @@ public class ClientInput
 
     private File getPreferenceStoreFile(File file) throws IOException
     {
-        boolean storeNextToFile = preferences.getBoolean(UIConstants.Preferences.STORE_SETTINGS_NEXT_TO_FILE, false);
-
+        boolean storeNextToFile = (preferences.getBoolean(UIConstants.Preferences.STORE_SETTINGS_NEXT_TO_FILE, false) || client.getLoadSettingsNextToFile());
         if (storeNextToFile)
         {
             String filename = file.getName();

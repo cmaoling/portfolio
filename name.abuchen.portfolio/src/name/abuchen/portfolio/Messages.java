@@ -134,6 +134,7 @@ public class Messages extends NLS
     public static String LabelClientAttributeAutosaveDatestamp;
     public static String LabelClientAttributeAutosavePeriod;
     public static String LabelClientAttributeBackupDirectory;
+    public static String LabelClientAttributeLoadSettings;
     public static String LabelCreditSuisseHTMLTable;
     public static String LabelDefaultReferenceAccountName;
     public static String LabelDeposits;
