@@ -60,4 +60,13 @@ public class ColorConversion
     {
         return toHex(brighter(hex2RGB(hex)));
     }
+
+    public static RGB darker(RGB rgb)
+    {
+        float[] hsb = rgb.getHSB();
+        float saturation = Math.max(0f, hsb[1] + 0.2f);
+        float brightness = Math.min(1f, hsb[2] - 0.2f);
+        return new RGB(hsb[0], saturation, brightness);
+    }
+
 }

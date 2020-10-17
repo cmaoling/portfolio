@@ -44,7 +44,6 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 
@@ -86,6 +85,7 @@ import name.abuchen.portfolio.ui.editor.AbstractFinanceView;
 import name.abuchen.portfolio.ui.selection.SecuritySelection;
 import name.abuchen.portfolio.ui.selection.SelectionService;
 import name.abuchen.portfolio.ui.util.AttributeComparator;
+import name.abuchen.portfolio.ui.util.Colors;
 import name.abuchen.portfolio.ui.util.LabelOnly;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnEditingSupport;
@@ -507,8 +507,7 @@ public class StatementOfAssetsViewer
             public Color getForeground(Object e)
             {
                 Money profitLoss = ((Element) e).getProfitLoss();
-                return Display.getCurrent()
-                                .getSystemColor(profitLoss.isNegative() ? SWT.COLOR_DARK_RED : SWT.COLOR_DARK_GREEN);
+                return (profitLoss.isNegative() ? Colors.DARK_RED : Colors.DARK_GREEN);
             }
 
             @Override
@@ -1425,9 +1424,9 @@ public class StatementOfAssetsViewer
                 doubleValue = (Double) value;
 
             if (doubleValue < 0)
-                return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
+                return Colors.DARK_RED;
             else if (doubleValue > 0)
-                return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GREEN);
+                return Colors.DARK_GREEN;
             else
                 return null;
         }

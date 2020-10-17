@@ -432,6 +432,13 @@ public final class SecuritiesTable implements ModificationListener
                 LocalDate sevenDaysAgo = LocalDate.now().minusDays(7);
                 return latest.getDate().isBefore(sevenDaysAgo) ? Colors.WARNING : null;
             }
+
+            @Override
+            public Color getForeground(Object element)
+            {
+                Color background = getBackground(element);
+                return (background == null? null : Colors.getTextColor(background));
+            }
         });
         column.setSorter(ColumnViewerSorter.create((o1, o2) -> {
             SecurityPrice p1 = ((Security) o1).getSecurityPrice(LocalDate.now());
@@ -481,6 +488,13 @@ public final class SecuritiesTable implements ModificationListener
                     return Colors.WARNING;
                 else
                     return null;
+            }
+
+            @Override
+            public Color getForeground(Object element)
+            {
+                Color background = getBackground(element);
+                return (background == null? null : Colors.getTextColor(background));
             }
         });
         column.setSorter(ColumnViewerSorter.create((o1, o2) -> {
@@ -1116,7 +1130,7 @@ public final class SecuritiesTable implements ModificationListener
         }
     }
 
-    private static final class QuoteReportingPeriodLabelProvider extends OptionLabelProvider<ReportingPeriod>
+    private final class QuoteReportingPeriodLabelProvider extends OptionLabelProvider<ReportingPeriod>
     {
         private BiFunction<Object, ReportingPeriod, Double> valueProvider;
 
@@ -1143,9 +1157,9 @@ public final class SecuritiesTable implements ModificationListener
                 return null;
 
             if (value.doubleValue() < 0)
-                return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
+                return Colors.DARK_RED;
             else if (value.doubleValue() > 0)
-                return Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GREEN);
+                return Colors.DARK_GREEN;
             else
                 return null;
         }
