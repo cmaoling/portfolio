@@ -10,17 +10,16 @@ import name.abuchen.portfolio.util.ColorConversion;
 
 public final class Colors
 {
+    private static final ColorRegistry REGISTRY = new ColorRegistry();
 
     public static final Color GRAY = Display.getDefault().getSystemColor(SWT.COLOR_GRAY);
     public static final Color WHITE = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
     public static final Color DARK_GRAY = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY);
-    public static final Color DARK_RED = Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED);
+    public static final Color DARK_RED = getColor(209, 29, 29); // D11D1D
     public static final Color DARK_GREEN = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN);
     public static final Color BLACK = Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
     public static final Color RED = Display.getDefault().getSystemColor(SWT.COLOR_RED);
     public static final Color GREEN = Display.getDefault().getSystemColor(SWT.COLOR_GREEN);
-
-    private static final ColorRegistry REGISTRY = new ColorRegistry();
 
     public static final Color ICON_ORANGE = getColor(241, 143, 1); // F18F01
     public static final Color ICON_BLUE = getColor(14, 110, 142);
@@ -36,17 +35,53 @@ public final class Colors
 
     public static final Color DARK_BLUE = getColor(149, 165, 180); // 95A5B4
 
+    public static final Color LIGHT_GREEN = getColor(188, 226, 158); // BCE29E
+    public static final Color LIGHT_ORANGE = getColor(255, 152, 89); // FF9859
+    public static final Color OLIVE_GREEN = getColor(163, 215, 113); // A3D771
+
     public static final Color HEADINGS = getColor(57, 62, 66); // 393E42
     public static final Color OTHER_CATEGORY = getColor(180, 180, 180);
     public static final Color INFO_TOOLTIP_BACKGROUND = getColor(236, 235, 236);
 
-    public static final Color WARNING = getColor(254, 223, 107); // FEDF6B
+    public static final Color WARNING = getColor(252, 209, 29); // FCCD1D
     public static final Color WARNING_RED = getColor(209, 29, 29); // D11D1D
 
     public static final Color SIDEBAR_TEXT = getColor(57, 62, 66); // 393E42
     public static final Color SIDEBAR_BACKGROUND = getColor(249, 250, 250); // F9FAFA
     public static final Color SIDEBAR_BACKGROUND_SELECTED = getColor(228, 230, 233); // E4E6E9
     public static final Color SIDEBAR_BORDER = getColor(244, 245, 245); // F4F5F5
+
+    public static final Color colorQuote = getColor(52, 70, 235);
+    public static final Color colorEventPurchase = getColor(26, 173, 33);
+    public static final Color colorEventSale = getColor(232, 51, 69);
+    public static final Color colorEventDividendPaid = getColor(128, 0, 128);
+    public static final Color colorEventDividendPromised  = getColor(180, 128, 180);
+    public static final Color colorEventSplit  = getColor(26, 52, 150);
+    public static final Color colorEventRight  = getColor(150, 220, 220);
+    public static final Color colorEventOther  = getColor(140, 90, 200);
+    public static final Color colorEventNote  = getColor(66, 66, 66);
+    public static final Color colorHigh = getColor(0, 102, 0);
+    public static final Color colorLow = getColor(128, 0, 0);
+    public static final Color colorFifoPurchasePrice = getColor(226, 122, 121);
+    public static final Color colorMovingAveragePurchasePrice = getColor(150, 82, 81);
+    public static final Color colorBollingerBands = getColor(201, 141, 68);
+    public static final Color colorSMA1 = getColor(179, 107, 107); // #B36B6B
+    public static final Color colorSMA2 = getColor(179, 167, 107); // #B3A76B
+    public static final Color colorSMA3 = getColor(131, 179, 107); // #83B36B
+    public static final Color colorSMA4 = getColor(107, 179, 143); // #6BB38F
+    public static final Color colorSMA5 = getColor(107, 155, 179); // #6B9BB3
+    public static final Color colorSMA6 = getColor(119, 107, 179); // #776BB3
+    public static final Color colorSMA7 = getColor(179, 107, 179); // #B36BB3
+    public static final Color colorEMA1 = getColor(200, 107, 107); // #C86B6B
+    public static final Color colorEMA2 = getColor(200, 167, 107); // #C8A76B
+    public static final Color colorEMA3 = getColor(131, 200, 107); // #83C86B
+    public static final Color colorEMA4 = getColor(107, 200, 143); // #6BC88F
+    public static final Color colorEMA5 = getColor(107, 155, 200); // #6B9BC8
+    public static final Color colorEMA6 = getColor(119, 107, 200); // #776BC8
+    public static final Color colorEMA7 = getColor(200, 107, 200); // #C86BB3
+    public static final Color colorAreaPositive = getColor(90, 114, 226);
+    public static final Color colorAreaNegative = getColor(226, 91, 90);
+    public static final Color colorNonTradingDay = getColor(255, 137, 89);
 
     private Colors()
     {
@@ -125,5 +160,10 @@ public final class Colors
     public static Color brighter(Color base)
     {
         return getColor(ColorConversion.brighter(base.getRGB()));
+    }
+
+    public static Color darker(Color base)
+    {
+        return getColor(ColorConversion.darker(base.getRGB()));
     }
 }

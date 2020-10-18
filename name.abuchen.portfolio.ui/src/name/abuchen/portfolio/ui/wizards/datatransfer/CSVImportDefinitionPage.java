@@ -505,9 +505,9 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
     private static final class ImportLabelProvider extends LabelProvider
                     implements ITableLabelProvider, ITableColorProvider
     {
-        private static final Color GREEN = Colors.getColor(163, 215, 113);
-        private static final Color LIGHTGREEN = Colors.getColor(188, 226, 158);
-        private static final Color ERROR = Colors.getColor(255, 152, 89);
+        private static final Color GREEN = Colors.OLIVE_GREEN;
+        private static final Color LIGHTGREEN = Colors.LIGHT_GREEN;
+        private static final Color ERROR = Colors.LIGHT_ORANGE;
 
         private CSVImporter importer;
 

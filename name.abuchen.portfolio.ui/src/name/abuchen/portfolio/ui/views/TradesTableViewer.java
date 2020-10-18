@@ -106,6 +106,13 @@ public class TradesTableViewer
             {
                 return ((Trade) e).getEnd().isPresent() ? null : Colors.WARNING;
             }
+
+            @Override
+            public Color getForeground(Object e)
+            {
+                Color background = getBackground(e);
+                return (background != null?Colors.getTextColor(background):null);
+            }
         });
         column.setSorter(ColumnViewerSorter.create(e -> {
             Optional<LocalDateTime> date = ((Trade) e).getEnd();
