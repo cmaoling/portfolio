@@ -277,6 +277,7 @@ public class Messages extends NLS
     public static String MsgNotAPortflioFile;
     public static String MsgParsingFailedWithHTML;
     public static String MsgPasswordMissing;
+    public static String MsgQuotesReceived;
     public static String MsgReadingFile;
     public static String MsgResponseContainsNoIndices;
     public static String MsgUnexpectedHeader;
