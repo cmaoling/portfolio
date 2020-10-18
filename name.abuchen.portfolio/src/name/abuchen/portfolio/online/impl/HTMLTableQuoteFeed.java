@@ -395,12 +395,15 @@ public class HTMLTableQuoteFeed implements QuoteFeed
                 if (urlCount > 10)
                     break;
             }
+            if (missingMonths.size() == 0)
+                urls.add(feedURL);
         }
         else
         {
             for (String url : variableURL) // NOSONAR
                 urls.add(url);
         }
+        // DEBUG: PortfolioLog.info(" URLS: " + urls); //$NON-NLS-1$
 
         for (String url : urls) // NOSONAR
         {
@@ -450,16 +453,16 @@ public class HTMLTableQuoteFeed implements QuoteFeed
                 }
             }
         }
-        PortfolioLog.info(MessageFormat.format(Messages.MsgArivaLoadMissingMonths, security.toString(), newPricesByDate.size()));
+        PortfolioLog.info(MessageFormat.format(Messages.MsgQuotesReceived, security.toString(), newPricesByDate.size(), urls.size()));
         data.addAllPrices(newPricesByDate);
         if (feedURL.contains("://" + ariva + "/") || feedURL.startsWith("http") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                         && feedURL.endsWith("month=")) //$NON-NLS-1$
         {
-            if (missingMonths.size() == 0)
+            if (missingMonths.size() == 0 && newPricesByDate.size() == 0)
                 PortfolioLog.info(MessageFormat.format(Messages.MsgArivaNoMissingMonths, security.toString()));
-            else if (newPricesByDate.size() > 0)
+            else if (missingMonths.size() > 0 && newPricesByDate.size() > 0)
                 PortfolioLog.info(MessageFormat.format(Messages.MsgArivaLoadMissingMonths, security.toString(), missingMonths));
-            else
+            else if (missingMonths.size() > 0 && newPricesByDate.size() == 0)
                 PortfolioLog.warning(MessageFormat.format(Messages.MsgArivaLoadMissingMonths, security.toString(), missingMonths));
         }
 
