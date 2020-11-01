@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 import java.io.InputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -830,24 +829,27 @@ public class CSVImporter
 
     public void processFile(boolean remap) throws IOException
     {
-        boolean converted = false;
-        // Let's first try to open it as a PDF
+        byte[] utext = inputFile.toString().getBytes(StandardCharsets.UTF_8);
+        String iFileStr = new String(utext, StandardCharsets.ISO_8859_1);
+        Path iPath = Paths.get(URI.create("file://" + iFileStr)); //$NON-NLS-1$
         try
         {
+            // Let's first try to open it as a PDF
             // https://stackoverflow.com/questions/941813/how-can-i-determine-if-a-file-is-a-pdf-file
             // https://stackoverflow.com/questions/14381880/read-first-4-bytes-of-file
+            InputStream stream =  Files.newInputStream(iPath);
             byte[] pdfIdentifier = {(byte)0x25, (byte)0x50, (byte)0x44, (byte)0x46, (byte)0x2D};
             byte[] buffer = new byte[5];
-            InputStream is = new FileInputStream(inputFile);
-            if (is.read(buffer) != buffer.length)
-                PortfolioLog.error(Messages.PDFImportBufferError);
-            is.close();
+            if (stream.read(buffer) != buffer.length)
+                PortfolioLog.error("Steam read failed."); //$NON-NLS-1$
+            stream.close();
             if (Arrays.equals(buffer, pdfIdentifier))
             {
                 PDFInputFile intermediateFile = new PDFInputFile(inputFile);
                 intermediateFile.convertPDFtoText();
                 // The file we are importing is actually a PDF.
                 // Let's check for the converters we have...
+                boolean converted = false;
                 for (AbstractPDFConverter converter : converters)
                 {
                     if (intermediateFile.getAuthor().contains(converter.getPDFAuthor()))
@@ -865,35 +867,15 @@ public class CSVImporter
                 if (!converted)
                     PortfolioLog.error(MessageFormat.format(Messages.PDFImportNoConverter, intermediateFile.getName(), intermediateFile.getAuthor()));
             }
-        }
-        catch (IOException e1)
-        {
-            PortfolioLog.error(e1);
-        }
-        if (!converted)
-        {
-            try (FileInputStream stream = new FileInputStream(inputFile))
+            else
             {
-                processStream(stream, remap);
+                InputStream fileStream =  Files.newInputStream(iPath);
+                processStream(fileStream, remap);
             }
-            catch (IOException e)
-            {
-                // fallback for file names with umlaute on Linux
-                byte[] ptext = inputFile.toString().getBytes(StandardCharsets.UTF_8);
-                String str = new String(ptext, StandardCharsets.ISO_8859_1);
-                Path path = Paths.get(URI.create("file://" + str)); //$NON-NLS-1$
-
-                try (InputStream stream = Files.newInputStream(path))
-                {
-                    processStream(stream, remap);
-                }
-                catch (IOException e2)
-                {
-                    PortfolioLog.error(e);
-                    PortfolioLog.error(e2);
-                }
-            }
-
+        }
+        catch (IOException e_processFile)
+        {
+            PortfolioLog.error(e_processFile);
         }
     }
 
