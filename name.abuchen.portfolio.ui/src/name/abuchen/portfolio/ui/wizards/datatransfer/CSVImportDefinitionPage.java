@@ -677,7 +677,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
             tableViewer.setContentProvider(new KeyMappingContentProvider());
             tableViewer.getTable().setLinesVisible(true);
             tableViewer.getTable().setHeaderVisible(true);
-            GridDataFactory.fillDefaults().grab(false, true).minSize(SWT.DEFAULT, 100).applyTo(tableViewer.getTable());
+            GridDataFactory.fillDefaults().grab(false, true).minSize(SWT.DEFAULT, 400).applyTo(tableViewer.getTable());
 
             TableViewerColumn col = new TableViewerColumn(tableViewer, SWT.NONE);
             col.getColumn().setText(Messages.CSVImportLabelExpectedValue);
