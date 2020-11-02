@@ -47,6 +47,7 @@ import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransactionDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.AccountTransferDialog;
 import name.abuchen.portfolio.ui.dialogs.transactions.OpenDialogAction;
 import name.abuchen.portfolio.ui.dialogs.transactions.SecurityTransactionDialog;
+import name.abuchen.portfolio.ui.util.Colors;
 import name.abuchen.portfolio.ui.util.DropDown;
 import name.abuchen.portfolio.ui.util.LogoManager;
 import name.abuchen.portfolio.ui.util.SimpleAction;
@@ -517,7 +518,7 @@ public class PeerListView extends AbstractListView implements ModificationListen
 
     private Color colorFor(AccountTransaction t)
     {
-        return Display.getCurrent().getSystemColor(t.getType().isDebit() ? SWT.COLOR_DARK_RED : SWT.COLOR_DARK_GREEN);  
+        return (t.getType().isDebit() ? Colors.theme().redForeground() : Colors.theme().greenForeground());
     }
 
     private void hookKeyListener()

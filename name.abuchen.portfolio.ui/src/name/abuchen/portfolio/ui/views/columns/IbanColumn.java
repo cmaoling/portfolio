@@ -1,7 +1,6 @@
 package name.abuchen.portfolio.ui.views.columns;
 
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.widgets.Display;
 
 import java.io.StringWriter;
 import java.io.PrintWriter;
@@ -11,6 +10,7 @@ import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Peer;
 import name.abuchen.portfolio.ui.Dimensions;
 import name.abuchen.portfolio.ui.Messages;
+import name.abuchen.portfolio.ui.util.Colors;
 import name.abuchen.portfolio.ui.util.viewers.Column;
 import name.abuchen.portfolio.ui.util.viewers.ColumnEditingSupport;
 import name.abuchen.portfolio.ui.util.viewers.ColumnViewerSorter;
@@ -125,9 +125,9 @@ public class IbanColumn extends Column
                 if (iban != null)
                 {
                     if (iban.length() > 0 && Iban.isValid(iban))
-                        return Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN);
+                        return Colors.theme().greenForeground();
                     else
-                        return Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED);                    
+                        return Colors.theme().redForeground();
                 }
                 else
                     return null;

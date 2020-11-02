@@ -81,7 +81,7 @@ public final class Colors
     public static final Color GRAY = Display.getDefault().getSystemColor(SWT.COLOR_GRAY);
     public static final Color WHITE = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
     public static final Color DARK_GRAY = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY);
-    public static final Color DARK_RED = getColor(209, 29, 29); // D11D1D
+    public static final Color DARK_RED = getColor(209, 84, 84); // D15454
     public static final Color DARK_GREEN = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN);
     public static final Color BLACK = Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
     public static final Color RED = Display.getDefault().getSystemColor(SWT.COLOR_RED);
