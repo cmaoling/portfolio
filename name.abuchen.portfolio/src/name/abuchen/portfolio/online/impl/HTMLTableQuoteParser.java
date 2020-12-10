@@ -1,6 +1,9 @@
 package name.abuchen.portfolio.online.impl;
 
 import java.text.ParseException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,13 +13,14 @@ import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.SecurityElement;
 import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.Pair;
+import name.abuchen.portfolio.util.TextUtil;
 
 public class HTMLTableQuoteParser extends HTMLTableParser
 {
     public HTMLTableQuoteParser()
     {        
-        COLUMNS = new Column[] { new DateColumn(), new CloseColumn(), new HighColumn(),
-                        new LowColumn(), new VolumeColumn() };
+        COLUMNS = new Column[] { new DateColumn(), new TimeColumn() , new CloseColumn(), new HighColumn(),
+                        new LowColumn(), new VolumeColumn()};
     }
     
     @SuppressWarnings("unchecked")
@@ -78,7 +82,7 @@ public class HTMLTableQuoteParser extends HTMLTableParser
         public CloseColumn()
         {
             super(new String[] { "Schluss.*", "Schluß.*", "Rücknahmepreis.*", "Close.*", "Zuletzt", "Price",
-                            "akt. Kurs", "Dernier" });
+                            "akt. Kurs", "Dernier", "Kurs"});
         }
 
         public CloseColumn(String[] patterns)
@@ -163,6 +167,41 @@ public class HTMLTableQuoteParser extends HTMLTableParser
                 price.setVolume(super.asInt(value, languageHint));
         }
     }
+
+    private static class TimeColumn extends Column
+    //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java
+    {
+        private DateTimeFormatter[] formatters = new DateTimeFormatter[] { DateTimeFormatter.ISO_LOCAL_TIME };
+ 
+        @SuppressWarnings("nls")
+        public TimeColumn()
+        {
+            super(new String[] { "Zeit.*" });
+        }
+ 
+        @Override
+        public void setValue(Element value, Object obj, String languageHint) throws ParseException
+        {
+            String text = TextUtil.strip(value.text());
+            for (DateTimeFormatter formatter : formatters)
+            {
+                try
+                {
+                    LocalTime time = LocalTime.parse(text, formatter);
+                    LatestSecurityPrice price = (LatestSecurityPrice) obj;
+                    price.setTime(time);
+                    return;
+                }
+                catch (DateTimeParseException e) // NOSONAR
+                {
+                    // continue with next pattern
+                }
+
+            }
+ 
+            throw new ParseException(text, 0);
+        }
+    }
     
     @Override
     protected boolean isSpecValid(List<Spec> specs)
@@ -172,16 +211,17 @@ public class HTMLTableQuoteParser extends HTMLTableParser
             return false;
 
         boolean hasDate = false;
+        boolean hasTime = false;
         boolean hasClose = false;
 
         for (Spec spec : specs)
         {
             hasDate = hasDate || spec.getColumn() instanceof DateColumn;
+            hasTime = hasTime || spec.getColumn() instanceof TimeColumn;
             hasClose = hasClose || spec.getColumn() instanceof CloseColumn;
         }
 
-        return hasDate && hasClose;
+        return (hasDate || hasTime) && hasClose;
     }
 
-  
 }

@@ -28,7 +28,7 @@ import name.abuchen.portfolio.util.Pair;
 
 public class HTMLTableQuoteFeed implements QuoteFeed
 {
- // ==> name.abuchen.portfolio.online.impl/Column.java
+// ==> name.abuchen.portfolio.online.impl/Column.java
 //    protected abstract static class Column
 //    {
 //
@@ -314,12 +314,23 @@ public class HTMLTableQuoteFeed implements QuoteFeed
     @Override
     public Optional<LatestSecurityPrice> getLatestQuote(Security security)
     {
+        FeedData data = getLatestData(security);
+        return getLatestQuote(data);
+    }
+    
+    public FeedData getLatestData(Security security)
+    {
         // if latestFeed is null, then the policy is 'use same configuration
         // as historic quotes'
         String feedURL = security.getLatestFeed() == null ? security.getFeedURL() : security.getLatestFeedURL();
 
         FeedData data = internalGetQuotes(security, feedURL, false, false);
 
+        return data;
+    }
+
+    public Optional<LatestSecurityPrice> getLatestQuote(FeedData data)
+    {
         if (!data.getErrors().isEmpty())
             PortfolioLog.error(data.getErrors());
 

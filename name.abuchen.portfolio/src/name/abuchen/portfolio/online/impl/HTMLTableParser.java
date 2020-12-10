@@ -1,7 +1,9 @@
 package name.abuchen.portfolio.online.impl;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.time.LocalDate;
@@ -15,6 +17,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Scanner;
 import java.util.Set;
 
 import org.jsoup.Jsoup;
@@ -25,6 +28,7 @@ import org.jsoup.select.Elements;
 import org.jsoup.safety.Whitelist;
 
 import name.abuchen.portfolio.Messages;
+import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.SecurityElement;
 import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.OnlineHelper;
@@ -143,6 +147,27 @@ abstract class HTMLTableParser
         return _parseFromURL(url, false, data);
     }
 
+    protected String _getHtml(String url) throws IOException, URISyntaxException
+    {
+        String html = ""; //$NON-NLS-1$
+        if (url.startsWith("file://")) //$NON-NLS-1$
+        {
+            String resourceName = url.replaceFirst("^file://", "");  //$NON-NLS-1$ $//$NON-NLS-2$
+            InputStream stream =  getClass().getResourceAsStream(resourceName);
+            try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8.name()))
+            {
+                html = scanner.useDelimiter("\\A").next(); //$NON-NLS-1$
+            }
+        }
+        else
+        {
+                html = new WebAccess(url) //
+                        .addUserAgent(getUserAgent()) //
+                        .get();
+        }
+        return html;
+    }
+
     protected Pair<String, List<Object>> _parseFromURL(String url, boolean collectRawResponse, FeedData data)
     {
         //from: name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed: internalGetQuotes
@@ -152,9 +177,7 @@ abstract class HTMLTableParser
         {
             try
             {
-                String html = new WebAccess(url) //
-                                .addUserAgent(getUserAgent()) //
-                                .get();
+                String html = _getHtml(url);
 
                 Document document = Jsoup.parse(html);
                 List<Object>  oList = parse(url, document, data);
@@ -164,7 +187,7 @@ abstract class HTMLTableParser
             }
             catch (URISyntaxException | IOException | UncheckedIOException e)
             {
-                data.addError(new IOException(url + '\n' + e.getMessage(), e));
+                data.addError(new IOException("<HTMLTableParser::_parseFromURL>: " +  url + '\n' + e.getMessage(), e)); //$NON-NLS-1$
                 return new Pair<>(String.valueOf(e.getMessage()), Collections.emptyList());
             }
         }
@@ -262,16 +285,23 @@ abstract class HTMLTableParser
                     for (; rowIndex < size; rowIndex++)
                     {
                         Element row = rows.get(rowIndex);
-
                         try
                         {
                             T element = extractData(row, specs, language, headerInfo.numberOfHeaderColumns, data);
                             if (element != null)
+                            {
+                                if (element instanceof LatestSecurityPrice)
+                                {
+                                    LatestSecurityPrice price = (LatestSecurityPrice) element;
+                                    if (price.getDate() == null && price.getTime() != null)
+                                        ((LatestSecurityPrice) element).setDate(LocalDate.now());
+                                }
                                 elementList.add(element);
+                            }
                         }
                         catch (Exception e)
                         {
-                            data.addError(new IOException(url + '\n' + e.getMessage(), e));
+                            data.addError(new IOException("<HTMLTableParser::parse>: " + url + '\n' + e.getMessage(), e)); //$NON-NLS-1$
                         }
                     }
 
@@ -283,8 +313,42 @@ abstract class HTMLTableParser
 
         // if no quotes could be extract, log HTML for further analysis
         if (elementList.isEmpty())
-            data.addError(new IOException(MessageFormat.format(Messages.MsgNoQuotesFoundInHTML, url,
+            data.addError(new IOException("<HTMLTableParser::parse>: " + MessageFormat.format(Messages.MsgNoQuotesFoundInHTML, url, //$NON-NLS-1$
                             Jsoup.clean(document.html(), Whitelist.relaxed()))));
+        else if (elementList.get(0) instanceof LatestSecurityPrice)
+        {
+            // sort by date and, if available, by time
+
+            Collections.sort(elementList, (r, l) -> {
+                int compare = ((SecurityElement) l).getDate().compareTo(((SecurityElement) r).getDate());
+                if (compare == 0  && l instanceof LatestSecurityPrice && r instanceof LatestSecurityPrice)
+                {
+                    if (((LatestSecurityPrice) r).getTime() == null || ((LatestSecurityPrice) l).getTime() == null)
+                        return 0;
+
+                    return ((LatestSecurityPrice) l).getTime().compareTo(((LatestSecurityPrice) r).getTime());
+                }
+                else
+                    return compare;
+            });
+
+            // remove the duplicates with the same date (keep the one with the
+            // oldest time)
+
+            List<T> answer = new ArrayList<>(elementList.size());
+
+            LocalDate last = null;
+            for (T t : elementList)
+            {
+                SecurityElement e = (SecurityElement) t;
+                if (e.getDate().equals(last))
+                    continue;
+
+                answer.add(t);
+                last = e.getDate();
+            }
+            return answer;
+        }
         return elementList;
     }
 

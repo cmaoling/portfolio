@@ -1,6 +1,8 @@
 package name.abuchen.portfolio.model;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Objects;
 
 import name.abuchen.portfolio.money.Values;
 
@@ -11,6 +13,9 @@ public class LatestSecurityPrice extends SecurityPrice
     private long volume;
 
     private long previousClose;
+
+    // cmaoling: combine ExtractedPrice from name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java into LatestSecurityPrice
+    private LocalTime time;
 
     public LatestSecurityPrice()
     {
@@ -50,6 +55,16 @@ public class LatestSecurityPrice extends SecurityPrice
         this.low = low;
     }
 
+    public LocalTime getTime()
+    {
+        return time;
+    }
+
+    public void setTime(LocalTime time)
+    {
+        this.time = time;
+    }
+
     public long getVolume()
     {
         return volume;
@@ -80,6 +95,7 @@ public class LatestSecurityPrice extends SecurityPrice
         result = prime * result + (int) (low ^ (low >>> 32));
         result = prime * result + (int) (previousClose ^ (previousClose >>> 32));
         result = prime * result + (int) (volume ^ (volume >>> 32));
+        result = prime * result + Objects.hash(time);
         return result;
     }
 
@@ -100,6 +116,8 @@ public class LatestSecurityPrice extends SecurityPrice
         if (previousClose != other.previousClose)
             return false;
         if (volume != other.volume)
+            return false;
+        if (time != other.time)
             return false;
         return true;
     }
