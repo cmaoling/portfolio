@@ -25,6 +25,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.money.CurrencyUnit;
 import name.abuchen.portfolio.money.Money;
+import name.abuchen.portfolio.util.TextUtil;
 
 /* package */ abstract class BaseCSVExtractor extends CSVExtractor
 {
@@ -77,14 +78,16 @@ import name.abuchen.portfolio.money.Money;
         int lineNo = 1 + skipLines; // +1 because of end user
         for (String[] strings : rawValues)
         {
+            String[] trimmed = TextUtil.strip(strings);
+
             try
             {
-                extract(result, strings, field2column);
+                extract(result, trimmed, field2column);
             }
             catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
             {
                 errors.add(new IOException(MessageFormat.format(Messages.CSVLineXwithMsgY, lineNo, e.getMessage(),
-                                Arrays.toString(strings)), e));
+                                Arrays.toString(trimmed)), e));
             }
             lineNo++;
         }
