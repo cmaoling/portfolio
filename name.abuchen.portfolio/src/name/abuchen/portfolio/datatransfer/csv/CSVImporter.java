@@ -298,9 +298,9 @@ public class CSVImporter
 
             if ("CH".equals(Locale.getDefault().getCountry())) //$NON-NLS-1$
                 return FORMATS.get(2);
-            if (TextUtil.DECIMAL_SEPERATOR == ',')
+            if (TextUtil.DECIMAL_SEPARATOR == ',')
                 return FORMATS.get(0);
-            if (TextUtil.DECIMAL_SEPERATOR == '.')
+            if (TextUtil.DECIMAL_SEPARATOR == '.')
                 return FORMATS.get(1);
 
             // fallback
