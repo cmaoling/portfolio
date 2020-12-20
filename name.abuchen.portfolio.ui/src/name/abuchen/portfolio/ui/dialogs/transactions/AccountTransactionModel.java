@@ -34,7 +34,7 @@ public class AccountTransactionModel extends AbstractModel
     public enum Properties
     {
         security, account, date, time, peer, partner, iban, shares, fxGrossAmount, dividendAmount, exchangeRate, inverseExchangeRate, grossAmount, // NOSONAR
-        fxTaxes, taxes, total, note, exchangeRateCurrencies, inverseExchangeRateCurrencies, // NOSONAR
+        fxTaxes, taxes, fxFees, fees, total, note, exchangeRateCurrencies, inverseExchangeRateCurrencies, // NOSONAR
         accountCurrencyCode, securityCurrencyCode, fxCurrencyCode, calculationStatus; // NOSONAR
     }
 
@@ -65,6 +65,8 @@ public class AccountTransactionModel extends AbstractModel
 
     private long fxTaxes;
     private long taxes;
+    private long fxFees;
+    private long fees;
     private long total;
 
     private String note;
@@ -152,6 +154,9 @@ public class AccountTransactionModel extends AbstractModel
 
         t.clearUnits();
 
+        if(fees != 0)
+            t.addUnit(new Transaction.Unit(Transaction.Unit.Type.FEE, Money.of(getAccountCurrencyCode(), fees)));
+        
         if (taxes != 0)
             t.addUnit(new Transaction.Unit(Transaction.Unit.Type.TAX, Money.of(getAccountCurrencyCode(), taxes)));
 
@@ -164,6 +169,12 @@ public class AccountTransactionModel extends AbstractModel
                             getExchangeRate());
             t.addUnit(forex);
 
+            if (fxFees != 0)
+                t.addUnit(new Transaction.Unit(Transaction.Unit.Type.FEE, //
+                                Money.of(getAccountCurrencyCode(), Math.round(fxFees * exchangeRate.doubleValue())), //
+                                Money.of(getSecurityCurrencyCode(), fxFees), //
+                                exchangeRate));
+            
             if (fxTaxes != 0)
                 t.addUnit(new Transaction.Unit(Transaction.Unit.Type.TAX, //
                                 Money.of(getAccountCurrencyCode(), Math.round(fxTaxes * exchangeRate.doubleValue())), //
@@ -186,6 +197,8 @@ public class AccountTransactionModel extends AbstractModel
         setFxGrossAmount(0);
         setDividendAmount(BigDecimal.ZERO);
         setGrossAmount(0);
+        setFees(0);
+        setFxFees(0);
         setTaxes(0);
         setFxTaxes(0);
         setNote(null);
@@ -261,6 +274,20 @@ public class AccountTransactionModel extends AbstractModel
                 return false;
         }
     }
+    
+    public boolean supportsFees()
+    {
+        switch (type)
+        {
+            case DIVIDEND_CHARGE:
+            case DIVIDENDS:
+            case INTEREST:
+            case INTEREST_CHARGE:
+                return true;
+            default:
+                return false;
+        }
+    }
 
     public void setSource(Account account, AccountTransaction transaction)
     {
@@ -299,6 +326,8 @@ public class AccountTransactionModel extends AbstractModel
         this.exchangeRate = BigDecimal.ONE;
         this.taxes = 0;
         this.fxTaxes = 0;
+        this.fees = 0;
+        this.fxFees = 0;
 
         transaction.getUnits().forEach(unit -> {
             switch (unit.getType())
@@ -313,6 +342,12 @@ public class AccountTransactionModel extends AbstractModel
                         this.fxTaxes += unit.getForex().getAmount();
                     else
                         this.taxes += unit.getAmount().getAmount();
+                    break;
+                case FEE:
+                    if (unit.getForex() != null)
+                        this.fxFees += unit.getForex().getAmount();
+                    else
+                        this.fees += unit.getAmount().getAmount();
                     break;
                 default:
                     throw new UnsupportedOperationException();
@@ -690,10 +725,24 @@ public class AccountTransactionModel extends AbstractModel
     {
         return fxTaxes;
     }
+    
+    public long getFxFees()
+    {
+        return fxFees;
+    }
 
     public void setFxTaxes(long fxTaxes)
     {
         firePropertyChange(Properties.fxTaxes.name(), this.fxTaxes, this.fxTaxes = fxTaxes);
+        triggerTotal(calculateTotal());
+
+        firePropertyChange(Properties.calculationStatus.name(), this.calculationStatus,
+                        this.calculationStatus = calculateStatus());
+    }
+    
+    public void setFxFees(long fxFees)
+    {
+        firePropertyChange(Properties.fxFees.name(), this.fxFees, this.fxFees = fxFees);
         triggerTotal(calculateTotal());
 
         firePropertyChange(Properties.calculationStatus.name(), this.calculationStatus,
@@ -704,10 +753,24 @@ public class AccountTransactionModel extends AbstractModel
     {
         return taxes;
     }
+    
+    public long getFees()
+    {
+        return fees;
+    }
 
     public void setTaxes(long taxes)
     {
         firePropertyChange(Properties.taxes.name(), this.taxes, this.taxes = taxes);
+        triggerTotal(calculateTotal());
+
+        firePropertyChange(Properties.calculationStatus.name(), this.calculationStatus,
+                        this.calculationStatus = calculateStatus());
+    }
+    
+    public void setFees(long fees)
+    {
+        firePropertyChange(Properties.fees.name(), this.fees, this.fees = fees);
         triggerTotal(calculateTotal());
 
         firePropertyChange(Properties.calculationStatus.name(), this.calculationStatus,
@@ -752,8 +815,9 @@ public class AccountTransactionModel extends AbstractModel
 
     protected long calculateGrossAmount4Total()
     {
+        long totalFees = fees + Math.round(exchangeRate.doubleValue() * fxFees);
         long totalTaxes = taxes + Math.round(exchangeRate.doubleValue() * fxTaxes);
-        return total + (type == AccountTransaction.Type.INTEREST_CHARGE ||  type == AccountTransaction.Type.DIVIDEND_CHARGE ? -1 : 1) * totalTaxes;
+        return total + (type == AccountTransaction.Type.INTEREST_CHARGE ||  type == AccountTransaction.Type.DIVIDEND_CHARGE ? -1 : 1) * (totalFees + totalTaxes);
     }
 
     protected long calculateGrossAmount4Dividend()
@@ -764,8 +828,9 @@ public class AccountTransactionModel extends AbstractModel
 
     private long calculateTotal()
     {
+        long totalFees = fees + Math.round(exchangeRate.doubleValue() * fxFees);
         long totalTaxes = taxes + Math.round(exchangeRate.doubleValue() * fxTaxes);
-        return Math.max(0, grossAmount + (type == AccountTransaction.Type.INTEREST_CHARGE || type == AccountTransaction.Type.DIVIDEND_CHARGE ? 1 : -1) * totalTaxes);
+        return Math.max(0, grossAmount + (type == AccountTransaction.Type.INTEREST_CHARGE || type == AccountTransaction.Type.DIVIDEND_CHARGE ? 1 : -1) * (totalTaxes + totalFees));
     }
 
     public String getNote()
