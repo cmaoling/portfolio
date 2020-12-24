@@ -141,8 +141,8 @@ public class AttributeListTab implements AbstractTabbedView.Tab, ModificationLis
 
         ColumnEditingSupport.prepare(tableViewer);
 
-        ShowHideColumnHelper support = new ShowHideColumnHelper(AttributeListTab.class.getSimpleName(), preferences,
-                        tableViewer, layout);
+        ShowHideColumnHelper support = new ShowHideColumnHelper(AttributeListTab.class.getSimpleName() + "@v2", //$NON-NLS-1$
+                        preferences, tableViewer, layout);
 
         addColumns(support);
 
@@ -202,6 +202,18 @@ public class AttributeListTab implements AbstractTabbedView.Tab, ModificationLis
             }
         });
         support.addColumn(column);
+
+        column = new Column(Messages.ColumnSource, SWT.None, 100);
+        column.setLabelProvider(new ColumnLabelProvider()
+        {
+            @Override
+            public String getText(Object element)
+            {
+                return ((AttributeType) element).getSource();
+            }
+        });
+        support.addColumn(column);
+
     }
 
     private void fillContextMenu(IMenuManager manager)
