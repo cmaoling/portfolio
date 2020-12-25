@@ -595,6 +595,8 @@ public class ClientFactory
             case 46:
                 // added dividend payment security event
                 addDefaultLogoAttributes(client);
+            case 47:
+                // added fees to dividend transactions
 
                 client.setVersion(Client.CURRENT_VERSION);
                 break;

@@ -9,7 +9,6 @@ import java.util.ResourceBundle;
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.Money;
-import name.abuchen.portfolio.money.MoneyCollectors;
 import name.abuchen.portfolio.money.Quote;
 import name.abuchen.portfolio.money.Values;
 
@@ -137,8 +136,7 @@ public class PortfolioTransaction extends Transaction
      */
     public long getGrossValueAmount()
     {
-        long taxAndFees = getUnits().filter(u -> u.getType() == Unit.Type.TAX || u.getType() == Unit.Type.FEE)
-                        .collect(MoneyCollectors.sum(getCurrencyCode(), u -> u.getAmount())).getAmount();
+        long taxAndFees = getUnitSum(Unit.Type.FEE, Unit.Type.TAX).getAmount();
 
         if (this.type.isPurchase())
             return getAmount() - taxAndFees;

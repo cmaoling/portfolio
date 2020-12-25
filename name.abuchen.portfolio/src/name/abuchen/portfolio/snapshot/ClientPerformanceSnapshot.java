@@ -364,7 +364,7 @@ public class ClientPerformanceSnapshot
                 {
                     case DIVIDENDS:
                     case INTEREST:
-                        addEarningTransaction(account, t, mEarnings, earningsBySecurity, mTaxes, taxesBySecurity, mOtherEarnings);
+                        addEarningTransaction(account, t, mEarnings, earningsBySecurity, mFees, mTaxes, feesBySecurity, taxesBySecurity, mOtherEarnings);
                         // cmaoling BEGIN: calculate dividends and interest individually
                         if (AccountTransaction.Type.DIVIDENDS.equals(t.getType()))
                             dividends.add(new TransactionPair<AccountTransaction>(account, t));
@@ -374,7 +374,7 @@ public class ClientPerformanceSnapshot
                         break;
                     case DIVIDEND_CHARGE:
                     case INTEREST_CHARGE:
-                        addExpenseTransaction(account, t, mEarnings, earningsBySecurity, mTaxes, taxesBySecurity, mOtherEarnings);
+                        addExpenseTransaction(account, t, mEarnings, earningsBySecurity, mFees, mTaxes, feesBySecurity, taxesBySecurity, mOtherEarnings);
                         // cmaoling BEGIN: calculate dividends and interest individually
                         if (AccountTransaction.Type.DIVIDEND_CHARGE.equals(t.getType()))
                             dividends.add(new TransactionPair<AccountTransaction>(account, t));
@@ -502,8 +502,9 @@ public class ClientPerformanceSnapshot
     }
 
     private void addEarningTransaction(Account account, AccountTransaction transaction, MutableMoney mEarnings,
-                    Map<Security, MutableMoney> earningsBySecurity, MutableMoney mTaxes,
-                    Map<Security, MutableMoney> taxesBySecurity, MutableMoney mOtherEarnings)
+                    Map<Security, MutableMoney> earningsBySecurity, MutableMoney mFees, MutableMoney mTaxes,
+                    Map<Security, MutableMoney> feesBySecurity, Map<Security, MutableMoney> taxesBySecurity,
+                    MutableMoney mOtherEarnings)
     {
         Money earned = transaction.getGrossValue().with(converter.at(transaction.getDateTime()));
         mEarnings.add(earned);
@@ -525,8 +526,9 @@ public class ClientPerformanceSnapshot
     }
 
     private void addExpenseTransaction(Account account, AccountTransaction transaction, MutableMoney mEarnings,
-                    Map<Security, MutableMoney> earningsBySecurity, MutableMoney mTaxes,
-                    Map<Security, MutableMoney> taxesBySecurity, MutableMoney mOtherEarnings)
+                    Map<Security, MutableMoney> earningsBySecurity, MutableMoney mFees, MutableMoney mTaxes,
+                    Map<Security, MutableMoney> feesBySecurity, Map<Security, MutableMoney> taxesBySecurity,
+                    MutableMoney mOtherEarnings)
     {
         Money charged = transaction.getMonetaryAmount().with(converter.at(transaction.getDateTime()));
         mEarnings.subtract(charged);
@@ -536,6 +538,15 @@ public class ClientPerformanceSnapshot
                             k -> MutableMoney.of(converter.getTermCurrency())).subtract(charged);
         else
             mOtherEarnings.subtract(charged);
+
+        Money fee = transaction.getUnitSum(Unit.Type.FEE, converter).with(converter.at(transaction.getDateTime()));
+        if (!fee.isZero())
+        {
+            mFees.add(fee);
+            this.fees.add(new TransactionPair<AccountTransaction>(account, transaction));
+            feesBySecurity.computeIfAbsent(transaction.getSecurity(), s -> MutableMoney.of(converter.getTermCurrency()))
+                            .add(fee);
+        }
 
         Money tax = transaction.getUnitSum(Unit.Type.TAX, converter).with(converter.at(transaction.getDateTime()));
         if (!tax.isZero())
