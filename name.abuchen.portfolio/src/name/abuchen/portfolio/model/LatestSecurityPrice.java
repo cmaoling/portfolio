@@ -89,14 +89,7 @@ public class LatestSecurityPrice extends SecurityPrice
     @Override
     public int hashCode()
     {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + (int) (high ^ (high >>> 32));
-        result = prime * result + (int) (low ^ (low >>> 32));
-        result = prime * result + (int) (previousClose ^ (previousClose >>> 32));
-        result = prime * result + (int) (volume ^ (volume >>> 32));
-        result = prime * result + Objects.hash(time);
-        return result;
+        return 31 * super.hashCode() + Objects.hash(high, low, previousClose, volume, time);
     }
 
     @Override
@@ -109,17 +102,7 @@ public class LatestSecurityPrice extends SecurityPrice
         if (getClass() != obj.getClass())
             return false;
         LatestSecurityPrice other = (LatestSecurityPrice) obj;
-        if (high != other.high)
-            return false;
-        if (low != other.low)
-            return false;
-        if (previousClose != other.previousClose)
-            return false;
-        if (volume != other.volume)
-            return false;
-        if (time != other.time)
-            return false;
-        return true;
+        return high == other.high && low == other.low && previousClose == other.previousClose && volume == other.volume && time == other.time;
     }
 
     @Override
