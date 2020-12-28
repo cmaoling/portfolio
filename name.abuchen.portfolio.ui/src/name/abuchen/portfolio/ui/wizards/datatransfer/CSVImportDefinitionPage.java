@@ -13,8 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.ErrorDialog;
@@ -220,6 +218,13 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
             }
         });
 
+        // cmaoling edition - obsolete?!
+        // IObservableValue<?> spinnerTarget = WidgetProperties.spinnerSelection().observe(skipLines);
+        // IObservableValue<String> spinnerModel = BeanProperties.value("skipLines", String.class).observe(importer); //$NON-NLS-1$
+        // context.bindValue(spinnerTarget, spinnerModel);
+        //
+        // skipLines.addModifyListener(event -> doProcessFile());
+
         Label lblEncoding = new Label(container, SWT.NONE);
         lblEncoding.setText(Messages.CSVImportLabelEncoding);
         Combo cmbEncoding = new Combo(container, SWT.READ_ONLY);
@@ -227,6 +232,13 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         ComboViewer encoding = encodingComboViewer;
         encoding.setContentProvider(ArrayContentProvider.getInstance());
         encoding.setInput(Charset.availableCharsets().values().toArray());
+
+        // cmaoling edition - obsolete?!
+        // IObservableValue<?> encodingTarget = ViewerProperties.singleSelection().observe(encoding);
+        // IObservableValue<?> encodingModel = BeanProperties.value("encoding").observe(importer); //$NON-NLS-1$
+        // context.bindValue(encodingTarget, encodingModel);
+        // encoding.addSelectionChangedListener(event -> doProcessFile());
+
         encoding.setSelection(new StructuredSelection(importer.getEncoding()));
         encoding.addSelectionChangedListener(this);
 
@@ -239,6 +251,16 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         headering.setInput(headerset.get());
         headering.setSelection(new StructuredSelection(importer.getHeader()));
         headering.addSelectionChangedListener(this);
+
+        // cmaoling edition - obsolete?!
+        // final Button firstLineIsHeader = new Button(container, SWT.CHECK);
+        // firstLineIsHeader.setText(Messages.CSVImportLabelFirstLineIsHeader);
+        //
+        // IObservableValue<?> targetObservable = WidgetProperties.buttonSelection().observe(firstLineIsHeader);
+        // IObservableValue<?> modelObservable = BeanProperties.value("firstLineHeader").observe(importer); //$NON-NLS-1$
+        // context.bindValue(targetObservable, modelObservable);
+        //
+        // firstLineIsHeader.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> doProcessFile()));
 
         Composite compositeTable = new Composite(container, SWT.NONE);
 
@@ -405,7 +427,6 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
 
             for (TableColumn column : tableViewer.getTable().getColumns())
                 column.dispose();
-
             TableColumnLayout layout = (TableColumnLayout) tableViewer.getTable().getParent().getLayout();
             for (Column column : importer.getColumns())
             {
@@ -421,12 +442,18 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
             tableViewer.refresh();
             tableViewer.getTable().pack();
 
-            // see #1723 and #1536: under Linux, the first column is extended to
-            // the full size of the table
-
-            if (!Platform.getWS().equals(Platform.WS_GTK))
-                for (TableColumn column : tableViewer.getTable().getColumns())
-                    column.pack();
+            // with 8cae79b8e399374554a178852a58ce797225218e by buchen the previous 06b944c patch does screw up the table in cmaoling edition. Reverting back.
+            int hack = 0;
+            for (TableColumn column : tableViewer.getTable().getColumns())
+            {
+                int saveWidth = 0;
+                if (hack > 0)
+                    saveWidth = tableViewer.getTable().getColumns()[0].getWidth();
+                column.pack();
+                if (hack > 0)
+                     tableViewer.getTable().getColumns()[0].setWidth(saveWidth);
+                hack += 1;
+            }
 
             doUpdateErrorMessages();
         }
