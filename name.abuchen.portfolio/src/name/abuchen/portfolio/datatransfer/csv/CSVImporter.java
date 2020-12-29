@@ -54,7 +54,7 @@ import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.util.Isin;
 import name.abuchen.portfolio.util.Iban;
-
+import name.abuchen.portfolio.util.TextUtil;
 
 public class CSVImporter
 {
@@ -281,12 +281,30 @@ public class CSVImporter
                         new FieldFormat(Messages.CSVFormatApostrophe, () -> {
                             DecimalFormatSymbols unusualSymbols = new DecimalFormatSymbols(Locale.US);
                             unusualSymbols.setGroupingSeparator('\'');
-                            return new DecimalFormat("#,##0.##", unusualSymbols); //$NON-NLS-1$
+                            return new DecimalFormat("#,##0.###", unusualSymbols); //$NON-NLS-1$
                         })));
 
         /* package */ AmountField(String... name)
         {
             super(name);
+        }
+
+        @Override
+        public FieldFormat guessFormat(Client client, String value)
+        {
+            // pre-configured based on locale; as PP currently does not allow
+            // arbitrary number format patterns, map it to the available FORMAT
+            // objects
+
+            if ("CH".equals(Locale.getDefault().getCountry())) //$NON-NLS-1$
+                return FORMATS.get(2);
+            if (TextUtil.DECIMAL_SEPERATOR == ',')
+                return FORMATS.get(0);
+            if (TextUtil.DECIMAL_SEPERATOR == '.')
+                return FORMATS.get(1);
+
+            // fallback
+            return FORMATS.get(0);
         }
     }
 
@@ -624,7 +642,7 @@ public class CSVImporter
 
     private CSVExtractor currentExtractor;
 
-    private char delimiter = ';';
+    private char delimiter = TextUtil.getListSeparatorChar();
     private Charset encoding = Charset.defaultCharset();
     private int skipLines = 0;
     private Header header = new Header (Header.Type.DEFAULT, "<none>"); //$NON-NLS-1$
