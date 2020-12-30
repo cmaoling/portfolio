@@ -1790,7 +1790,9 @@ public class OnvistaPDFExtractor extends AbstractPDFExtractor
                             t.setDateTime(asDate(v.get("date")));
                         })
 
-                        .wrap(TransactionItem::new);
+                        .wrap(t -> t.getAmount() != 0 ? new TransactionItem(t)
+                                        : new NonImportableItem("Steuerpflichtige Vorabpauschale mit 0 "
+                                                        + t.getCurrencyCode()));
 
         block.set(taxVorabpauschaleTransaction);
     }
