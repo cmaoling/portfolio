@@ -377,7 +377,7 @@ public class CSVAccountTransactionExtractorTest
         security.setName("ALIBABA GR.HLDG SP.ADR");
         security.setCurrencyCode(CurrencyUnit.EUR);
         LocalDate date = LocalDate.parse("2018-09-11");
-        long price = 123_4501L;
+        long price = Values.Quote.factorize(123.4501);
         security.addPrice(new SecurityPrice(date, price));
         client.addSecurity(security);
 
@@ -424,7 +424,7 @@ public class CSVAccountTransactionExtractorTest
         security.setName("ALIBABA GR.HLDG SP.ADR");
         security.setCurrencyCode(CurrencyUnit.EUR);
         LocalDate date = LocalDate.parse("2018-10-11");
-        long price = 123_4501L;
+        long price = Values.Quote.factorize(123.4501);
         security.addPrice(new SecurityPrice(date, price));
         client.addSecurity(security);
 
@@ -463,6 +463,52 @@ public class CSVAccountTransactionExtractorTest
         assertThat(item.hasProposedFees(), is(false));
     }
 
+
+    @Test
+    public void testBuySellFailsBecauseNoPriceExists()
+    {
+        Client client = new Client();
+
+        Security security = new Security();
+        security.setIsin("US01609W1027");
+        security.setName("ALIBABA GR.HLDG SP.ADR");
+        security.setCurrencyCode(CurrencyUnit.EUR);
+        LocalDate date = LocalDate.parse("2018-10-13");
+        client.addSecurity(security);
+
+        CSVExtractor extractor = new CSVDibaAccountTransactionExtractor(client);
+
+        List<Exception> errors = new ArrayList<Exception>();
+        List<Item> results = extractor.extract(0, Arrays.<String[]>asList(new String[] { "2018-10-13", "",
+                        "US01609W1027", "ALIBABA GR.HLDG SP.ADR", "", "4684,32", "EUR", "BUY", "", "", "Notiz" }), buildField2Column(extractor),
+                        errors);
+
+        assertThat(errors, empty());
+        assertThat(results.size(), is(1));
+
+        BuySellEntryItem item = (BuySellEntryItem) results.get(0);
+        BuySellEntry entry = (BuySellEntry) item.getSubject();
+        PortfolioTransaction t = entry.getPortfolioTransaction();
+        assertThat(t.getType(), is(PortfolioTransaction.Type.BUY));
+        assertThat(t.getMonetaryAmount(), is(Money.of(CurrencyUnit.EUR, 4684_32)));
+        assertThat(t.getNote(), is("Notiz"));
+        assertThat(t.getDateTime(), is(LocalDateTime.parse("2018-10-13T00:00")));
+        assertThat(t.getSecurity(), is(security));
+        assertThat(t.getShares(), is(0L));
+        assertThat(t.getUnit(Transaction.Unit.Type.FEE), is(Optional.empty()));
+        assertThat(item.hasProposedShares(), is(false));
+        assertThat(item.hasProposedFees(), is(false));
+
+        t.addUnit(new Transaction.Unit(Transaction.Unit.Type.FEE, Money.of(CurrencyUnit.EUR, 32_00)));
+
+        assertThat(extractor.proposeShares(null, null, item), is(false)); // Command is aborted
+
+        assertThat(t.getShares(), is(Values.Share.factorize(0)));
+        assertThat(t.getUnitSum(Transaction.Unit.Type.FEE), is(Money.of(CurrencyUnit.EUR, 32_00)));
+        assertThat(item.hasProposedShares(), is(false));
+        assertThat(item.hasProposedFees(), is(false));
+    }
+
     @Test
     public void testTransactionSucceedsWhenSharesAreOptional()
     {
@@ -473,7 +519,7 @@ public class CSVAccountTransactionExtractorTest
         security.setName("INTL BUS.");
         security.setCurrencyCode(CurrencyUnit.USD);
         LocalDate date = LocalDate.parse("2018-09-10");
-        long price = 123_4501L;
+        long price = Values.Quote.factorize(999.99);
         security.addPrice(new SecurityPrice(date, price));
         client.addSecurity(security);
 

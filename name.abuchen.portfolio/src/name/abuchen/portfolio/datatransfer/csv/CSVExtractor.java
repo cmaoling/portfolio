@@ -331,26 +331,28 @@ public abstract class CSVExtractor implements Extractor
             Security security = item.getSecurity();
             LocalDateTime date = item.getDate();
 
-            double  price      = (double) security.getSecurityPrice(date.toLocalDate()).getValue() / Values.Quote.divider();
-            if (price <= 0)
+            BigDecimal price   = BigDecimal.valueOf(security.getSecurityPrice(date.toLocalDate()).getValue()).divide(Values.Quote.getBigDecimalFactor(), Values.MC);
+
+            if (price.compareTo(BigDecimal.ZERO) <= 0)
                 return false;
-            double  amount     = (double) item.getAmount().getAmount() / Values.Amount.divider();
-            double  shareCount = amount / price;
+            BigDecimal amount  = BigDecimal.valueOf(item.getAmount().getAmount())
+                                    .divide(Values.Amount.getBigDecimalFactor(), Values.MC);
+            BigDecimal shareCount = amount.divide(price, Values.MC);
             long proposedShares = 0L;
             long proposedFees = 0L;
             if (security.getCurrencyCode().equals(item.getAmount().getCurrencyCode()))
             {
                 PortfolioTransaction pTransaction = item.getEntry().getPortfolioTransaction();
                 if (pTransaction.getType().equals(PortfolioTransaction.Type.BUY))
-                    proposedShares = (long) Math.floor(shareCount);
+                    proposedShares = (long) Math.floor(shareCount.doubleValue());
                 else if (pTransaction.getType().equals(PortfolioTransaction.Type.SELL))
-                    proposedShares = (long) Math.ceil(shareCount);
+                    proposedShares = (long) Math.ceil(shareCount.doubleValue());
                 pTransaction.setShares(proposedShares * Values.Share.factor());
                 item.setProposedShares(true);
                 if (pTransaction.getUnit(Transaction.Unit.Type.FEE).equals(Optional.empty()))
                 {
-                    double value = (double) proposedShares * price;
-                    proposedFees = Math.round(Math.abs(amount - value) * Values.Amount.factor());
+                    double value = BigDecimal.valueOf(proposedShares).multiply(price).doubleValue();
+                    proposedFees = Math.round(Math.abs(amount.doubleValue() - value) * Values.Amount.factor());
                     Transaction.Unit fee = new Transaction.Unit(Transaction.Unit.Type.FEE, Money.of(security.getCurrencyCode(), proposedFees));
                     pTransaction.addUnit(fee);
                     item.setProposedFees(true);

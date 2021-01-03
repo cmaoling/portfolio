@@ -49,17 +49,17 @@ public class HTMLTableQuoteFeedTest
             assertThat(elements.size(), equalTo(23));
 
             assertThat(elements.get( 0), //
-                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.JUNE   , 4), 2548000L, 2577000L, 2502000L, 1355534L)));
+                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.JUNE   , 4), Values.Quote.factorize(254.8000), Values.Quote.factorize(257.7000), Values.Quote.factorize(250.2000), 1355534L)));
             assertThat(elements.get( 2), //
-                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.JUNE   ,  2), 2411000L, 2434000L, 2390000L, 1136776L)));
+                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.JUNE   ,  2), Values.Quote.factorize(241.1000), Values.Quote.factorize(243.4000), Values.Quote.factorize(239.0000), 1136776L)));
             assertThat(elements.get( 3), //
-                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.MAY    , 29), 2372000L, 2397000L, 2348000L, 1803669L)));
+                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.MAY    , 29), Values.Quote.factorize(237.2000), Values.Quote.factorize(239.7000), Values.Quote.factorize(234.8000), 1803669L)));
             assertThat(elements.get( 8), //
-                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.MAY    , 22), 2178000L, 2185000L, 2116000L,  648062L)));
+                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.MAY    , 22), Values.Quote.factorize(217.8000), Values.Quote.factorize(218.5000), Values.Quote.factorize(211.6000),  648062L)));
             assertThat(elements.get(14), //
-                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.MAY    , 14), 1952500L, 1971500L, 1894000L,  918512L)));
+                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.MAY    , 14), Values.Quote.factorize(195.2500), Values.Quote.factorize(197.1500), Values.Quote.factorize(189.4000),  918512L)));
             assertThat(elements.get(22), //
-                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.MAY    ,  4), 1938500L, 2036000L, 1931000L, 1494144L)));
+                            is(new LatestSecurityPrice(LocalDate.of(2020, Month.MAY    ,  4), Values.Quote.factorize(193.8500), Values.Quote.factorize(203.6000), Values.Quote.factorize(193.1000), 1494144L)));
 
         }
     }
@@ -84,9 +84,9 @@ public class HTMLTableQuoteFeedTest
 
         Collections.sort(prices, new SecurityPrice.ByDate());
 
-        assertPrice(prices.get(0), "2020-12-03", 6750000, 6750000, 6658900);
-        assertPrice(prices.get(1), "2020-12-04", 6753700, 6753700, 6674600);
-        assertPrice(prices.get(2), "2020-12-07", 6771300, 6803100, 6771300);
+        assertPrice(prices.get(0), "2020-12-03", 675, 675, 665.89);
+        assertPrice(prices.get(1), "2020-12-04", 675.37, 675.37, 667.46);
+        assertPrice(prices.get(2), "2020-12-07", 677.13, 680.31, 677.13);
     }
 
     @Test
@@ -113,11 +113,11 @@ public class HTMLTableQuoteFeedTest
 
     }
 
-    private void assertPrice(LatestSecurityPrice price, String date, long value, long high, long low)
+    private void assertPrice(LatestSecurityPrice price, String date, double value, double high, double low)
     {
         assertThat(price.getDate(), is(LocalDate.parse(date)));
-        assertThat(price.getValue(), is(value));
-        assertThat(price.getHigh(), is(high));
-        assertThat(price.getLow(), is(low));
+        assertThat(price.getValue(), is(Values.Quote.factorize(value)));
+        assertThat(price.getHigh(), is(Values.Quote.factorize(high)));
+        assertThat(price.getLow(), is(Values.Quote.factorize(low)));
     }
 }
