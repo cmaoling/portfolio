@@ -385,7 +385,7 @@ public class CSVAccountTransactionExtractorTest
 
         List<Exception> errors = new ArrayList<Exception>();
         List<Item> results = extractor.extract(0, Arrays.<String[]>asList(new String[] { "2018-09-11", "",
-                        "US01609W1027", "ALIBABA GR.HLDG SP.ADR", "", "4.384,32", "EUR", "BUY", "", "", "Notiz" }), buildField2Column(extractor),
+                        "US01609W1027", "ALIBABA GR.HLDG SP.ADR", "", "4507,77", "EUR", "BUY", "", "", "Notiz" }), buildField2Column(extractor),
                         errors);
 
         assertThat(errors, empty());
@@ -395,7 +395,7 @@ public class CSVAccountTransactionExtractorTest
         BuySellEntry entry = (BuySellEntry) item.getSubject();
         PortfolioTransaction t = entry.getPortfolioTransaction();
         assertThat(t.getType(), is(PortfolioTransaction.Type.BUY));
-        assertThat(t.getMonetaryAmount(), is(Money.of(CurrencyUnit.EUR, 4384_32)));
+        assertThat(t.getMonetaryAmount(), is(Money.of(CurrencyUnit.EUR, 4507_77)));
         assertThat(t.getNote(), is("Notiz"));
         assertThat(t.getDateTime(), is(LocalDateTime.parse("2018-09-11T00:00")));
         assertThat(t.getSecurity(), is(security));
@@ -408,7 +408,7 @@ public class CSVAccountTransactionExtractorTest
 
         assertThat(extractor.proposeShares(null, null, item), is(true)); // Neither Client nor Portfolio needed for BuySellEntry, will use Security.
 
-        assertThat(t.getShares(), is(35000000L));
+        assertThat(t.getShares(), is(Values.Share.factorize(36)));
         assertThat(t.getUnitSum(Transaction.Unit.Type.FEE), is(Money.of(CurrencyUnit.EUR, 63_57)));
         assertThat(item.hasProposedShares(), is(true));
         assertThat(item.hasProposedFees(), is(true));
@@ -457,7 +457,7 @@ public class CSVAccountTransactionExtractorTest
 
         assertThat(extractor.proposeShares(null, null, item), is(true)); // Neither Client nor Portfolio needed for BuySellEntry, will use Security.
         
-        assertThat(t.getShares(), is(35000000L));
+        assertThat(t.getShares(), is(Values.Share.factorize(35)));
         assertThat(t.getUnitSum(Transaction.Unit.Type.FEE), is(Money.of(CurrencyUnit.EUR, 32_00)));
         assertThat(item.hasProposedShares(), is(true));
         assertThat(item.hasProposedFees(), is(false));
@@ -506,7 +506,7 @@ public class CSVAccountTransactionExtractorTest
 
         assertThat(extractor.proposeShares(client, portfolio, item), is(true));
 
-        assertThat(t.getShares(), is(10000000L));
+        assertThat(t.getShares(), is(Values.Share.factorize(10)));
         assertThat(item.hasProposedShares(), is(true));
     }
 
