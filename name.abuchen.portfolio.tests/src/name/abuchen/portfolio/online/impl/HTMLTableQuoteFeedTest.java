@@ -5,7 +5,6 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Collections;
@@ -15,6 +14,7 @@ import java.util.Scanner;
 
 import org.junit.Test;
 
+import name.abuchen.portfolio.TestUtilities;
 import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
@@ -69,7 +69,7 @@ public class HTMLTableQuoteFeedTest
     {
         HTMLTableQuoteFeed feed = new HTMLTableQuoteFeed();
 
-        String html = read("HTMLTableQuoteFeedHistoricalSample.html");
+        String html = TestUtilities.read(getClass(), "HTMLTableQuoteFeedHistoricalSample.html");
 
         FeedData data = feed.getHistoricalQuotes(html);
 
@@ -120,13 +120,4 @@ public class HTMLTableQuoteFeedTest
         assertThat(price.getHigh(), is(high));
         assertThat(price.getLow(), is(low));
     }
-
-    private String read(String resourceName)
-    {
-        try (Scanner scanner = new Scanner(getClass().getResourceAsStream(resourceName), StandardCharsets.UTF_8.name()))
-        {
-            return scanner.useDelimiter("\\A").next(); //$NON-NLS-1$
-        }
-    }
-
 }
