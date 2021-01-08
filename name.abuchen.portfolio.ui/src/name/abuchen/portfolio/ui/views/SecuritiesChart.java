@@ -240,6 +240,8 @@ public class SecuritiesChart
         }
     }
 
+    // cmaoling edition: moved to ui.util/Colors:
+
     private static final String PREF_KEY = "security-chart-details"; //$NON-NLS-1$
 
     private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("d LLL"); //$NON-NLS-1$
