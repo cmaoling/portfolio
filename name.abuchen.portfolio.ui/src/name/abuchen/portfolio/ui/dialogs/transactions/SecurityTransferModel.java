@@ -24,8 +24,12 @@ import name.abuchen.portfolio.money.CurrencyConverterImpl;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.snapshot.ClientSnapshot;
 import name.abuchen.portfolio.snapshot.PortfolioSnapshot;
+import name.abuchen.portfolio.snapshot.security.SecurityPerformanceIndicator;
+import name.abuchen.portfolio.snapshot.security.SecurityPerformanceRecord;
+import name.abuchen.portfolio.snapshot.security.SecurityPerformanceSnapshot;
 import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.ui.Messages;
+import name.abuchen.portfolio.util.Interval;
 
 public class SecurityTransferModel extends AbstractModel
 {
@@ -231,18 +235,34 @@ public class SecurityTransferModel extends AbstractModel
             return null;
     }
 
+    private SecurityPerformanceRecord getRecord4Quote()
+    {
+        if (security != null)
+        {
+            CurrencyConverter converter = new CurrencyConverterImpl(getExchangeRateProviderFactory(),
+                            client.getBaseCurrency());
+            SecurityPerformanceSnapshot securityPerformanceSnapshot = SecurityPerformanceSnapshot.create(client, converter, Interval.of(LocalDate.MIN, date), SecurityPerformanceIndicator.Costs.class);
+            SecurityPerformanceRecord securityPerformanceRecord = securityPerformanceSnapshot.getRecord(security).orElseThrow(IllegalArgumentException::new);
+            return securityPerformanceRecord;
+        }
+        else
+            return null;
+    }
+
     public void updateQuote()
     {
         BigDecimal newQuote = (source == null ? BigDecimal.ZERO: getQuote());
         if (!quoteSuggestion.getSuggestion().equals(Suggestion.goodwill))
         {
             SecurityPosition position = getPosition4Quote();
-
             if (position != null)
             {
                 if (quoteSuggestion.getSuggestion().equals(Suggestion.purchase))
+                {
                     // purchase
-                    newQuote = new BigDecimal(position.getFIFOPurchasePrice().getAmount() / Values.Amount.divider());
+                    SecurityPerformanceRecord record = getRecord4Quote();
+                    newQuote = new BigDecimal(record.getInvestmentPerShare().getAmount() / Values.Amount.divider());
+                }
                 else
                     // market
                     newQuote = new BigDecimal(position.getPrice().getValue() / Values.Quote.divider());

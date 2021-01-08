@@ -162,6 +162,7 @@ public final class Colors
     public static final Color colorHigh = getColor(0, 102, 0);
     public static final Color colorLow = getColor(128, 0, 0);
     public static final Color colorFifoPurchasePrice = getColor(226, 122, 121);
+    public static final Color colorInvestmentPerShare = getColor(122, 226, 121);
     public static final Color colorMovingAveragePurchasePrice = getColor(150, 82, 81);
     public static final Color colorBollingerBands = getColor(201, 141, 68);
     public static final Color colorSMA1 = getColor(179, 107, 107); // #B36B6B

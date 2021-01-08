@@ -246,6 +246,7 @@ public class Messages extends NLS
     public static String ColumnProfitLossBaseCurrency;
     public static String ColumnPurchasePrice;
     public static String ColumnPurchasePrice_Description;
+    public static String ColumnPurchasePriceBaseCurrency;
     public static String ColumnPurchaseValue;
     public static String ColumnPurchaseValue_Description;
     public static String ColumnPurchaseValueBaseCurrency;
@@ -495,11 +496,14 @@ public class Messages extends NLS
     public static String LabelChartDetailChartDevelopment;
     public static String LabelChartDetailChartDevelopmentClosing;
     public static String LabelChartDetailChartDevelopmentClosingFIFO;
+    public static String LabelChartDetailChartDevelopmentClosingInvestment;
     public static String LabelChartDetailMarker;
     public static String LabelChartDetailMarkerDividends;
     public static String LabelChartDetailMarkerEvents;
     public static String LabelChartDetailMarkerHigh;
     public static String LabelChartDetailMarkerHighLow;
+    public static String LabelChartDetailMarkerInvestmentPerShare;
+    public static String LabelChartDetailMarkerInvestmentPerSharePeriod;
     public static String LabelChartDetailMarkerInvestments;
     public static String LabelChartDetailMarkerLow;
     public static String LabelChartDetailMarkerRights;

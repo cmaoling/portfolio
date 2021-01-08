@@ -61,10 +61,11 @@ import name.abuchen.portfolio.model.TransactionPair;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
-import name.abuchen.portfolio.snapshot.AssetPosition;
 import name.abuchen.portfolio.snapshot.ClientSnapshot;
 import name.abuchen.portfolio.snapshot.filter.ClientSecurityFilter;
 import name.abuchen.portfolio.snapshot.filter.ReadOnlyClient;
+import name.abuchen.portfolio.snapshot.security.SecurityPerformanceIndicator;
+import name.abuchen.portfolio.snapshot.security.SecurityPerformanceSnapshot;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.Colors;
@@ -126,6 +127,7 @@ public class SecuritiesChart
         SCALING_LOG(Messages.LabelChartDetailChartScalingLog), //
         CLOSING(Messages.LabelChartDetailChartDevelopmentClosing), //
         PURCHASEPRICE(Messages.LabelChartDetailChartDevelopmentClosingFIFO), //
+        CLOSINGINVESTMENT(Messages.LabelChartDetailChartDevelopmentClosingInvestment), //
         INVESTMENT(Messages.LabelChartDetailMarkerInvestments), //
         DIVIDENDS(Messages.LabelChartDetailMarkerDividends), //
         EVENTS(Messages.LabelChartDetailMarkerEvents), //
@@ -134,6 +136,7 @@ public class SecuritiesChart
         EXTREMES(Messages.LabelChartDetailMarkerHighLow), //
         FIFOPURCHASE(Messages.LabelChartDetailMarkerPurchaseFIFO), //
         FLOATINGAVGPURCHASE(Messages.LabelChartDetailMarkerPurchaseMovingAverage), //
+        INVESTMENTPERSHARE(Messages.LabelChartDetailMarkerInvestmentPerShare), //
         BOLLINGERBANDS(Messages.LabelChartDetailIndicatorBollingerBands), //
         SMA_5DAYS(Messages.LabelChartDetailMovingAverage_5days), //
         SMA_20DAYS(Messages.LabelChartDetailMovingAverage_20days), //
@@ -525,12 +528,14 @@ public class SecuritiesChart
         subMenuChartScaling.add(addMenuAction(ChartDetails.SCALING_LOG));
         subMenuChartDevelopment.add(addMenuAction(ChartDetails.CLOSING));
         subMenuChartDevelopment.add(addMenuAction(ChartDetails.PURCHASEPRICE));
+        subMenuChartDevelopment.add(addMenuAction(ChartDetails.CLOSINGINVESTMENT));
         subMenuChartMarker.add(addMenuAction(ChartDetails.INVESTMENT));
         subMenuChartMarker.add(addMenuAction(ChartDetails.DIVIDENDS));
         subMenuChartMarker.add(addMenuAction(ChartDetails.EVENTS));
         subMenuChartMarker.add(addMenuAction(ChartDetails.EXTREMES));
         subMenuChartMarker.add(addMenuAction(ChartDetails.FIFOPURCHASE));
         subMenuChartMarker.add(addMenuAction(ChartDetails.FLOATINGAVGPURCHASE));
+        subMenuChartMarker.add(addMenuAction(ChartDetails.INVESTMENTPERSHARE));
         subMenuChartIndicator.add(addMenuAction(ChartDetails.BOLLINGERBANDS));
         subMenuChartMovingAverageSMA.add(addMenuAction(ChartDetails.SMA_5DAYS));
         subMenuChartMovingAverageSMA.add(addMenuAction(ChartDetails.SMA_20DAYS));
@@ -582,13 +587,21 @@ public class SecuritiesChart
                         chartConfig.remove(ChartDetails.SCALING_LINEAR);
                         chartConfig.remove(ChartDetails.PURCHASEPRICE);
                         chartConfig.remove(ChartDetails.CLOSING);
+                        chartConfig.remove(ChartDetails.CLOSINGINVESTMENT);
                         break;
                     case CLOSING:
                         chartConfig.remove(ChartDetails.PURCHASEPRICE);
+                        chartConfig.remove(ChartDetails.CLOSINGINVESTMENT);
                         chartConfig.remove(ChartDetails.SCALING_LOG);
                         break;
                     case PURCHASEPRICE:
                         chartConfig.remove(ChartDetails.CLOSING);
+                        chartConfig.remove(ChartDetails.CLOSINGINVESTMENT);
+                        chartConfig.remove(ChartDetails.SCALING_LOG);
+                        break;
+                    case CLOSINGINVESTMENT:
+                        chartConfig.remove(ChartDetails.CLOSING);
+                        chartConfig.remove(ChartDetails.PURCHASEPRICE);
                         chartConfig.remove(ChartDetails.SCALING_LOG);
                         break;
                     default:
@@ -659,6 +672,7 @@ public class SecuritiesChart
             chart.getTitle().setText(security.getName());
 
             boolean showAreaRelativeToFirstQuote = chartConfig.contains(ChartDetails.CLOSING)
+                            || chartConfig.contains(ChartDetails.CLOSINGINVESTMENT)
                             || chartConfig.contains(ChartDetails.PURCHASEPRICE);
 
             // determine the interval to be shown in the chart
@@ -695,14 +709,19 @@ public class SecuritiesChart
             // performance issue in Drawing
             swtAntialias = range.size > 1000 ? SWT.OFF : SWT.ON;
 
-            if (!chartConfig.contains(ChartDetails.PURCHASEPRICE))
+            if (chartConfig.contains(ChartDetails.CLOSING))
             {
                 SecurityPrice p2 = prices.get(range.start);
                 firstQuote = (p2.getValue() / Values.Quote.divider());
             }
             else
             {
-                Optional<Double> purchasePrice = getLatestPurchasePrice();
+                Optional<Double> purchasePrice;
+                if (chartConfig.contains(ChartDetails.CLOSINGINVESTMENT))
+                    purchasePrice = getLatestInvestmentPerShare();
+                else
+                    // PURCHASEPRICE
+                    purchasePrice = getLatestPurchasePrice();
 
                 if (purchasePrice.isPresent())
                     firstQuote = purchasePrice.get();
@@ -876,6 +895,9 @@ public class SecuritiesChart
 
         if (chartConfig.contains(ChartDetails.FLOATINGAVGPURCHASE))
             addMovingAveragePurchasePrice(chartInterval);
+
+        if (chartConfig.contains(ChartDetails.INVESTMENTPERSHARE))
+            addInvestmentPerShare(chartInterval);
 
         if (chartConfig.contains(ChartDetails.INVESTMENT))
             addInvestmentMarkerLines(chartInterval);
@@ -1468,6 +1490,97 @@ public class SecuritiesChart
                         seriesCounter == 0);
     }
 
+    private void addInvestmentPerShare(ChartInterval chartInterval)
+    {
+        // securities w/o currency (e.g. index) cannot be bought and hence have
+        // no purchase price
+        if (security.getCurrencyCode() == null)
+            return;
+
+        // create a list of dates that are relevant for invested price calculation
+
+        Client filteredClient = new ClientSecurityFilter(security).filter(client);
+        CurrencyConverter securityCurrency = converter.with(security.getCurrencyCode());
+
+        List<LocalDate> candidates = client.getPortfolios().stream() //
+                        .flatMap(p -> p.getTransactions().stream()) //
+                        .filter(t -> t.getSecurity().equals(security))
+                        .filter(t -> !(t.getType() == PortfolioTransaction.Type.TRANSFER_IN
+                                        || t.getType() == PortfolioTransaction.Type.TRANSFER_OUT))
+                        .filter(t -> !t.getDateTime().toLocalDate().isAfter(chartInterval.getEnd()))
+                        .map(t -> chartInterval.contains(t.getDateTime()) ? t.getDateTime().toLocalDate()
+                                        : chartInterval.getStart())
+                        .distinct() //
+                        .sorted() //
+                        .collect(Collectors.toList());
+
+        // calculate invested price per share for each event - separate
+        // lineSeries
+        // per holding period
+
+        List<Double> values = new ArrayList<>();
+        List<LocalDate> dates = new ArrayList<>();
+        int seriesCounter = 0;
+
+        for (LocalDate eventDate : candidates)
+        {
+            Optional<Double> investmentPerShare = getInvestmentPerShare(filteredClient, securityCurrency, eventDate);
+
+            if (investmentPerShare.isPresent())
+            {
+                dates.add(eventDate);
+                values.add(investmentPerShare.get());
+            }
+            else
+            {
+                if (!dates.isEmpty())
+                {
+                    // add previous value if the data series ends here (no more
+                    // future events)
+
+                    dates.add(eventDate);
+                    values.add(values.get(values.size() - 1));
+
+                    createInvestmentPerShareLineSeries(values, dates, seriesCounter++);
+
+                    values.clear();
+                    dates.clear();
+                }
+                else if (dates.isEmpty())
+                {
+                    // if no holding period exists, then do not add the event at
+                    // all
+                }
+            }
+        }
+
+        // add today if needed
+
+        getInvestmentPerShare(filteredClient, securityCurrency, chartInterval.getEnd()).ifPresent(price -> {
+            dates.add(chartInterval.getEnd());
+            values.add(price);
+        });
+        if (!dates.isEmpty())
+            createInvestmentPerShareLineSeries(values, dates, seriesCounter);
+    }
+
+    private void createInvestmentPerShareLineSeries(List<Double> values, List<LocalDate> dates, int seriesCounter)
+    {
+        String label = seriesCounter == 0 ? Messages.LabelChartDetailMarkerInvestmentPerShare
+                        : MessageFormat.format(Messages.LabelChartDetailMarkerInvestmentPerSharePeriod,
+                                        seriesCounter + 1);
+
+        ILineSeries series = (ILineSeries) chart.getSeriesSet().createSeries(SeriesType.LINE, label);
+
+        series.setSymbolType(PlotSymbolType.NONE);
+        series.setYAxisId(0);
+        series.enableStep(true);
+
+        configureSeriesPainter(series, TimelineChart.toJavaUtilDate(dates.toArray(new LocalDate[0])),
+                        Doubles.toArray(values), Colors.colorInvestmentPerShare, 2, LineStyle.SOLID, false,
+                        seriesCounter == 0);
+    }
+
     private Optional<Double> getLatestPurchasePrice()
     {
         // securities w/o currency (e.g. index) cannot be bought and hence have
@@ -1479,34 +1592,49 @@ public class SecuritiesChart
                         converter.with(security.getCurrencyCode()), LocalDate.now());
     }
 
+    private Optional<Double> getLatestInvestmentPerShare()
+    {
+        // securities w/o currency (e.g. index) cannot be bought and hence have
+        // no purchase price
+        if (security.getCurrencyCode() == null)
+            return Optional.empty();
+
+        return getInvestmentPerShare(new ClientSecurityFilter(security).filter(client),
+                        converter.with(security.getCurrencyCode()), LocalDate.now());
+    }
+
     private Optional<Double> getPurchasePrice(Client filteredClient, CurrencyConverter currencyConverter,
                     LocalDate date)
     {
-        ClientSnapshot snapshot = ClientSnapshot.create(filteredClient, currencyConverter, date);
-        AssetPosition position = snapshot.getPositionsByVehicle().get(security);
-        if (position == null)
-            return Optional.empty();
-
-        Money purchasePrice = position.getPosition().getFIFOPurchasePrice();
-        if (!purchasePrice.isZero())
-            return Optional.of(purchasePrice.getAmount() / Values.Amount.divider());
-        else
-            return Optional.empty();
+        return SecurityPerformanceSnapshot
+                        .create(filteredClient, currencyConverter, Interval.of(LocalDate.MIN, date),
+                                        SecurityPerformanceIndicator.Costs.class)
+                        .getRecord(security) //
+                        .filter(r -> !r.getFifoCostPerSharesHeld().isZero()) //
+                        .map(r -> r.getFifoCostPerSharesHeld().getAmount() / Values.Quote.divider());
     }
 
     private Optional<Double> getMovingAveragePurchasePrice(Client filteredClient, CurrencyConverter currencyConverter,
                     LocalDate date)
     {
-        ClientSnapshot snapshot = ClientSnapshot.create(filteredClient, currencyConverter, date);
-        AssetPosition position = snapshot.getPositionsByVehicle().get(security);
-        if (position == null)
-            return Optional.empty();
+        return SecurityPerformanceSnapshot
+                        .create(filteredClient, currencyConverter, Interval.of(LocalDate.MIN, date),
+                                        SecurityPerformanceIndicator.Costs.class)
+                        .getRecord(security) //
+                        .filter(r -> !r.getFifoCostPerSharesHeld().isZero()) //
+                        .map(r -> r.getMovingAverageCostPerSharesHeld().getAmount() / Values.Quote.divider());
+    }
 
-        Money purchasePrice = position.getPosition().getMovingAveragePurchasePrice();
-        if (!purchasePrice.isZero())
-            return Optional.of(purchasePrice.getAmount() / Values.Amount.divider());
-        else
-            return Optional.empty();
+    private Optional<Double> getInvestmentPerShare(Client filteredClient, CurrencyConverter currencyConverter,
+                    LocalDate date)
+    {
+
+        return SecurityPerformanceSnapshot
+                        .create(filteredClient, currencyConverter, Interval.of(LocalDate.MIN, date),
+                                        SecurityPerformanceIndicator.Costs.class)
+                        .getRecord(security) //
+                        .filter(r -> !r.getFifoCostPerSharesHeld().isZero()) //
+                        .map(r -> r.getInvestmentPerShare().getAmount() / Values.Money.divider());
     }
 
 }

@@ -37,6 +37,8 @@ import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.snapshot.PortfolioSnapshot;
 import name.abuchen.portfolio.ui.Dimensions;
+import name.abuchen.portfolio.snapshot.filter.ClientFilter;
+import name.abuchen.portfolio.snapshot.filter.PortfolioClientFilter;
 import name.abuchen.portfolio.ui.Images;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.handlers.ImportPDFHandler;
@@ -280,13 +282,16 @@ public class PortfolioListView extends AbstractListView implements ModificationL
                 transactions.refresh();
                 CurrencyConverter converter = new CurrencyConverterImpl(factory,
                                 portfolio.getReferenceAccount().getCurrencyCode());
-                statementOfAssets.setInput(PortfolioSnapshot.create(portfolio, converter, LocalDate.now()));
+
+                ClientFilter clientFilter = new PortfolioClientFilter(portfolio);
+
+                statementOfAssets.setInput(clientFilter, LocalDate.now(), converter);
             }
             else
             {
                 transactions.setInput(null);
                 transactions.refresh();
-                statementOfAssets.setInput((PortfolioSnapshot) null);
+                statementOfAssets.setInput(null, null, null);
             }
         });
 

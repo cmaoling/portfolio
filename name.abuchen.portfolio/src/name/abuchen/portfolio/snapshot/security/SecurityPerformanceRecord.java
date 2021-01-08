@@ -171,6 +171,11 @@ public final class SecurityPerformanceRecord implements Adaptable, TrailProvider
     private Quote fifoCostPerSharesHeld;
 
     /**
+     * investment per shares held (might me negative) {@link #calculateFifoAndMovingAverageCosts()}
+     */
+    private Money investmentPerShare;
+
+    /**
      * cost per shares held {@link #calculateFifoAndMovingAverageCosts()}
      */
     private Quote movingAverageCostPerSharesHeld;
@@ -306,6 +311,11 @@ public final class SecurityPerformanceRecord implements Adaptable, TrailProvider
     public Money getFifoCost()
     {
         return fifoCost;
+    }
+
+    public Money getInvestmentPerShare()
+    {
+        return investmentPerShare;
     }
 
     @Override
@@ -548,6 +558,7 @@ public final class SecurityPerformanceRecord implements Adaptable, TrailProvider
         this.fifoCost = cost.getFifoCost();
         this.fifoCostTrail = cost.getFifoCostTrail();
         this.movingAverageCost = cost.getMovingAverageCost();
+        this.investmentPerShare = cost.getInvestmentPerShare();
 
         Money netFifoCost = cost.getNetFifoCost();
         this.fifoCostPerSharesHeld = Quote.of(netFifoCost.getCurrencyCode(), Math.round(netFifoCost.getAmount()

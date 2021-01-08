@@ -56,6 +56,11 @@ import name.abuchen.portfolio.snapshot.trail.TrailRecord;
     private long fees;
     private long taxes;
 
+    private long grossInvestment = 0;
+    private long netInvestment = 0;
+    private long sharesBought = 0;
+    private long sharesSold = 0;
+
     @Override
     public void visit(CurrencyConverter converter, CalculationLineItem.ValuationAtStart item)
     {
@@ -84,14 +89,13 @@ import name.abuchen.portfolio.snapshot.trail.TrailRecord;
         long tax = t.getUnitSum(Unit.Type.TAX, converter).getAmount();
         fees += fee;
         taxes += tax;
+        long grossAmount = t.getMonetaryAmount(converter).getAmount();
+        long netAmount = t.getGrossValue(converter).getAmount();
 
         switch (t.getType())
         {
             case BUY:
             case DELIVERY_INBOUND:
-                long grossAmount = t.getMonetaryAmount(converter).getAmount();
-                long netAmount = t.getGrossValue(converter).getAmount();
-
                 TrailRecord trail = TrailRecord.ofTransaction(t);
                 if (!getTermCurrency().equals(t.getCurrencyCode()))
                     trail = trail.convert(Money.of(getTermCurrency(), grossAmount),
@@ -101,12 +105,18 @@ import name.abuchen.portfolio.snapshot.trail.TrailRecord;
                 movingRelativeCost += grossAmount;
                 movingRelativeNetCost += netAmount;
                 heldShares += t.getShares();
+                grossInvestment += grossAmount;
+                netInvestment += netAmount;
+                sharesBought += t.getShares();
                 break;
 
             case SELL:
             case DELIVERY_OUTBOUND:
                 long sold = t.getShares();
 
+                grossInvestment -= grossAmount;
+                netInvestment -= netAmount;
+                sharesSold += sold;
                 long remaining = heldShares - sold;
                 if (remaining <= 0)
                 {
@@ -294,6 +304,23 @@ import name.abuchen.portfolio.snapshot.trail.TrailRecord;
     public Money getNetMovingAverageCost()
     {
         return Money.of(getTermCurrency(), movingRelativeNetCost);
+    }
+
+    /**
+     * gross investment
+     */
+    public Money getInvestmentPerShare()
+    {
+        return Money.of(getTermCurrency(), (sharesBought - sharesSold) > 0 ?
+                        Math.round((netInvestment * Values.Share.factor()) / (double) (sharesBought - sharesSold)) : 0);
+    }
+
+    /**
+     * gross investment
+     */
+    public Money getGrossInvestment()
+    {
+        return Money.of(getTermCurrency(), grossInvestment);
     }
 
     private long getSharesHeld()
