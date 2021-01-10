@@ -479,6 +479,7 @@ public class Messages extends NLS
     public static String LabelAccumulatedTaxes;
     public static String LabelAggregation;
     public static String LabelAggregationDaily;
+    public static String LabelAllCurrencies;
     public static String LabelAllFiles;
     public static String LabelAllSecurities;
     public static String LabelAllTrades;
@@ -857,6 +858,7 @@ public class Messages extends NLS
     public static String MsgDeletionNotPossibleDetail;
     public static String MsgDialogInputRequired;
     public static String MsgDialogNotAValidIBAN;
+    public static String MsgDialogNotAValidCurrency;
     public static String MsgDialogNotAValidISIN;
     public static String MsgEmbeddedBrowserError;
     public static String MsgErrorConvertedAmount;
