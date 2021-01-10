@@ -41,6 +41,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
+import com.google.common.base.Strings;
+
 import name.abuchen.portfolio.model.Classification;
 import name.abuchen.portfolio.model.Classification.Assignment;
 import name.abuchen.portfolio.model.InvestmentVehicle;
@@ -74,6 +76,7 @@ import name.abuchen.portfolio.ui.views.columns.IsinColumn;
 import name.abuchen.portfolio.ui.views.columns.NameColumn;
 import name.abuchen.portfolio.ui.views.columns.NameColumn.NameColumnLabelProvider;
 import name.abuchen.portfolio.ui.views.columns.NoteColumn;
+import name.abuchen.portfolio.util.TextUtil;
 
 /* package */abstract class AbstractNodeTreeViewer extends Page implements ModificationListener
 {
@@ -423,6 +426,21 @@ import name.abuchen.portfolio.ui.views.columns.NoteColumn;
                     return Images.UNASSIGNED_CATEGORY.image();
                 return super.getImage(e);
             }
+
+            @Override
+            public String getToolTipText(Object e)
+            {
+                TaxonomyNode node = (TaxonomyNode) e;
+
+                if (!node.isClassification())
+                    return super.getToolTipText(e);
+
+                String note = node.getClassification().getNote();
+
+                return Strings.isNullOrEmpty(note) ? super.getToolTipText(e)
+                                : TextUtil.wordwrap(node.getName() + "\n\n" + note); //$NON-NLS-1$
+            }
+
         });
         new StringEditingSupport(Named.class, "name") //$NON-NLS-1$
         {
