@@ -296,6 +296,7 @@ public class YahooFinanceQuoteFeed implements QuoteFeed
 
         FeedData data = new FeedData();
         data.getLatestPrices().addAll(answer);
+        data.addResponse("n/a", responseBody); //$NON-NLS-1$
         return data;
     }
 
