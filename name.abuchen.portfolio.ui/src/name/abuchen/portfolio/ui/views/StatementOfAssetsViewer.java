@@ -55,6 +55,7 @@ import name.abuchen.portfolio.model.Classification;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.InvestmentVehicle;
 import name.abuchen.portfolio.model.Named;
+import name.abuchen.portfolio.model.Portfolio;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Taxonomy;
 import name.abuchen.portfolio.money.CurrencyConverter;
@@ -71,6 +72,7 @@ import name.abuchen.portfolio.snapshot.PortfolioSnapshot;
 import name.abuchen.portfolio.snapshot.ReportingPeriod;
 import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.snapshot.filter.ClientFilter;
+import name.abuchen.portfolio.snapshot.filter.ReadOnlyPortfolio;
 import name.abuchen.portfolio.snapshot.security.SecurityPerformanceIndicator;
 import name.abuchen.portfolio.snapshot.security.SecurityPerformanceRecord;
 import name.abuchen.portfolio.snapshot.security.SecurityPerformanceSnapshot;
@@ -900,7 +902,11 @@ public class StatementOfAssetsViewer
         }
         else if (element.isSecurity())
         {
-            new SecurityContextMenu(view).menuAboutToShow(manager, element.getSecurity(), null);
+            Portfolio reference = null;
+            if (model.filteredClient.getPortfolios().size() == 1)
+                reference = ReadOnlyPortfolio.unwrap(model.filteredClient.getPortfolios().get(0));
+
+            new SecurityContextMenu(view).menuAboutToShow(manager, element.getSecurity(), reference);
         }
     }
 
