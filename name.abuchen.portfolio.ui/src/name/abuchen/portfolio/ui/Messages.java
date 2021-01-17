@@ -1007,7 +1007,7 @@ public class Messages extends NLS
     public static String SecurityMenuCreateQuotesFromTransactions;
     public static String SecurityMenuDebugGetHistoricalQuotes;
     public static String SecurityMenuDeleteAllPrices;
-    public static String SecurityMenuDeleteLatest;
+    public static String SecurityMenuDeleteLatestQuote;
     public static String SecurityMenuDeletePrice;
     public static String SecurityMenuDeleteSecurity;
     public static String SecurityMenuDividendCharge;
@@ -1015,6 +1015,7 @@ public class Messages extends NLS
     public static String SecurityMenuDeleteMultipleSecurityConfirm;
     public static String SecurityMenuDividends;
     public static String SecurityMenuEditSecurity;
+    public static String SecurityMenuErrorMessageRoundingMustBeBetween0AndX;
     public static String SecurityMenuExportCSV;
     public static String SecurityMenuHideSecurity;
     public static String SecurityMenuImportCSV;
@@ -1024,10 +1025,12 @@ public class Messages extends NLS
     public static String SecurityMenuNewSecurity;
     public static String SecurityMenuQuotes;
     public static String SecurityMenuRemoveFromWatchlist;
+    public static String SecurityMenuRoundToXDecimalPlaces;
     public static String SecurityMenuSearch4Securities;
     public static String SecurityMenuSell;
     public static String SecurityMenuStockSplit;
     public static String SecurityMenuAddEvent;
+    public static String SecurityMenuLabelNumberOfDecimalPlaces;
     public static String SecurityMenuTransfer;
     public static String SecurityMenuUpdateEvents;
     public static String SecurityMenuUpdateQuotes;
