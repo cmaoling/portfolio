@@ -101,6 +101,7 @@ abstract class HTMLTableParser
                             DateTimeFormatter.ofPattern("MMM d, y", Locale.ENGLISH), //$NON-NLS-1$
                             DateTimeFormatter.ofPattern("MMM dd, y", Locale.ENGLISH), //$NON-NLS-1$
                             DateTimeFormatter.ofPattern("MMM dd y", Locale.ENGLISH), //$NON-NLS-1$
+                            DateTimeFormatter.ofPattern("d MMM y", Locale.ENGLISH), //$NON-NLS-1$
                             DateTimeFormatter.ofPattern("EEEE, MMMM dd, yEEE, MMM dd, y", Locale.ENGLISH) //$NON-NLS-1$
             };
         }
@@ -367,6 +368,20 @@ abstract class HTMLTableParser
         for (int ii = 0; ii < row.size(); ii++)
         {
             Element element = row.get(ii);
+
+            if (element.hasAttr("colspan")) //$NON-NLS-1$
+            {
+                int colspan = Integer.valueOf(element.attr("colspan")); //$NON-NLS-1$
+                // remove attribute
+                element.removeAttr("colspan"); //$NON-NLS-1$
+
+                // add copies of this column to the header to align header with
+                // columns in table
+                for (int c = 1; c < colspan; c++)
+                {
+                    row.add(ii, element);
+                }
+            }
 
             for (Column column : available)
             {
