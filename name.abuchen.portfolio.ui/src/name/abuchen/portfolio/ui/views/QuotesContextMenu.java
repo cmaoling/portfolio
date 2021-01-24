@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.FileDialog;
 
 import name.abuchen.portfolio.datatransfer.csv.CSVExporter;
 import name.abuchen.portfolio.model.Security;
+import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.money.CurrencyConverter;
 import name.abuchen.portfolio.money.CurrencyConverterImpl;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
@@ -227,8 +228,8 @@ public class QuotesContextMenu
 
         if (security.getLatest() != null)
         {
-            manager.add(new SimpleAction("Delete Latest Quote", a -> {
-                security.setLatest(null);
+            manager.add(new SimpleAction(Messages.SecurityMenuDeleteLatest, a -> {
+                security.setLatest((LatestSecurityPrice) null);
                 owner.markDirty();
                 owner.notifyModelUpdated();
             }));
