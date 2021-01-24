@@ -21,6 +21,7 @@ public class PreferencesInitializer extends AbstractPreferenceInitializer
         store.setDefault(UIConstants.Preferences.AUTOSAVE_PERIOD, 0);
         store.setDefault(UIConstants.Preferences.AUTOSAVE_WITH_DATESTAMP, false);
         store.setDefault(UIConstants.Preferences.FORMAT_SHARES_DIGITS, 5);
+        store.setDefault(UIConstants.Preferences.FORMAT_CALCULATED_QUOTE_DIGITS, 2);
         store.setDefault(UIConstants.Preferences.USE_INDIRECT_QUOTATION, true);
         store.setDefault(UIConstants.Preferences.CREATE_BACKUP_BEFORE_SAVING, true);
         store.setDefault(UIConstants.Preferences.UPDATE_QUOTES_AFTER_FILE_OPEN, true);

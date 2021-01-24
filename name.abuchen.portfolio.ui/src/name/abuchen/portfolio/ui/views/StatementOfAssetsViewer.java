@@ -1330,7 +1330,7 @@ public class StatementOfAssetsViewer
             if (value instanceof Money)
                 return Values.Money.format((Money) value, client.getBaseCurrency());
             else if (value instanceof Quote)
-                return Values.Money.format(((Quote) value).toMoney(), client.getBaseCurrency());
+                return Values.CalculatedQuote.format((Quote) value, client.getBaseCurrency());
             else if (value instanceof Double)
                 return Values.Percent2.format((Double) value);
 
