@@ -20,10 +20,10 @@ import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.SecurityPrice;
 import name.abuchen.portfolio.online.QuoteFeed;
-import name.abuchen.portfolio.online.QuoteFeedData;
+import name.abuchen.portfolio.online.FeedData;
 import name.abuchen.portfolio.util.WebAccess;
 
-public final class BinanceQuoteFeed implements QuoteFeed 
+public final class BinanceQuoteFeed implements QuoteFeed
 {
     public static final String ID = "BINANCE"; //$NON-NLS-1$
 
@@ -44,7 +44,7 @@ public final class BinanceQuoteFeed implements QuoteFeed
     @Override
     public Optional<LatestSecurityPrice> getLatestQuote(Security security)
     {
-        QuoteFeedData data = getHistoricalQuotes(security, false, LocalDate.now());
+        FeedData data = getHistoricalQuotes(security, false, LocalDate.now());
 
         if (!data.getErrors().isEmpty())
             PortfolioLog.error(data.getErrors());
@@ -60,7 +60,7 @@ public final class BinanceQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
+    public FeedData getHistoricalQuotes(Security security, boolean collectRawResponse)
     {
         LocalDate quoteStartDate = LocalDate.MIN;
 
@@ -71,13 +71,13 @@ public final class BinanceQuoteFeed implements QuoteFeed
     }
 
     @Override
-    public QuoteFeedData previewHistoricalQuotes(Security security)
+    public FeedData previewHistoricalQuotes(Security security)
     {
         return getHistoricalQuotes(security, true, LocalDate.now().minusMonths(2));
     }
 
     @SuppressWarnings("unchecked")
-    private void convertBinanceJsonArray(JSONArray ohlcArray, QuoteFeedData data)
+    private void convertBinanceJsonArray(JSONArray ohlcArray, FeedData data)
     {
         if (ohlcArray.isEmpty())
             return;
@@ -134,24 +134,23 @@ public final class BinanceQuoteFeed implements QuoteFeed
         return price;
     }
 
-    private QuoteFeedData getHistoricalQuotes(Security security, boolean collectRawResponse, LocalDate start)
+    private FeedData getHistoricalQuotes(Security security, boolean collectRawResponse, LocalDate start)
     {
         if (security.getTickerSymbol() == null)
-            return QuoteFeedData.withError(
+            return FeedData.withError(
                             new IOException(MessageFormat.format(Messages.MsgMissingTickerSymbol, security.getName())));
 
-        QuoteFeedData data = new QuoteFeedData();
+        FeedData data = new FeedData();
 
         final Long tickerStartEpochMilliSeconds = start.atStartOfDay(ZoneOffset.UTC).toEpochSecond() * 1000;
 
         try
         {
-            String path = "/api/v3/klines"; //$NON-NLS-1$
-            WebAccess webaccess = new WebAccess("api.binance.com", path) 
-                    // Ticker: BTCUSD, IOTUSD, ...
-                    .addParameter("symbol", security.getTickerSymbol()) 
-                    .addParameter("interval", "1d")
-                    .addParameter("startTime", tickerStartEpochMilliSeconds.toString());
+            WebAccess webaccess = new WebAccess("api.binance.com", "/api/v3/klines") //$NON-NLS-1$ //$NON-NLS-2$
+                            // Ticker: BTCEUR, BTCUSDT, ...
+                            .addParameter("symbol", security.getTickerSymbol()) //$NON-NLS-1$
+                            .addParameter("interval", "1d") //$NON-NLS-1$ //$NON-NLS-2$
+                            .addParameter("startTime", tickerStartEpochMilliSeconds.toString()); //$NON-NLS-1$
             String html = webaccess.get();
 
             if (collectRawResponse)
