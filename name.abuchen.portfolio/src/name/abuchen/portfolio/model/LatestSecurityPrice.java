@@ -17,6 +17,8 @@ public class LatestSecurityPrice extends SecurityPrice
     // cmaoling: combine ExtractedPrice from name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java into LatestSecurityPrice
     private LocalTime time;
 
+    public static final long NOT_AVAILABLE = -1L;
+
     public LatestSecurityPrice()
     {
     }
