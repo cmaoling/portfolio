@@ -78,7 +78,7 @@ public class direkt1822bankPDFExtractorTest
 
         List<Exception> errors = new ArrayList<>();
 
-        List<Item> results = extractor.extract(PDFInputFile.loadTestCase(getClass(), "Ausschüttung01.txt"),
+        List<Item> results = extractor.extract(PDFInputFile.loadTestCase(getClass(), "Ausschuettung01.txt"),
                         errors);
 
         assertThat(errors, empty());
@@ -118,7 +118,7 @@ public class direkt1822bankPDFExtractorTest
 
         List<Exception> errors = new ArrayList<>();
 
-        List<Item> results = extractor.extract(PDFInputFile.loadTestCase(getClass(), "Ausschüttung02.txt"),
+        List<Item> results = extractor.extract(PDFInputFile.loadTestCase(getClass(), "Ausschuettung02.txt"),
                         errors);
 
         assertThat(errors, empty());
@@ -158,7 +158,7 @@ public class direkt1822bankPDFExtractorTest
 
         List<Exception> errors = new ArrayList<>();
 
-        List<Item> results = extractor.extract(PDFInputFile.loadTestCase(getClass(), "Ausschüttung03.txt"),
+        List<Item> results = extractor.extract(PDFInputFile.loadTestCase(getClass(), "Ausschuettung03.txt"),
                         errors);
 
         assertThat(errors, empty());
