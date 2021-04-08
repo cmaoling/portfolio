@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.StringJoiner;
 
 import name.abuchen.portfolio.Messages;
@@ -69,6 +70,9 @@ import name.abuchen.portfolio.money.Money;
         fields.add(new Field(Messages.CSVColumn_AccountName2nd).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_PortfolioName).setOptional(true));
 
+        fields.add(new AmountField(Messages.CSVColumn_GrossAmount).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_CurrencyGrossAmount).setOptional(true));
+        fields.add(new AmountField(Messages.CSVColumn_ExchangeRate).setOptional(true));
         return fields;
     }
 
@@ -93,6 +97,8 @@ import name.abuchen.portfolio.money.Money;
         Long shares = getShares(Messages.CSVColumn_Shares, rawValues, field2column);
         Long taxes = getAmount(Messages.CSVColumn_Taxes, rawValues, field2column);
         Long fees = getAmount(Messages.CSVColumn_Fees, rawValues, field2column);
+
+        Optional<Unit> grossAmount = extractGrossAmount(rawValues, field2column, amount);
 
         Account account = getAccount(getClient(), rawValues, field2column);
         Account account2nd = getAccount(getClient(), rawValues, field2column, true);
@@ -214,9 +220,20 @@ import name.abuchen.portfolio.money.Money;
                 if (dividendType && taxes != null && taxes.longValue() != 0)
                     t.addUnit(new Unit(Unit.Type.TAX, Money.of(t.getCurrencyCode(), Math.abs(taxes))));
 
+                if (dividendType && fees != null && fees.longValue() != 0)
+                    t.addUnit(new Unit(Unit.Type.FEE, Money.of(t.getCurrencyCode(), Math.abs(fees))));
+
                 t.setNote(note);
                 if ((type == Type.DEPOSIT || type == Type.REMOVAL) && peer != null)
                     t.setPeer(peer);
+
+                if (security != null && grossAmount.isPresent())
+                {
+                    // gross amount can only be relevant if a transaction is
+                    // linked to a security (dividend, taxes, fees, and refunds)
+
+                    t.addUnit(grossAmount.get());
+                }
 
                 item = new TransactionItem(t);
                 break;

@@ -665,6 +665,10 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
             List<Field> fields = new ArrayList<Field>();
             fields.add(EMPTY);
             fields.addAll(definition.getFields());
+//            List<Field> fields = new ArrayList<>();
+//            fields.addAll(importer.getExtractor().getFields());
+            Collections.sort(fields, (r, l) -> r.getName().compareTo(l.getName()));
+  //          fields.add(0, EMPTY);
             mappedTo.setInput(fields);
 
             final Composite details = new Composite(composite, SWT.NONE);
