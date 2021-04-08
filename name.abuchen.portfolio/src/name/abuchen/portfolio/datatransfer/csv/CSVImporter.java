@@ -917,7 +917,7 @@ public class CSVImporter
         for (Column column : columns)
         {
             column.setField(null);
-            String normalizedColumnName = normalizeColumnName(column.getLabel());
+            String normalizedColumnName = normalizeColumnName(TextUtil.strip(column.getLabel()));
             Iterator<Field> iter = list.iterator();
             while (iter.hasNext())
             {
