@@ -33,5 +33,9 @@ public class GeneralPreferencePage extends FieldEditorPreferencePage
 
         createNoteComposite(getFieldEditorParent().getFont(), getFieldEditorParent(), //
                         Messages.PrefLabelNote, Messages.PrefNoteStoreSettingsNextToFile);
+
+        addField(new BooleanFieldEditor(UIConstants.Preferences.ENABLE_EXPERIMENTAL_FEATURES, //
+                        Messages.PrefLabelEnableExperimentalFeatures, getFieldEditorParent()));
+
     }
 }
