@@ -786,6 +786,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
 
         allEntries.addAll(entries);
         tableViewer.setInput(allEntries);
+        extractionErrors.clear();
         extractionErrors.addAll(errors);
         errorTableViewer.setInput(extractionErrors);
 

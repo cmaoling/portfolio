@@ -640,6 +640,8 @@ public class CSVImporter
     private final File inputFile;
     private final List<CSVExtractor> extractors;
 
+    private boolean remap = true;
+
     private CSVExtractor currentExtractor;
 
     private char delimiter = TextUtil.getListSeparatorChar();
@@ -676,6 +678,11 @@ public class CSVImporter
         this.converters.add(new AmazonPDFConverter(client));
     }
 
+    public void doRemap()
+    {
+        remap = true;
+    }
+
     public Client getClient()
     {
         return client;
@@ -698,9 +705,13 @@ public class CSVImporter
 
     public void setExtractor(CSVExtractor extractor)
     {
-        this.currentExtractor = extractor;
-        this.skipLines = extractor.getDefaultSkipLines();
-        this.setEncoding(Charset.forName(extractor.getDefaultEncoding()));
+        if (this.currentExtractor == null || !(this.currentExtractor.equals(extractor)))
+        {
+            doRemap();
+            this.currentExtractor = extractor;
+            this.skipLines = extractor.getDefaultSkipLines();
+            this.setEncoding(Charset.forName(extractor.getDefaultEncoding()));
+        }
     }
 
     public CSVExtractor setExtractor(String className)
@@ -847,6 +858,7 @@ public class CSVImporter
 
     public void processFile(boolean remap) throws IOException
     {
+        remap = this.remap && remap;
         byte[] utext = inputFile.toString().getBytes(StandardCharsets.UTF_8);
         String iFileStr = new String(utext, StandardCharsets.ISO_8859_1);
         Path iPath = Paths.get(URI.create("file://" + iFileStr)); //$NON-NLS-1$
@@ -948,8 +960,8 @@ public class CSVImporter
         for (Column column : getColumns())
             if (column.getField() != null)
                 field2column.put(column.getField().getName(), column);
-
         int startingLineNo = skipLines + (header.getHeaderType().equals(Header.Type.FIRST) ? 1 : 0);
+        this.remap = false;
         return currentExtractor.extract(startingLineNo, values, field2column, errors);
     }
 

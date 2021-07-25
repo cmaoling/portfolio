@@ -23,6 +23,8 @@ public class Dimensions
     public static int CapitalGainsPercentColumnWidth               = Dimensions.PercentageColumnWidth;
     public static int CSVImportDataHeight                          = 800;
     public static int CSVImportDataWidth                           = 500;
+    public static int CSVImportTypeNameWidth                       = 200;
+    public static int CSVImportTypePatternWidth                    = 400;
     public static int CurrencyColumnWidth                          =  40;
     public static int CurrencyProviderColumnWidth                  = 160;
     public static int DateColumnAlignment                          = SWT.LEFT;

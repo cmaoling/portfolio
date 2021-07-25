@@ -400,7 +400,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
     private void onSkipLinesChanged(int linesToSkip)
     {
         importer.setSkipLines(linesToSkip);
-        doProcessFile();
+        doProcessFile(false);
     }
 
     private void onColumnSelected(int columnIndex)
@@ -705,7 +705,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
 
             TableViewerColumn col = new TableViewerColumn(tableViewer, SWT.NONE);
             col.getColumn().setText(Messages.CSVImportLabelExpectedValue);
-            col.getColumn().setWidth(100);
+            col.getColumn().setWidth(Dimensions.CSVImportTypeNameWidth);
             col.setLabelProvider(new ColumnLabelProvider()
             {
                 @Override
@@ -717,7 +717,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
 
             col = new TableViewerColumn(tableViewer, SWT.NONE);
             col.getColumn().setText(Messages.CSVImportLabelProvidedValue);
-            col.getColumn().setWidth(100);
+            col.getColumn().setWidth(Dimensions.CSVImportTypePatternWidth);
             col.setLabelProvider(new ColumnLabelProvider()
             {
                 @Override
