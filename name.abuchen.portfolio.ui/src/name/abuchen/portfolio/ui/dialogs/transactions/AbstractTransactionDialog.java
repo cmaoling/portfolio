@@ -435,7 +435,7 @@ public abstract class AbstractTransactionDialog extends TitleAreaDialog
             new Exception().printStackTrace(System.err);
 
             IObservableValue<String> targetObservable = WidgetProperties.text(SWT.Modify).observe(value);
-            IObservableValue<Long> modelObservable = BeanProperties.value(property, Long.class).observe(model);
+            IObservableValue<String> modelObservable = BeanProperties.value(property, String.class).observe(model);
             context.bindValue(targetObservable, modelObservable, strategy, null);
         }
     }
