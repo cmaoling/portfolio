@@ -29,6 +29,7 @@ import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Transaction.Unit;
 import name.abuchen.portfolio.money.Money;
+import name.abuchen.portfolio.util.Iban;
 
 /* package */ public class CSVAccountTransactionExtractor extends BaseCSVExtractor
 {
@@ -107,6 +108,7 @@ import name.abuchen.portfolio.money.Money;
         Extractor.Item item = null;
 
         Peer peer = getPeer(rawValues, field2column, p -> {});
+        // DEBUG: System.err.println("CSVAccountTransactionExtratctor:extract peer: " + (peer != null?peer.toString():"")); //$NON-NLS-1$  //$NON-NLS-2$
         if (peer != null && peer.links2Account())
         {
             if (type == Type.DEPOSIT)
@@ -203,14 +205,20 @@ import name.abuchen.portfolio.money.Money;
                 if (dividendType || type == Type.TAXES || type == Type.TAX_REFUND || type == Type.FEES || type == Type.FEES_REFUND)
                     t.setSecurity(security);
                 t.setDateTime(date.withHour(0).withMinute(0));
-                String extNote = getText(Messages.CSVColumn_ISIN, rawValues, field2column);
-                if (extNote != null && security.getIsin().equals("")) //$NON-NLS-1$
+                String isinNote = getText(Messages.CSVColumn_ISIN, rawValues, field2column);
+                if (isinNote != null && security.getIsin().equals("")) //$NON-NLS-1$
                 {
                     if (note == null)
                         note = Messages.LabelNothing;
                     else if (!note.equals("")) //$NON-NLS-1$
                         note += " - "; //$NON-NLS-1$
-                    note += extNote;
+                    note += isinNote;
+                }
+                String ibanNote = getText(Messages.CSVColumn_IBAN, rawValues, field2column);
+                // DEBUG: System.err.println("CSVAccountTransactionExtratctor:extract ibanNote: " + (ibanNote != null?ibanNote:"")); //$NON-NLS-1$  //$NON-NLS-2$
+                if (!(ibanNote == null || Iban.isValid(ibanNote)))
+                {
+                    note = ibanNote + (note != null?" - "+note:"") ; //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 if (dividendType)
                 {
