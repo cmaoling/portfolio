@@ -13,7 +13,7 @@ public class PreferencesInitializer extends AbstractPreferenceInitializer
     public void initializeDefaultPreferences()
     {
         IPreferenceStore store = PortfolioPlugin.getDefault().getPreferenceStore();
-        store.setDefault(UIConstants.Preferences.AUTO_UPDATE, true);
+        store.setDefault(UIConstants.Preferences.AUTO_UPDATE, false);
         store.setDefault(UIConstants.Preferences.UPDATE_SITE,
                         Platform.ARCH_X86.equals(Platform.getOSArch())
                                         ? "https://updates.portfolio-performance.info/portfolio-x86" //$NON-NLS-1$
