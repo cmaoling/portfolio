@@ -84,6 +84,7 @@ public class AmazonPDFConverter implements AbstractPDFConverter
             matchPattern.add(Pattern.compile("^Der Betrag von [\\d.,]{4,} Euro wird am [\\d.]{10} von Ihrem Konto abgebucht. IBAN: (?<Nummer>[A-Z0-9]{22})")); //$NON-NLS-1$
             matchPattern.add(Pattern.compile("^Visa Karte (?<Nummer>[\\d]{4} [\\d]{2}XX XXXX [\\d]{4}) .*")); //$NON-NLS-1$
             matchPattern.add(Pattern.compile("^Kundennummer: (?<account>[\\d]{10})")); //$NON-NLS-1$
+            matchPattern.add(Pattern.compile("^(?<Note>STARTGUTSCHRIFT) (?<Buchungsdatum>[\\d.]{10}) (?<amount>[\\d.,]{4,}) (?<direction>[+-])")); //$NON-NLS-1$
             matchPattern.add(Pattern.compile("^(?<Note>ZAHLUNG-LASTSCHRIFT) (?<Buchungsdatum>[\\d.]{10}) (?<amount>[\\d.,]{4,}) (?<direction>[+-])")); //$NON-NLS-1$
             matchPattern.add(Pattern.compile("^(?<Note>Guthaben-Einzahlung) (?<Buchungsdatum>[\\d.]{10}) (?<amount>[\\d.,]{4,}) (?<direction>[+-])")); //$NON-NLS-1$
             matchPattern.add(Pattern.compile("^(?<Kaufdatum>[\\d.]{10}) (?<Peer>.{1,25})\\W+(?<location>[A-Za-z0-9-./]{8,13})\\W*(?<country>[A-Z]{2}) (?<Buchungsdatum>[\\d.]{10}) (?<currency>[A-Z]{2,4}) (?<foreign>[\\\\d.,]{4,}) (?<Kurs>[\\\\d.,]{4,}) (?<amount>[\\\\d.,]{4,}) (?<direction>[+-])")); //$NON-NLS-1$
