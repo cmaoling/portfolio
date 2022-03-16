@@ -599,8 +599,11 @@ public class AccountTransactionModel extends AbstractModel
         if (peerList.size() == 1 && matchStr.length() >= 3)
         {
            this.peer = peerList.get(0);
+           // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::matchPeer() this.peer   : " + (this.peer != null ? this.peer.toString()  : "<null>"));
            firePropertyChange(Properties.peer.name(), Messages.LabelNothing, this.peer);
+           // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::matchPeer() this.peer.getIban()   : " + (this.peer.getIban() != null ? this.peer.getIban().toString()  : "<null>"));
            firePropertyChange(Properties.iban.name(), Messages.LabelNothing, this.peer.getIban());
+           // TODO: still needed for debug? System.err.println(">>>> AccountTransactionModel::matchPeer() this.peer.getName()   : " + (this.peer.getName() != null ? this.peer.getName().toString()  : "<null>"));
            firePropertyChange(Properties.partner.name(), Messages.LabelNothing, this.peer.getName());
            return true;
         }
