@@ -50,8 +50,8 @@ import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 
-import com.ibm.icu.text.DecimalFormat;
-import com.ibm.icu.text.NumberFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Peer;

@@ -4,7 +4,7 @@ import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.function.Function;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;

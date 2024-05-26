@@ -2,7 +2,7 @@ package name.abuchen.portfolio.ui.views.dashboard;
 
 import java.util.List;
 
-import com.ibm.icu.text.MessageFormat;
+import java.text.MessageFormat;
 
 import name.abuchen.portfolio.model.Dashboard.Widget;
 import name.abuchen.portfolio.money.Money;

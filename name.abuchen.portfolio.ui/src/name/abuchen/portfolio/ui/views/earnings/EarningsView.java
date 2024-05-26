@@ -3,8 +3,8 @@ package name.abuchen.portfolio.ui.views.earnings;
 import java.time.LocalDate;
 import java.util.EnumSet;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;

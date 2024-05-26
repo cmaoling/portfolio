@@ -9,7 +9,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
 
-import com.ibm.icu.util.Calendar;
+import java.util.Calendar;
 
 public class SimpleDateTimeTimeSelectionProperty extends WidgetValueProperty<Control, LocalTime>
 {

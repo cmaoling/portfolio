@@ -47,7 +47,7 @@ import org.swtchart.LineStyle;
 import org.swtchart.Range;
 
 import com.google.common.primitives.Doubles;
-import com.ibm.icu.text.MessageFormat;
+import java.text.MessageFormat;
 
 import name.abuchen.portfolio.model.AccountTransaction;
 import name.abuchen.portfolio.model.Client;

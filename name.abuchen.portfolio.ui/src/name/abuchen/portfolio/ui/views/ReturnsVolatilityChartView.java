@@ -7,8 +7,8 @@ import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.function.ToDoubleFunction;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;

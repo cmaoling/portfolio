@@ -1,6 +1,6 @@
 package name.abuchen.portfolio.ui.views.settings;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.layout.TableColumnLayout;

@@ -5,7 +5,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 
-import com.ibm.icu.text.MessageFormat;
+import java.text.MessageFormat;
 
 public class ConfirmActionWithSelection extends Action
 {

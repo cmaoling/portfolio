@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.function.ToLongFunction;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
