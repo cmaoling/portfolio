@@ -2,6 +2,7 @@ package name.abuchen.portfolio.model;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.MessageFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -57,6 +58,9 @@ public abstract class Transaction implements Annotated, Adaptable
             this.amount = Objects.requireNonNull(amount);
             this.forex = null;
             this.exchangeRate = null;
+
+            if (type == Type.GROSS_VALUE)
+                throw new IllegalArgumentException("Gross value without forex: " + Values.Money.format(amount)); //$NON-NLS-1$
         }
 
         public Unit(Type type, Money amount, Money forex, BigDecimal exchangeRate)
@@ -79,10 +83,38 @@ public abstract class Transaction implements Annotated, Adaptable
                 long lower = Math.round(exchangeRate.add(BigDecimal.valueOf(-0.003))
                                 .multiply(BigDecimal.valueOf(forex.getAmount())).doubleValue());
 
+                // check for negative values
+                if (lower > upper)
+                {
+                    long temp = lower;
+                    lower = upper;
+                    upper = temp;
+                }
+
                 if (amount.getAmount() < lower || amount.getAmount() > upper)
-                    throw new IllegalArgumentException(MessageFormat.format(Messages.MsgErrorIllegalForexUnit,
-                                    type.toString(), Values.Money.format(forex), exchangeRate,
-                                    Values.Money.format(amount)));
+                {
+                    // do the reverse check b/c small currency amounts might not
+                    // allow for a better exchange rate
+
+                    upper = BigDecimal.valueOf(amount.getAmount() + 1).divide(exchangeRate, Values.MC)
+                                    .setScale(0, RoundingMode.HALF_EVEN).longValue();
+                    lower = BigDecimal.valueOf(amount.getAmount() - 1).divide(exchangeRate, Values.MC)
+                                    .setScale(0, RoundingMode.HALF_EVEN).longValue();
+
+                    if (lower > upper)
+                    {
+                        long temp = lower;
+                        lower = upper;
+                        upper = temp;
+                    }
+
+                    if (forex.getAmount() < lower || forex.getAmount() > upper)
+                    {
+                        throw new IllegalArgumentException(MessageFormat.format(Messages.MsgErrorIllegalForexUnit,
+                                        type.toString(), Values.Money.format(forex), exchangeRate,
+                                        Values.Money.format(amount)));
+                    }
+                }
             }
         }
 
@@ -134,6 +166,8 @@ public abstract class Transaction implements Annotated, Adaptable
         }
     }
 
+    public static final Comparator<Transaction> BY_DATE = new ByDate();
+    
     public static final class ByDate implements Comparator<Transaction>, Serializable
     {
         private static final long serialVersionUID = 1L;
@@ -141,7 +175,22 @@ public abstract class Transaction implements Annotated, Adaptable
         @Override
         public int compare(Transaction t1, Transaction t2)
         {
-            return t1.getDateTime().compareTo(t2.getDateTime());
+            int compareTo = t1.getDateTime().compareTo(t2.getDateTime());
+            if (compareTo != 0)
+                return compareTo;
+
+            compareTo = Long.compare(t1.getAmount(), t2.getAmount());
+            if (compareTo != 0)
+                return compareTo;
+
+            if (t1 instanceof AccountTransaction at1 && t2 instanceof AccountTransaction at2)
+            {
+                compareTo = at1.getType().compareTo(at2.getType());
+                if (compareTo != 0)
+                    return compareTo;
+            }
+
+            return Integer.compare(t1.hashCode(), t2.hashCode());
         }
     }
 
@@ -154,6 +203,7 @@ public abstract class Transaction implements Annotated, Adaptable
     private CrossEntry crossEntry;
     private long shares;
     private String note;
+    private String source;
 
     private List<Unit> units;
 
@@ -288,6 +338,17 @@ public abstract class Transaction implements Annotated, Adaptable
         this.updatedAt = Instant.now();
     }
 
+    public String getSource()
+    {
+        return source;
+    }
+
+    public void setSource(String source)
+    {
+        this.source = source;
+        this.updatedAt = Instant.now();
+    }
+
     public Instant getUpdatedAt()
     {
         return updatedAt;
@@ -351,6 +412,16 @@ public abstract class Transaction implements Annotated, Adaptable
     }
 
     /**
+     * Remove all units by unit type
+     */
+    public void removeUnits(Unit.Type type)
+    {
+        units = units == null ? new ArrayList<>() : units;
+        units.removeIf(unit -> unit.getType() == type);
+        updatedAt = Instant.now();
+    }
+
+    /**
      * Returns the sum of units in transaction currency
      */
     public Money getUnitSum(Unit.Type type)
@@ -385,6 +456,8 @@ public abstract class Transaction implements Annotated, Adaptable
                                 return unit.getAmount().with(converter.at(date));
                         }));
     }
+
+    public abstract Money getGrossValue();
 
     public static final <E extends Transaction> List<E> sortByDate(List<E> transactions)
     {

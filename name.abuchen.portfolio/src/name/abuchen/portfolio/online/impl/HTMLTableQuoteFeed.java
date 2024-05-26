@@ -566,7 +566,7 @@ public class HTMLTableQuoteFeed implements QuoteFeed
 //        // if no quotes could be extract, log HTML for further analysis
 //        if (prices.isEmpty())
 //            data.addError(new IOException(MessageFormat.format(Messages.MsgNoQuotesFoundInHTML, url,
-//                            Jsoup.clean(document.html(), Whitelist.relaxed()))));
+//                            Jsoup.clean(document.html(), Safelist.relaxed()))));
 //
 //        return prices;
 //    }

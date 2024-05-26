@@ -33,48 +33,77 @@ public class PDFImportAssistant
         this.client = client;
         this.files = files;
 
-        extractors.add(new BaaderBankPDFExtractor(client));
-        extractors.add(new BankSLMPDFExtractor(client));
-        extractors.add(new BondoraGoAndGrowPDFExtractor(client));
-        extractors.add(new ComdirectPDFExtractor(client));
-        extractors.add(new CommerzbankPDFExtractor(client));
+     // CMAOLING: extractors.add(new AJBellSecuritiesLimitedPDFExtractor(client));
+     // CMAOLING: extractors.add(new AvivaPLCPDFExtractor(client));
+     // CMAOLING: extractors.add(new BaaderBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new BankSLMPDFExtractor(client));
+     // CMAOLING: extractors.add(new BisonPDFExtractor(client));
+     // CMAOLING: extractors.add(new BondoraCapitalPDFExtractor(client));
+     // CMAOLING: extractors.add(new ComdirectPDFExtractor(client));
+     // CMAOLING: extractors.add(new CommerzbankPDFExtractor(client));
+     // CMAOLING: extractors.add(new CommSecPDFExtractor(client));
         extractors.add(new ConsorsbankPDFExtractor(client));
-        extractors.add(new ConsorsbankPre2009PDFExtractor(client));
-        extractors.add(new DABPDFExtractor(client));
-        extractors.add(new DADATBankenhausPDFExtractor(client));
-        extractors.add(new DegiroPDFExtractor(client));
-        extractors.add(new DeutscheBankPDFExtractor(client));
-        extractors.add(new Direkt1822BankPDFExtractor(client));
-        extractors.add(new DkbPDFExtractor(client));
-        extractors.add(new DreiBankenEDVPDFExtractor(client));
-        extractors.add(new DZBankPDFExtractor(client));
-        extractors.add(new ErsteBankPDFExtractor(client));
-        extractors.add(new FinTechGroupBankPDFExtractor(client));
-        extractors.add(new HelloBankPDFExtractor(client));
-        extractors.add(new INGDiBaExtractor(client));
-        extractors.add(new JustTradePDFExtractor(client));
-        extractors.add(new KeytradeBankPDFExtractor(client));
-        extractors.add(new MLPBankingAGPDFExtractor(client));
-        extractors.add(new LGTBankPDFExtractor(client));
-        extractors.add(new OnvistaPDFExtractor(client));
-        extractors.add(new PostbankPDFExtractor(client));
-        extractors.add(new PostfinancePDFExtractor(client));
-        extractors.add(new QuirionPDFExtractor(client));
-        extractors.add(new SBrokerPDFExtractor(client));
-        extractors.add(new SwissquotePDFExtractor(client));
-        extractors.add(new TargobankPDFExtractor(client));
-        extractors.add(new TradeRepublicPDFExtractor(client));
-        extractors.add(new UnicreditPDFExtractor(client));
-        extractors.add(new VBankAGPDFExtractor(client));
-        extractors.add(new ViacPDFExtractor(client));
-        extractors.add(new WeberbankPDFExtractor(client));
-
-        extractors.add(new JSONPDFExtractor(client, "deutsche-bank-purchase.json")); //$NON-NLS-1$
-        extractors.add(new JSONPDFExtractor(client, "deutsche-bank-sale.json")); //$NON-NLS-1$
-        extractors.add(new JSONPDFExtractor(client, "ffb.json")); //$NON-NLS-1$
-        extractors.add(new JSONPDFExtractor(client, "trade-republic-dividends.json")); //$NON-NLS-1$
-        extractors.add(new JSONPDFExtractor(client, "trade-republic-investmentplan.json")); //$NON-NLS-1$
-        extractors.add(new JSONPDFExtractor(client, "ebase.json")); //$NON-NLS-1$
+     // CMAOLING: extractors.add(new CreditSuisseAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new CrowdestorPDFExtractor(client));
+     // CMAOLING: extractors.add(new DABPDFExtractor(client));
+     // CMAOLING: extractors.add(new DADATBankenhausPDFExtractor(client));
+     // CMAOLING: extractors.add(new DegiroPDFExtractor(client));
+     // CMAOLING: extractors.add(new DekaBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new DeutscheBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new Direkt1822BankPDFExtractor(client));
+     // CMAOLING: extractors.add(new DkbPDFExtractor(client));
+     // CMAOLING: extractors.add(new DreiBankenEDVPDFExtractor(client));
+     // CMAOLING: extractors.add(new DZBankGruppePDFExtractor(client));
+     // CMAOLING: extractors.add(new EasyBankAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new EbasePDFExtractor(client));
+     // CMAOLING: extractors.add(new ErsteBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new FidelityInternationalPDFExtractor(client));
+     // CMAOLING: extractors.add(new FILFondbankPDFExtractor(client));
+     // CMAOLING: extractors.add(new FindependentAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new FinTechGroupBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new GenoBrokerPDFExtractor(client));
+     // CMAOLING: extractors.add(new HargreavesLansdownPlcExtractor(client));
+     // CMAOLING: extractors.add(new HelloBankPDFExtractor(client));
+        extractors.add(new INGDiBaPDFExtractor(client));
+     // CMAOLING: extractors.add(new JustTradePDFExtractor(client));
+     // CMAOLING: extractors.add(new KBCGroupNVPDFExtractor(client));
+     // CMAOLING: extractors.add(new KeytradeBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new MLPBankingAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new NIBCBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new OldenburgischeLandesbankAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new LGTBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new LiechtensteinischeLandesbankAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new LimeTradingCorpPDFExtractor(client));
+     // CMAOLING: extractors.add(new MerkurPrivatBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new OnvistaPDFExtractor(client));
+     // CMAOLING: extractors.add(new OpenBankSAPDFExtractor(client));
+     // CMAOLING: extractors.add(new PictetCieGruppeSAPDFExtractor(client));
+     // CMAOLING: extractors.add(new PostbankPDFExtractor(client));
+     // CMAOLING: extractors.add(new PostfinancePDFExtractor(client));
+     // CMAOLING: extractors.add(new QuirinBankAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new RaiffeisenBankgruppePDFExtractor(client));
+     // CMAOLING: extractors.add(new RenaultBankDirektPDFExtractor(client));
+     // CMAOLING: extractors.add(new RevolutLtdPDFExtractor(client));
+     // CMAOLING: extractors.add(new SantanderConsumerBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new SberbankEuropeAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new SBrokerPDFExtractor(client));
+     // CMAOLING: extractors.add(new ScorePriorityIncPDFExtractor(client));
+     // CMAOLING: extractors.add(new SelfWealthPDFExtractor(client));
+     // CMAOLING: extractors.add(new SimpelPDFExtractor(client));
+     // CMAOLING: extractors.add(new SolarisbankAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new StakePDFExtractor(client));
+     // CMAOLING: extractors.add(new SuresseDirektBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new SwissquotePDFExtractor(client));
+     // CMAOLING: extractors.add(new TargobankPDFExtractor(client));
+     // CMAOLING: extractors.add(new TigerBrokersPteLtdPDFExtractor(client));
+     // CMAOLING: extractors.add(new TradeRepublicPDFExtractor(client));
+     // CMAOLING: extractors.add(new UBSAGBankingAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new UnicreditPDFExtractor(client));
+     // CMAOLING: extractors.add(new VanguardGroupEuropePDFExtractor(client));
+     // CMAOLING: extractors.add(new VBankAGPDFExtractor(client));
+     // CMAOLING: extractors.add(new WealthsimpleInvestmentsIncPDFExtractor(client));
+     // CMAOLING: extractors.add(new WirBankPDFExtractor(client));
+     // CMAOLING: extractors.add(new WeberbankPDFExtractor(client));
     }
 
     public Map<Extractor, List<Item>> run(IProgressMonitor monitor, Map<File, List<Exception>> errors)

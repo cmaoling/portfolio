@@ -36,6 +36,7 @@ import name.abuchen.portfolio.snapshot.PortfolioSnapshot;
 import name.abuchen.portfolio.snapshot.SecurityPosition;
 import name.abuchen.portfolio.util.Iban;
 import name.abuchen.portfolio.util.Isin;
+import name.abuchen.portfolio.util.TextUtil;
 
 public abstract class CSVExtractor implements Extractor
 {
@@ -144,7 +145,7 @@ public abstract class CSVExtractor implements Extractor
         Number num;
         try
         {
-            num = (Number) field2column.get(name).getFormat().getFormat().parseObject(value);
+            num = (Number) field2column.get(name).getFormat().getFormat().parseObject(TextUtil.stripNonNumberCharacters(value));
         }
         catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
         {
@@ -235,23 +236,12 @@ public abstract class CSVExtractor implements Extractor
     protected final Long getShares(String name, String[] rawValues, Map<String, Column> field2column)
                     throws ParseException
     {
-        String value = getText(name, rawValues, field2column);
+        Long value = getValue(name, rawValues, field2column, Values.Share);
+
         if (value == null)
             return null;
 
-        Number num;
-        try
-        {
-            num = (Number) field2column.get(name).getFormat().getFormat().parseObject(value);
-        }
-        catch (ParseException | UnsupportedOperationException | IllegalArgumentException e)
-        {
-            if (e instanceof ParseException)
-                throw new ParseException(e.getMessage() + ": " + MessageFormat.format(Messages.CSVImportGenericColumnLabel, field2column.get(name).getColumnIndex()), new Exception().getStackTrace()[0].getLineNumber()); //$NON-NLS-1$
-            else
-                throw e;
-        }
-        return Math.round(Math.abs(num.doubleValue()) * Values.Share.factor());
+        return Math.abs(value);
     }
 
     @SuppressWarnings("unchecked")

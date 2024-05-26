@@ -46,9 +46,9 @@ import org.apache.commons.csv.CSVRecord;
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.PortfolioLog;
 import name.abuchen.portfolio.datatransfer.Extractor.Item;
-import name.abuchen.portfolio.datatransfer.pdf.AbstractPDFConverter;
-import name.abuchen.portfolio.datatransfer.pdf.AmazonPDFConverter;
-import name.abuchen.portfolio.datatransfer.pdf.PDFInputFile;
+//CMAOLING: <PDFConverter> import name.abuchen.portfolio.datatransfer.pdf.AbstractPDFConverter;
+//CMAOLING: <PDFConverter> import name.abuchen.portfolio.datatransfer.pdf.AmazonPDFConverter;
+//CMAOLING: <PDFConverter> import name.abuchen.portfolio.datatransfer.pdf.PDFInputFile;
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Account;
@@ -119,6 +119,12 @@ public class CSVImporter
             this(label, supplier.get());
         }
 
+        // TODO CMAOLING edition: consider #1097 and related https://github.com/portfolio-performance/portfolio/commit/bad7ae8794c1a8237dea74f37de68abae0765f8d
+        public String getCode()
+        {
+            return "0,010.00"; //$NON-NLS-1$
+        }        
+
         @Override
         public String toString()
         {
@@ -163,6 +169,12 @@ public class CSVImporter
             for (int ii = 0; ii < names.length; ii++)
                 this.normalizedNames.add(normalizeColumnName(names[ii]));
         }
+
+        // TODO CMAOLING edition: consider #1077 and https://github.com/portfolio-performance/portfolio/commit/c739e62b9abf69eab6f68829ea40bf96621f598d
+        public String getCode()
+        {
+            return "shares"; //$NON-NLS-1$
+        }        
 
         public String getName()
         {
@@ -652,9 +664,9 @@ public class CSVImporter
     private Column[] columns;
     private List<String[]> values;
 
-    private final List<AbstractPDFConverter> converters = new ArrayList<>();
+//CMAOLING: <PDFConverter>     private final List<AbstractPDFConverter> converters = new ArrayList<>();
 
-    private AbstractPDFConverter converter = null;
+//CMAOLING: <PDFConverter>     private AbstractPDFConverter converter = null;
 
     public CSVImporter(Client client, File file)
     {
@@ -675,7 +687,7 @@ public class CSVImporter
                         );
         this.setExtractor(extractors.get(0));
 
-        this.converters.add(new AmazonPDFConverter(client));
+//CMAOLING: <PDFConverter>         this.converters.add(new AmazonPDFConverter(client));
     }
 
     public void doRemap()
@@ -693,11 +705,11 @@ public class CSVImporter
         return inputFile;
     }
 
-    public AbstractPDFConverter getConverter()
-    {
-        return converter;
-    }
-
+//CMAOLING: <PDFConverter>     public AbstractPDFConverter getConverter()
+//    {
+//        return converter;
+//    }
+//
     public List<CSVExtractor> getExtractors()
     {
         return extractors;
@@ -864,44 +876,45 @@ public class CSVImporter
         Path iPath = Paths.get(URI.create("file://" + iFileStr)); //$NON-NLS-1$
         try
         {
-            // Let's first try to open it as a PDF
-            // https://stackoverflow.com/questions/941813/how-can-i-determine-if-a-file-is-a-pdf-file
-            // https://stackoverflow.com/questions/14381880/read-first-4-bytes-of-file
-            InputStream stream =  Files.newInputStream(iPath);
-            byte[] pdfIdentifier = {(byte)0x25, (byte)0x50, (byte)0x44, (byte)0x46, (byte)0x2D};
-            byte[] buffer = new byte[5];
-            if (stream.read(buffer) != buffer.length)
-                PortfolioLog.error("Steam read failed."); //$NON-NLS-1$
-            stream.close();
-            if (Arrays.equals(buffer, pdfIdentifier))
-            {
-                PDFInputFile intermediateFile = new PDFInputFile(inputFile);
-                intermediateFile.convertPDFtoText();
-                // The file we are importing is actually a PDF.
-                // Let's check for the converters we have...
-                boolean converted = false;
-                for (AbstractPDFConverter converter : converters)
-                {
-                    if (intermediateFile.getAuthor().contains(converter.getPDFAuthor()))
-                    {
-                        converter.setFile(intermediateFile);
-                        if (converter.process())
-                            processStream(converter.getStream(), remap);
-                        else
-                            PortfolioLog.error(MessageFormat.format(Messages.PDFImportFailure, intermediateFile.getName(), intermediateFile.getAuthor(), converter.getLabel()));
-                        converted = true;
-                        this.converter = converter;
-                        break;
-                    }
-                }
-                if (!converted)
-                    PortfolioLog.error(MessageFormat.format(Messages.PDFImportNoConverter, intermediateFile.getName(), intermediateFile.getAuthor()));
-            }
-            else
-            {
+// CMAOLING: drop PDF Converter; <PDFConverter> 
+//            // Let's first try to open it as a PDF
+//            // https://stackoverflow.com/questions/941813/how-can-i-determine-if-a-file-is-a-pdf-file
+//            // https://stackoverflow.com/questions/14381880/read-first-4-bytes-of-file
+//            InputStream stream =  Files.newInputStream(iPath);
+//            byte[] pdfIdentifier = {(byte)0x25, (byte)0x50, (byte)0x44, (byte)0x46, (byte)0x2D};
+//            byte[] buffer = new byte[5];
+//            if (stream.read(buffer) != buffer.length)
+//                PortfolioLog.error("Steam read failed."); //$NON-NLS-1$
+//            stream.close();
+//            if (Arrays.equals(buffer, pdfIdentifier))
+//            {
+//                PDFInputFile intermediateFile = new PDFInputFile(inputFile);
+//                intermediateFile.convertPDFtoText();
+//                // The file we are importing is actually a PDF.
+//                // Let's check for the converters we have...
+//                boolean converted = false;
+//                for (AbstractPDFConverter converter : converters)
+//                {
+//                    if (intermediateFile.getAuthor().contains(converter.getPDFAuthor()))
+//                    {
+//                        converter.setFile(intermediateFile);
+//                        if (converter.process())
+//                            processStream(converter.getStream(), remap);
+//                        else
+//                            PortfolioLog.error(MessageFormat.format(Messages.PDFImportFailure, intermediateFile.getName(), intermediateFile.getAuthor(), converter.getLabel()));
+//                        converted = true;
+//                        this.converter = converter;
+//                        break;
+//                    }
+//                }
+//                if (!converted)
+//                    PortfolioLog.error(MessageFormat.format(Messages.PDFImportNoConverter, intermediateFile.getName(), intermediateFile.getAuthor()));
+//            }
+//            else
+//            {
                 InputStream fileStream =  Files.newInputStream(iPath);
                 processStream(fileStream, remap);
-            }
+//            }
         }
         catch (IOException e_processFile)
         {

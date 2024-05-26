@@ -1,13 +1,15 @@
 package name.abuchen.portfolio.util;
 
 import static java.time.temporal.TemporalAdjusters.dayOfWeekInMonth;
-import static java.time.temporal.TemporalAdjusters.lastInMonth;
+import static java.time.temporal.TemporalAdjusters.nextOrSame;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /* package */ abstract class HolidayType
 {
@@ -70,26 +72,6 @@ import java.util.List;
         }
     }
 
-    private static class LastWeekdayHolidayType extends HolidayType
-    {
-        private final DayOfWeek weekday;
-        private final Month month;
-
-        public LastWeekdayHolidayType(HolidayName name, DayOfWeek weekday, Month month)
-        {
-            super(name);
-            this.weekday = weekday;
-            this.month = month;
-        }
-
-        @Override
-        protected Holiday doGetHoliday(int year)
-        {
-            LocalDate date = LocalDate.of(year, month, 1);
-            return new Holiday(getName(), date.with(lastInMonth(weekday)));
-        }
-    }
-
     private static class RelativeToEasterHolidayType extends HolidayType
     {
         private final int daysToAdd;
@@ -116,7 +98,7 @@ import java.util.List;
             // http://www.java2s.com/Code/Java/Data-Type/CalculateHolidays.htm
             // and published under the
             // GNU General Public License version 2
-            
+
             /*  Calculate Easter Sunday
             Written by Gregory N. Mirsky
             Source: 2nd Edition by Peter Duffett-Smith. It was originally from
@@ -193,8 +175,10 @@ import java.util.List;
 
     private int validFrom = -1;
     private int validTo = -1;
+    private final Set<Integer> exceptIn = new HashSet<>();
 
     private final List<MoveIf> moveIf = new ArrayList<>();
+    private DayOfWeek moveTo = null;
 
     public HolidayType(HolidayName name)
     {
@@ -209,11 +193,6 @@ import java.util.List;
     public static HolidayType weekday(HolidayName name, int which, DayOfWeek weekday, Month month)
     {
         return new FixedWeekdayHolidayType(name, which, weekday, month);
-    }
-
-    public static HolidayType last(HolidayName name, DayOfWeek weekday, Month month)
-    {
-        return new LastWeekdayHolidayType(name, weekday, month);
     }
 
     public static HolidayType easter(HolidayName name, int daysToAdd)
@@ -238,9 +217,28 @@ import java.util.List;
         return this;
     }
 
+    public HolidayType onlyIn(int year)
+    {
+        this.validFrom = year;
+        this.validTo = year;
+        return this;
+    }
+
+    public HolidayType exceptIn(int year)
+    {
+        this.exceptIn.add(year);
+        return this;
+    }
+
     public HolidayType moveIf(DayOfWeek dayOfWeek, int daysToAdd)
     {
         moveIf.add(new MoveIf(dayOfWeek, daysToAdd));
+        return this;
+    }
+
+    public HolidayType moveTo(DayOfWeek dayOfWeek)
+    {
+        moveTo = dayOfWeek;
         return this;
     }
 
@@ -252,14 +250,21 @@ import java.util.List;
         if (validTo != -1 && year > validTo)
             return null;
 
+        if (exceptIn.contains(year))
+            return null;
+
         Holiday answer = doGetHoliday(year);
 
-        if (moveIf.isEmpty())
+        if (moveIf.isEmpty() && moveTo == null)
             return answer;
 
         LocalDate date = answer.getDate();
+
         for (MoveIf mv : moveIf)
             date = mv.apply(date);
+
+        if (moveTo != null)
+            date = date.with(nextOrSame(moveTo));
 
         return new Holiday(answer.getName(), date);
     }

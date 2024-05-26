@@ -1,10 +1,22 @@
 package name.abuchen.portfolio.datatransfer.csv;
 
 import static name.abuchen.portfolio.datatransfer.csv.CSVExtractorTestUtil.buildField2Column;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
+
+//TODO CMAOLING edition: import static name.abuchen.portfolio.datatransfer.ExtractorMatchers.dividend;
+import static name.abuchen.portfolio.datatransfer.ExtractorMatchers.hasAmount;
+import static name.abuchen.portfolio.datatransfer.ExtractorMatchers.hasDate;
+import static name.abuchen.portfolio.datatransfer.ExtractorMatchers.hasFees;
+import static name.abuchen.portfolio.datatransfer.ExtractorMatchers.hasGrossValue;
+import static name.abuchen.portfolio.datatransfer.ExtractorMatchers.hasNote;
+//TODO CMAOLING edition: import static name.abuchen.portfolio.datatransfer.ExtractorMatchers.hasShares;
+import static name.abuchen.portfolio.datatransfer.ExtractorMatchers.hasSource;
+import static name.abuchen.portfolio.datatransfer.ExtractorMatchers.hasTaxes;
+import static name.abuchen.portfolio.datatransfer.ExtractorMatchers.interest;
 
 import java.text.ParseException;
 import java.time.LocalDate;
@@ -27,8 +39,10 @@ import name.abuchen.portfolio.datatransfer.actions.AssertImportActions;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Column;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumField;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumMapFormat;
+//TODO CMAOLING edition: import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.FieldFormat;
 import name.abuchen.portfolio.model.AccountTransaction;
+//TODO CMAOLING edition: import name.abuchen.portfolio.model.AccountTransaction.Type;
 import name.abuchen.portfolio.model.AccountTransferEntry;
 import name.abuchen.portfolio.model.BuySellEntry;
 import name.abuchen.portfolio.model.Client;
@@ -77,7 +91,7 @@ public class CSVAccountTransactionExtractorTest
         assertThat(t.getShares(), is(Values.Share.factorize(10)));
         assertThat(t.getSecurity(), is(security));
     }
-    
+
     @Test
     public void testValuesAreTrimmed() throws ParseException
     {
@@ -87,8 +101,8 @@ public class CSVAccountTransactionExtractorTest
 
         List<Exception> errors = new ArrayList<Exception>();
         List<Item> results = extractor.extract(0,
-                        Arrays.<String[]>asList(new String[] { " 2013-01-01 ", "", " DE0007164600 ", " SAP.DE ", "", " 100 ",
-                                        " EUR ", " DIVIDENDS ", " SAP SE ", " 10 ", " Notiz " }),
+                        Arrays.<String[]>asList(new String[] { " 2013-01-01 ", "", " DE0007164600 ", " SAP.DE ", "",
+                                        " 100 ", " EUR ", " DIVIDENDS ", " SAP SE ", " 10 ", " Notiz " }),
                         buildField2Column(extractor), errors);
 
         assertThat(errors, empty());
@@ -698,5 +712,83 @@ public class CSVAccountTransactionExtractorTest
                         .findAny().get().getSubject();
 
         assertThat(t2.getMonetaryAmount(), is(Money.of(CurrencyUnit.EUR, Values.Amount.factorize(20))));
+    }
+
+// TODO CMAOLING edition: consider #1097 and related https://github.com/portfolio-performance/portfolio/commit/bad7ae8794c1a8237dea74f37de68abae0765f8d
+//    @Test
+//    public void testScientificNotation()
+//    {
+//        Client client = new Client();
+//
+//        CSVExtractor extractor = new CSVAccountTransactionExtractor(client);
+//
+//        List<Exception> errors = new ArrayList<Exception>();
+//        Map<String, Column> field2column = buildField2Column(extractor);
+//
+//        // configure shares column to use english format
+//        Field field = extractor.getFields().stream().filter(f -> {
+//            boolean result = "shares".equals(f.getCode());
+//            System.err.println("Filtering (f): " + f.toString() + "  code: " + f.getCode() + " -> " + result);
+//            System.err.println("               " + f.getAvailableFieldFormats());
+//            return result;           
+//        }).findFirst().orElseThrow();
+//        FieldFormat fieldFormat = field.getAvailableFieldFormats().stream()
+//                        .filter(ff -> {
+//                            boolean result = "0,010.00".equals(ff.getCode());
+//                            System.err.println("Filtering (ff): " + ff.toString() + "  code: " + ff.getCode() + " -> " + result);
+//                            return result;           
+//                            
+//                        }).findFirst().orElseThrow();
+//
+//        Column column = new Column(9, field.getName());
+//        column.setField(field);
+//        column.setFormat(fieldFormat);
+//        field2column.put(field.getName(), column);
+//
+//        List<Item> results = extractor.extract(0, Arrays.<String[]>asList(
+//                        // upper capital
+//                        new String[] { "2013-01-01", "", "DE0007164600", "SAP.DE", "", "100", "EUR", "DIVIDENDS",
+//                                        "SAP SE", "1.98E-6", "Notiz" },
+//                        // lower capital
+//                        new String[] { "2013-01-01", "", "DE0007164600", "SAP.DE", "", "100", "EUR", "DIVIDENDS",
+//                                        "SAP SE", "2.12e-6", "Notiz" }),
+//                        field2column, errors);
+//
+//        assertThat(results, hasItem(dividend(hasShares(0.00000198))));
+//        assertThat(results, hasItem(dividend(hasShares(0.00000212))));
+//    }
+
+    @Test
+    public void testInterestWithTaxesTransaction()
+    {
+        Client client = new Client();
+
+        CSVExtractor extractor = new CSVAccountTransactionExtractor(client);
+
+        List<Exception> errors = new ArrayList<>();
+        List<Item> results = extractor.extract(0, Arrays.<String[]>asList( //
+                        new String[] { //
+                                        "2013-01-01", "12:34:56", // Date + Time //CMAOLING edition w/o time
+                                        "", "", "", // ISIN + TickerSymbol + WKN
+                                        "7,5", "EUR", // Amount + Currency
+                                        "INTEREST", // Type
+                                        "", "", //  Security name + Shares
+                                        "Notiz", // Note
+                                        "2,5", "", // Taxes +  Fee
+                                        "", "", "", // account + account2nd + portfolio
+                                        "10", "EUR", // Gross + Gross currency
+                                        "" }), // Exchange rate
+                        buildField2Column(extractor), errors);
+
+        assertThat(errors, empty());
+        assertThat(results.size(), is(1));
+        new AssertImportActions().check(results, CurrencyUnit.EUR);
+
+        // assert transaction
+        assertThat(results, hasItem(interest(
+                        hasDate("2013-01-01T00:00"), 
+                        hasAmount("EUR", 7.50), hasGrossValue("EUR", 10.00), //
+                        hasTaxes("EUR", 2.50),  hasFees("EUR", 0.00), //
+                        hasSource(null), hasNote("Notiz"))));
     }
 }

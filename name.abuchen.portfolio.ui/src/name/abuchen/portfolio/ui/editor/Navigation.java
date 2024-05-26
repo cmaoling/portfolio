@@ -14,6 +14,8 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import jakarta.inject.Inject;
+
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.InputDialog;

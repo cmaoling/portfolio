@@ -26,6 +26,7 @@ public final class Colors
         private Color greenBackground = Colors.RED;
         private Color redForeground = Colors.DARK_RED;
         private Color greenForeground = Colors.DARK_GREEN;
+        private Color grayForeground = getColor(112, 112, 112); // 707070
         private Color hyperlink = Display.getDefault().getSystemColor(SWT.COLOR_LINK_FOREGROUND);
 
         public Color defaultForeground()
@@ -98,6 +99,16 @@ public final class Colors
             this.greenForeground = getColor(color.rgb);
         }
 
+        public Color grayForeground()
+        {
+            return grayForeground;
+        }
+
+        public void setGrayForeground(RGBA color)
+        {
+            this.grayForeground = getColor(color.rgb);
+        }
+
         public Color hyperlink()
         {
             return hyperlink;
@@ -114,14 +125,14 @@ public final class Colors
     public static final Color GRAY = Display.getDefault().getSystemColor(SWT.COLOR_GRAY);
     public static final Color WHITE = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
     public static final Color DARK_GRAY = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY);
-    public static final Color DARK_RED = getColor(209, 84, 84); // D15454
+    public static final Color DARK_RED = Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED); // CMAOLING: getColor(209, 84, 84); // D15454
     public static final Color DARK_GREEN = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN);
     public static final Color BLACK = Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
     public static final Color RED = Display.getDefault().getSystemColor(SWT.COLOR_RED);
     public static final Color GREEN = Display.getDefault().getSystemColor(SWT.COLOR_GREEN);
 
     public static final Color ICON_ORANGE = getColor(241, 143, 1); // F18F01
-    public static final Color ICON_BLUE = getColor(14, 110, 142);
+    public static final Color ICON_BLUE = getColor(14, 110, 142); // 0E6E8E
     public static final Color ICON_GREEN = getColor(154, 193, 85); // 9AC155
 
     public static final Color TOTALS = getColor(0, 0, 0);
@@ -133,6 +144,7 @@ public final class Colors
     public static final Color IRR = getColor(0, 0, 0);
 
     public static final Color DARK_BLUE = getColor(149, 165, 180); // 95A5B4
+    public static final Color LIGHT_GRAY = getColor(240, 240, 240);
 
     public static final Color LIGHT_GREEN = getColor(188, 226, 158); // BCE29E
     public static final Color LIGHT_ORANGE = getColor(255, 152, 89); // FF9859
@@ -248,8 +260,7 @@ public final class Colors
 
     public static RGB toRGB(String hex)
     {
-        int[] rgb = ColorConversion.toRGB(hex);
-        return new RGB(rgb[0], rgb[1], rgb[2]);
+        return ColorConversion.hex2RGB(hex);
     }
 
     /**

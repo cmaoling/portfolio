@@ -103,6 +103,19 @@ public class BuySellEntry implements CrossEntry, Annotated
     }
 
     @Override
+    public String getSource()
+    {
+        return this.portfolioTransaction.getSource();
+    }
+
+    @Override
+    public void setSource(String source)
+    {
+        this.portfolioTransaction.setSource(source);
+        this.accountTransaction.setSource(source);
+    }
+
+    @Override
     public void insert()
     {
         portfolio.addTransaction(portfolioTransaction);
@@ -145,10 +158,10 @@ public class BuySellEntry implements CrossEntry, Annotated
     @Override
     public void setOwner(Transaction t, TransactionOwner<? extends Transaction> owner)
     {
-        if (t.equals(portfolioTransaction) && owner instanceof Portfolio)
-            portfolio = (Portfolio) owner;
-        else if (t.equals(accountTransaction) && owner instanceof Account)
-            account = (Account) owner;
+        if (t.equals(portfolioTransaction) && owner instanceof Portfolio p)
+            portfolio = p;
+        else if (t.equals(accountTransaction) && owner instanceof Account a)
+            account = a;
         else
             throw new IllegalArgumentException();
     }

@@ -153,6 +153,8 @@ public class PortfolioTransaction extends Transaction
      * transactions, that are the gross proceeds before the deduction of taxes
      * and fees.
      */
+
+    @Override
     public Money getGrossValue()
     {
         return Money.of(getCurrencyCode(), getGrossValueAmount());

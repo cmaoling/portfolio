@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -54,11 +54,15 @@ import name.abuchen.portfolio.ui.jobs.CreateInvestmentPlanTxJob;
 import name.abuchen.portfolio.ui.jobs.SyncOnlineSecuritiesJob;
 import name.abuchen.portfolio.ui.jobs.UpdateDividendsJob;
 import name.abuchen.portfolio.ui.jobs.UpdateQuotesJob;
+import name.abuchen.portfolio.ui.preferences.BackupMode;
 import name.abuchen.portfolio.ui.wizards.client.ClientMigrationDialog;
 
 public class ClientInput
 {
-    // compatibility: the value used to be stored in the AbstractHistoricView
+
+    public static final String DEFAULT_RELATIVE_BACKUP_FOLDER = "backups"; //$NON-NLS-1$
+
+        // compatibility: the value used to be stored in the AbstractHistoricView
     private static final String REPORTING_PERIODS_KEY = "AbstractHistoricView"; //$NON-NLS-1$
 
     private String label;
@@ -173,9 +177,20 @@ public class ClientInput
         return exchangeRateProviderFacory;
     }
 
+    /**
+     * Returns the preferences store per data file.
+     */
     public PreferenceStore getPreferenceStore()
     {
         return preferenceStore;
+    }
+
+    /**
+     * Returns the eclipse preferences which exist per installation.
+     */
+    public IEclipsePreferences getEclipsePreferences()
+    {
+        return preferences;
     }
 
     public void savePreferences()

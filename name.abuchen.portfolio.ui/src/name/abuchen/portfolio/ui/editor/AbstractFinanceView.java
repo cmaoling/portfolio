@@ -3,7 +3,7 @@ package name.abuchen.portfolio.ui.editor;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
@@ -88,6 +88,11 @@ public abstract class AbstractFinanceView
     {
     }
 
+    /** called after the views has been fully created */
+    protected void notifyViewCreationCompleted()
+    {
+    }
+
     public PortfolioPart getPart()
     {
         return part;
@@ -154,14 +159,17 @@ public abstract class AbstractFinanceView
         addViewButtons(viewToolBar);
         ToolBar tb1 = viewToolBar.createControl(wrapper);
         tb1.setBackground(header.getBackground());
+        // add buttons only after (!) creation of tool bar to avoid flickering
+        addViewButtons(viewToolBar);
 
         // create layout *after* the toolbar to keep the tab order right
-        wrapper.setLayout(new ToolBarPlusChevronLayout(wrapper));
+        wrapper.setLayout(new ToolBarPlusChevronLayout(wrapper, SWT.RIGHT));
 
         actionToolBar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
-        addButtons(actionToolBar);
         ToolBar tb2 = actionToolBar.createControl(header);
         tb2.setBackground(header.getBackground());
+        // add buttons only after (!) creation of tool bar to avoid flickering
+        addButtons(actionToolBar);
 
         // layout
         GridLayoutFactory.fillDefaults().numColumns(3).margins(5, 5).applyTo(header);
@@ -264,4 +272,10 @@ public abstract class AbstractFinanceView
     {
         return context.get(clazz);
     }
+
+    public void setToContext(String key, Object value)
+    {
+        context.set(key, value);
+    }
+
 }

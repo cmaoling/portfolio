@@ -69,6 +69,8 @@ public interface Extractor
 
         private Portfolio portfolioSecondary;
         
+        private String failureMessage;
+
         private boolean investmentPlanItem = false;
 
         public abstract Annotated getSubject();
@@ -94,6 +96,21 @@ public interface Extractor
         public long getShares()
         {
             return 0; // NOSONAR
+        }
+
+        public String getFailureMessage()
+        {
+            return failureMessage;
+        }
+
+        public void setFailureMessage(String failureMessage)
+        {
+            this.failureMessage = failureMessage;
+        }
+
+        public boolean isFailure()
+        {
+            return failureMessage != null;
         }
 
         public abstract Status apply(ImportAction action, Context context);

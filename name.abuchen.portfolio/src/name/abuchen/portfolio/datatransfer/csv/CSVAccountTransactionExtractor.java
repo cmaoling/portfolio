@@ -235,6 +235,12 @@ import name.abuchen.portfolio.util.Iban;
                 if ((type == Type.DEPOSIT || type == Type.REMOVAL) && peer != null)
                     t.setPeer(peer);
 
+                if (type == Type.INTEREST)
+                {
+                    if (taxes != null && taxes.longValue() != 0)
+                        t.addUnit(new Unit(Unit.Type.TAX, Money.of(t.getCurrencyCode(), Math.abs(taxes))));
+                }
+
                 if (security != null && grossAmount.isPresent())
                 {
                     // gross amount can only be relevant if a transaction is

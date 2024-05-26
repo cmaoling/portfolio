@@ -202,6 +202,8 @@ public class InvestmentPlan implements Named, Adaptable, Attributable
 
         for (Transaction t : transactions)
         {
+            if (t instanceof AccountTransaction at)
+                answer.add(new TransactionPair<>(lookupOwner(client, at), at));
             if (t instanceof AccountTransaction)
                 answer.add(new TransactionPair<AccountTransaction>(lookupOwner(client, (AccountTransaction) t),
                                 (AccountTransaction) t));
@@ -450,7 +452,8 @@ public class InvestmentPlan implements Named, Adaptable, Attributable
                 entry.setCurrencyCode(targetCurrencyCode);
                 entry.setAmount(amount);
                 entry.setSecurity(getSecurity());
-                entry.setNote(note);
+                entry.setNote(MessageFormat.format(Messages.InvestmentPlanAutoNoteLabel,
+                            Values.DateTime.format(LocalDateTime.now()), name));
 
                 if (fees != 0)
                     entry.getPortfolioTransaction()
@@ -491,7 +494,8 @@ public class InvestmentPlan implements Named, Adaptable, Attributable
             transaction.setCurrencyCode(targetCurrencyCode);
             transaction.setAmount(amount);
             transaction.setShares(shares);
-            transaction.setNote(note);
+            transaction.setNote(MessageFormat.format(Messages.InvestmentPlanAutoNoteLabel,
+                            Values.DateTime.format(LocalDateTime.now()), name));
 
             if (fees != 0)
                 transaction.addUnit(new Transaction.Unit(Unit.Type.FEE, Money.of(targetCurrencyCode, fees)));

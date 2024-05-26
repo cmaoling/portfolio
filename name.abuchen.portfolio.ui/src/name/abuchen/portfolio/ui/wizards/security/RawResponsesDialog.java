@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.jsoup.Jsoup;
-import org.jsoup.safety.Whitelist;
+import org.jsoup.safety.Safelist;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -32,7 +32,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
-import name.abuchen.portfolio.online.FeedData.RawResponse;
+import name.abuchen.portfolio.online.QuoteFeedData.RawResponse;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.FormDataFactory;
 import name.abuchen.portfolio.ui.util.SWTHelper;
@@ -115,7 +115,7 @@ public class RawResponsesDialog extends Dialog
 
             try
             {
-                JsonElement jsonElement = new JsonParser().parse(rawText.getText());
+                JsonElement jsonElement = JsonParser.parseString(rawText.getText());
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 rawText.setText(gson.toJson(jsonElement));
             }
@@ -130,7 +130,7 @@ public class RawResponsesDialog extends Dialog
             if (rawText.isDisposed())
                 return;
 
-            rawText.setText(Jsoup.clean(rawText.getText(), Whitelist.relaxed()));
+            rawText.setText(Jsoup.clean(rawText.getText(), Safelist.relaxed()));
         }));
 
     }
