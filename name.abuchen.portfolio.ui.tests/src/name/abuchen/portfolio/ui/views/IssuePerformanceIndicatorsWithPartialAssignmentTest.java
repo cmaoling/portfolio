@@ -12,7 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.eclipse.jface.preference.PreferenceStore;
+// CMAOLING: import org.eclipse.jface.preference.PreferenceStore;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -89,7 +89,7 @@ public class IssuePerformanceIndicatorsWithPartialAssignmentTest
 
         Taxonomy taxonomy = CLIENT.getTaxonomy("f8ffb083-774d-499e-a983-5c214eff7297"); //$NON-NLS-1$
 
-        StatementOfAssetsViewer.Model model = new StatementOfAssetsViewer.Model(new PreferenceStore(), CLIENT,
+        StatementOfAssetsViewer.Model model = new StatementOfAssetsViewer.Model(                       CLIENT,
                         ClientFilter.NO_FILTER, SNAPSHOT.getCurrencyConverter(), SNAPSHOT.getTime(), taxonomy);
 
         model.getElements().stream().map(Element.class::cast).filter(Element::isSecurity).forEach(e -> e
@@ -116,7 +116,7 @@ public class IssuePerformanceIndicatorsWithPartialAssignmentTest
 
         Taxonomy taxonomy = CLIENT.getTaxonomy("21baca92-db77-41f2-96d4-64e31ff4b4f5"); //$NON-NLS-1$
 
-        StatementOfAssetsViewer.Model model = new StatementOfAssetsViewer.Model(new PreferenceStore(), CLIENT,
+        StatementOfAssetsViewer.Model model = new StatementOfAssetsViewer.Model(                       CLIENT,
                         ClientFilter.NO_FILTER, SNAPSHOT.getCurrencyConverter(), SNAPSHOT.getTime(), taxonomy);
 
         model.getElements().stream().map(Element.class::cast).filter(Element::isSecurity).forEach(e -> e
