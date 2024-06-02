@@ -4,3 +4,12 @@ workspace
 .project
 .recommenders/*
 .DS_Store
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+
+*.orig

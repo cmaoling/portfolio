@@ -2,6 +2,7 @@ package name.abuchen.portfolio.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -96,6 +97,7 @@ public class PortfolioTransaction extends Transaction
     public void setType(Type type)
     {
         this.type = type;
+        setUpdatedAt(Instant.now());
     }
 
     /**
@@ -151,6 +153,8 @@ public class PortfolioTransaction extends Transaction
      * transactions, that are the gross proceeds before the deduction of taxes
      * and fees.
      */
+
+    @Override
     public Money getGrossValue()
     {
         return Money.of(getCurrencyCode(), getGrossValueAmount());

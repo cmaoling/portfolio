@@ -4,14 +4,16 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.e4.core.contexts.IEclipseContext;
@@ -55,9 +57,32 @@ public class LifeCycleManager
     @PostContextCreate
     public void doPostContextCreate(IEclipseContext context)
     {
+        checkForCustomCSSFile();
         checkForModelChanges();
         checkForRequestToClearPersistedState();
         setupEventLoopAdvisor(context);
+    }
+
+    private void checkForCustomCSSFile()
+    {
+        try
+        {
+            // the custom.css file *must* exist, otherwise no style sheets are
+            // loaded at all. Create the file if it does not exist
+
+            URL url = FileLocator.resolve(new URL("platform:/meta/name.abuchen.portfolio.ui/custom.css")); //$NON-NLS-1$
+            File customCSSFile = new File(url.getFile());
+
+            if (!customCSSFile.exists())
+            {
+                customCSSFile.getParentFile().mkdirs();
+                customCSSFile.createNewFile(); // NOSONAR
+            }
+        }
+        catch (IOException e)
+        {
+            logger.error(e);
+        }
     }
 
     private void checkForModelChanges()
@@ -118,9 +143,12 @@ public class LifeCycleManager
             public void eventLoopException(final Throwable exception)
             {
                 boolean isAnnoyingNullPointerOnElCapitan = isAnnoyingNullPointerOnElCapitan(exception);
+                boolean isAnnoyingNoClassDefFoundErrorAccessibleObject = isAnnoyingNoClassDefFoundErrorAccessibleObject(
+                                exception);
 
                 StatusReporter statusReporter = (StatusReporter) context.get(StatusReporter.class.getName());
-                if (!isAnnoyingNullPointerOnElCapitan && statusReporter != null)
+                if (!isAnnoyingNullPointerOnElCapitan && !isAnnoyingNoClassDefFoundErrorAccessibleObject
+                                && statusReporter != null)
                 {
                     statusReporter.show(StatusReporter.ERROR, "Internal Error", exception); //$NON-NLS-1$
                 }
@@ -151,6 +179,13 @@ public class LifeCycleManager
 
                 return true;
             }
+
+            private boolean isAnnoyingNoClassDefFoundErrorAccessibleObject(Throwable exception)
+            {
+                return (exception instanceof NoClassDefFoundError
+                                && "org/eclipse/swt/accessibility/AccessibleObject".equals(exception.getMessage())); //$NON-NLS-1$
+            }
+
         });
     }
 
@@ -238,13 +273,13 @@ public class LifeCycleManager
                 {
                     // Must be a Detached Window
                     MUIElement eParent = (MUIElement) ((EObject) container).eContainer();
-                    if (eParent instanceof MPerspective)
+                    if (eParent instanceof MPerspective perspective)
                     {
-                        ((MPerspective) eParent).getWindows().remove(container);
+                        perspective.getWindows().remove(container);
                     }
-                    else if (eParent instanceof MWindow)
+                    else if (eParent instanceof MWindow window)
                     {
-                        ((MWindow) eParent).getWindows().remove(container);
+                        window.getWindows().remove(container);
                     }
                 }
             }
@@ -267,7 +302,7 @@ public class LifeCycleManager
             File file = new File(Platform.getStateLocation(FrameworkUtil.getBundle(LifeCycleManager.class)).toFile(),
                             ModelConstants.E4XMICOPY_FILENAME);
 
-            try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file)))
+            try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file))) // NOSONAR
             {
                 resource.save(out, null);
             }

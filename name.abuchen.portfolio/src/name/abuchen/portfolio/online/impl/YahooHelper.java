@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
+import name.abuchen.portfolio.model.LatestSecurityPrice;
 import name.abuchen.portfolio.money.Values;
 
 public /* package */class YahooHelper
@@ -26,7 +27,7 @@ public /* package */class YahooHelper
 
     static boolean isNotApplicable(String s)
     {
-        if ("\"N/A\"".equals(s) || "N/A".equals(s) || "null".equals(s)) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        if ("\"N/A\"".equals(s) || "N/A".equals(s) || "null".equals(s) || "NaN".equals(s)) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             return true;
         return false;
     }
@@ -34,7 +35,7 @@ public /* package */class YahooHelper
     static long asPrice(String s) throws ParseException
     {
         if (isNotApplicable(s))
-            return -1;
+            return LatestSecurityPrice.NOT_AVAILABLE;
         BigDecimal v = (BigDecimal) FMT_PRICE.get().parse(s);
         return v.multiply(Values.Quote.getBigDecimalFactor()).setScale(0, RoundingMode.HALF_UP).longValue();
     }

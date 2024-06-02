@@ -3,7 +3,7 @@ package name.abuchen.portfolio.ui.views.earnings;
 import java.text.DateFormatSymbols;
 import java.util.Arrays;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.eclipse.jface.resource.ColorDescriptor;
 import org.eclipse.jface.resource.JFaceResources;

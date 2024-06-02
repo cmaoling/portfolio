@@ -2,7 +2,7 @@ package name.abuchen.portfolio.ui.handlers;
 
 import java.util.EnumSet;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 import org.eclipse.e4.core.di.annotations.CanExecute;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -27,13 +27,19 @@ public class UpdateQuotesHandler
     @Execute
     public void execute(@Named(IServiceConstants.ACTIVE_PART) MPart part,
                     @Named(IServiceConstants.ACTIVE_SHELL) Shell shell, SelectionService selectionService,
-                    @Named("name.abuchen.portfolio.ui.param.only-current-security") @Optional String onlyCurrentSecurity)
+                    @Named("name.abuchen.portfolio.ui.param.filter") @Optional String filter)
     {
         MenuHelper.getActiveClient(part).ifPresent(client -> {
-            if (Boolean.parseBoolean(onlyCurrentSecurity))
+
+            if ("security".equals(filter)) //$NON-NLS-1$
             {
                 selectionService.getSelection(client)
                                 .ifPresent(s -> new UpdateQuotesJob(client, s.getSecurity()).schedule());
+            }
+            else if ("active".equals(filter)) //$NON-NLS-1$
+            {
+                new UpdateQuotesJob(client, s -> !s.isRetired(), EnumSet.allOf(UpdateQuotesJob.Target.class))
+                                .schedule();
             }
             else
             {

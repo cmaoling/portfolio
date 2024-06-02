@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.BrowserFunction;

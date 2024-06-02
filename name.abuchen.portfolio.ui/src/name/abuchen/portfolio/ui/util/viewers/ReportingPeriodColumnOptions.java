@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.eclipse.swt.widgets.Shell;
 
-import com.ibm.icu.text.MessageFormat;
+import java.text.MessageFormat;
 
 import name.abuchen.portfolio.snapshot.ReportingPeriod;
 import name.abuchen.portfolio.ui.dialogs.ReportingPeriodDialog;

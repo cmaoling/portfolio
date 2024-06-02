@@ -25,7 +25,7 @@ import org.jsoup.UncheckedIOException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.jsoup.safety.Whitelist;
+import org.jsoup.safety.Safelist;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.model.LatestSecurityPrice;
@@ -91,6 +91,9 @@ abstract class HTMLTableParser
             formatters = new DateTimeFormatter[] { DateTimeFormatter.ofPattern("y-M-d"),
                             // https://stackoverflow.com/a/29496149/1158146
                             new DateTimeFormatterBuilder().appendPattern("d.M.")
+                                            .appendValueReduced(ChronoField.YEAR, 2, 2, Year.now().getValue() - 80)
+                                            .toFormatter(),
+                            new DateTimeFormatterBuilder().appendPattern("M/d/")
                                             .appendValueReduced(ChronoField.YEAR, 2, 2, Year.now().getValue() - 80)
                                             .toFormatter(),
                             DateTimeFormatter.ofPattern("d.M.yy"), //$NON-NLS-1$
@@ -315,7 +318,7 @@ abstract class HTMLTableParser
         // if no quotes could be extract, log HTML for further analysis
         if (elementList.isEmpty())
             data.addError(new IOException("<HTMLTableParser::parse>: " + MessageFormat.format(Messages.MsgNoQuotesFoundInHTML, url, //$NON-NLS-1$
-                            Jsoup.clean(document.html(), Whitelist.relaxed()))));
+                            Jsoup.clean(document.html(), Safelist.relaxed()))));
         else if (elementList.get(0) instanceof LatestSecurityPrice)
         {
             // sort by date and, if available, by time

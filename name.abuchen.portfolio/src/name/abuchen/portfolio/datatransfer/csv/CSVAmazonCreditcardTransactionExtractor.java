@@ -47,16 +47,16 @@ import name.abuchen.portfolio.money.Money;
         String[] defaultHeader = {  Messages.CSVColumn_IBAN, //0
                                     Messages.CSVColumn_Date, //1
                                     "", //2 //$NON-NLS-1$
+                                    "", //3 //$NON-NLS-1$
                                     Messages.CSVColumn_Note, //3
-                                    "", //4 //$NON-NLS-1$
-                                    "", //5 //$NON-NLS-1$
-                                    Messages.CSVColumn_Value, //6
+                                    Messages.CSVColumn_PartnerName, //3
+                                    "", //6 //$NON-NLS-1$
                                     "", //7 //$NON-NLS-1$
-                                    "", //8 //$NON-NLS-1$
+                                    Messages.CSVColumn_Value, //6
                                     "", //9 //$NON-NLS-1$
                                     "", //10 //$NON-NLS-1$
                                     "", //11 //$NON-NLS-1$
-                                    "" //12 //$NON-NLS-1$
+                                    ""  //12 //$NON-NLS-1$
                                 };
         return defaultHeader;
     }

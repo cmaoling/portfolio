@@ -14,8 +14,9 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -40,6 +41,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.ClientFactory;
+import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.snapshot.ReportingPeriod;
 import name.abuchen.portfolio.ui.Dimensions;
@@ -52,11 +54,15 @@ import name.abuchen.portfolio.ui.jobs.CreateInvestmentPlanTxJob;
 import name.abuchen.portfolio.ui.jobs.SyncOnlineSecuritiesJob;
 import name.abuchen.portfolio.ui.jobs.UpdateDividendsJob;
 import name.abuchen.portfolio.ui.jobs.UpdateQuotesJob;
+// CMOALING: import name.abuchen.portfolio.ui.preferences.BackupMode;
 import name.abuchen.portfolio.ui.wizards.client.ClientMigrationDialog;
 
 public class ClientInput
 {
-    // compatibility: the value used to be stored in the AbstractHistoricView
+    @Deprecated
+    public static final String DEFAULT_RELATIVE_BACKUP_FOLDER = "backups"; //$NON-NLS-1$
+
+        // compatibility: the value used to be stored in the AbstractHistoricView
     private static final String REPORTING_PERIODS_KEY = "AbstractHistoricView"; //$NON-NLS-1$
 
     private String label;
@@ -171,9 +177,20 @@ public class ClientInput
         return exchangeRateProviderFacory;
     }
 
+    /**
+     * Returns the preferences store per data file.
+     */
     public PreferenceStore getPreferenceStore()
     {
         return preferenceStore;
+    }
+
+    /**
+     * Returns the eclipse preferences which exist per installation.
+     */
+    public IEclipsePreferences getEclipsePreferences()
+    {
+        return preferences;
     }
 
     public void savePreferences()
@@ -503,7 +520,9 @@ public class ClientInput
     {
         if (preferences.getBoolean(UIConstants.Preferences.UPDATE_QUOTES_AFTER_FILE_OPEN, true))
         {
-            Job initialQuoteUpdate = new UpdateQuotesJob(client,
+            Predicate<Security> onlyActive = s -> !s.isRetired();
+
+            Job initialQuoteUpdate = new UpdateQuotesJob(client, onlyActive,
                             EnumSet.of(UpdateQuotesJob.Target.LATEST, UpdateQuotesJob.Target.HISTORIC));
             initialQuoteUpdate.schedule(1000);
 
@@ -513,17 +532,19 @@ public class ClientInput
             checkInvestmentPlans.schedule(1100);
 
             int thirtyMinutes = 1000 * 60 * 30;
-            Job job = new UpdateQuotesJob(client, EnumSet.of(UpdateQuotesJob.Target.LATEST)).repeatEvery(thirtyMinutes);
+            Job job = new UpdateQuotesJob(client, onlyActive, EnumSet.of(UpdateQuotesJob.Target.LATEST))
+                            .repeatEvery(thirtyMinutes);
             job.schedule(thirtyMinutes);
             regularJobs.add(job);
 
             int sixHours = 1000 * 60 * 60 * 6;
-            job = new UpdateQuotesJob(client, EnumSet.of(UpdateQuotesJob.Target.HISTORIC)).repeatEvery(sixHours);
+            job = new UpdateQuotesJob(client, onlyActive, EnumSet.of(UpdateQuotesJob.Target.HISTORIC))
+                            .repeatEvery(sixHours);
             job.schedule(sixHours);
             regularJobs.add(job);
 
-            new SyncOnlineSecuritiesJob(client).schedule(2000);
-            new UpdateDividendsJob(getClient()).schedule(5000);
+            new SyncOnlineSecuritiesJob(client).schedule(5000);
+            new UpdateDividendsJob(getClient()).schedule(7000);
         }
     }
 

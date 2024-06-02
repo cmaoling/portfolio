@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.function.DoubleFunction;
 import java.util.function.Predicate;
 
-import com.ibm.icu.text.MessageFormat;
+import java.text.MessageFormat;
 
 import name.abuchen.portfolio.model.Dashboard;
 import name.abuchen.portfolio.model.Dashboard.Widget;

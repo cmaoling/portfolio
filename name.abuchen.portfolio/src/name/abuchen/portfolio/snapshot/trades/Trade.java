@@ -33,7 +33,9 @@ public class Trade implements Adaptable
     private List<TransactionPair<PortfolioTransaction>> transactions = new ArrayList<>();
 
     private Money entryValue;
+    private Money entryGrossValue;
     private Money exitValue;
+    private Money exitGrossValue;
     private long holdingPeriod;
     private double irr;
 
@@ -52,11 +54,23 @@ public class Trade implements Adaptable
                                         .with(converter.at(t.getTransaction().getDateTime())))
                         .collect(MoneyCollectors.sum(converter.getTermCurrency()));
 
+        this.entryGrossValue = transactions.stream() //
+                        .filter(t -> t.getTransaction().getType().isPurchase())
+                        .map(t -> t.getTransaction().getGrossValue()
+                                        .with(converter.at(t.getTransaction().getDateTime())))
+                        .collect(MoneyCollectors.sum(converter.getTermCurrency()));
+
         if (end != null)
         {
             this.exitValue = transactions.stream() //
                             .filter(t -> t.getTransaction().getType().isLiquidation())
                             .map(t -> t.getTransaction().getMonetaryAmount()
+                                            .with(converter.at(t.getTransaction().getDateTime())))
+                            .collect(MoneyCollectors.sum(converter.getTermCurrency()));
+
+            this.exitGrossValue = transactions.stream() //
+                            .filter(t -> t.getTransaction().getType().isLiquidation())
+                            .map(t -> t.getTransaction().getGrossValue()
                                             .with(converter.at(t.getTransaction().getDateTime())))
                             .collect(MoneyCollectors.sum(converter.getTermCurrency()));
 
@@ -177,6 +191,15 @@ public class Trade implements Adaptable
         return exitValue.subtract(entryValue);
     }
 
+    public Money getGrossProfitLoss()
+    {
+        if (exitGrossValue == null) 
+        {
+            return null;
+        }
+        return exitGrossValue.subtract(entryGrossValue);
+    }
+
     public long getHoldingPeriod()
     {
         return holdingPeriod;
@@ -190,6 +213,33 @@ public class Trade implements Adaptable
     public double getReturn()
     {
         return (exitValue.getAmount() / (double) entryValue.getAmount()) - 1;
+    }
+    
+    /**
+     * @brief Checks if the trade is closed
+     * @return True if the trade has been closed, false otherwise
+     */
+    public boolean isClosed()
+    {
+        return this.getEnd().isPresent();
+    }
+    
+    /**
+     * @brief Checks if the trade made a net loss
+     * @return True if the trade resulted in a net loss
+     */
+    public boolean isLoss()
+    {
+        return this.getProfitLoss().isNegative();
+    }
+    
+    /**
+     * @brief Check if the trade man a gross gross 
+     * @return True if the trade result in a gross loss
+     */
+    public boolean isGrossLoss()
+    {
+        return this.getGrossProfitLoss().isNegative();
     }
 
     @Override

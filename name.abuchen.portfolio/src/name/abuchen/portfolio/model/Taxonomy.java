@@ -66,7 +66,7 @@ public class Taxonomy
 
     public void setName(String name)
     {
-        propertyChangeSupport.firePropertyChange("name", this.name, this.name = name); //$NON-NLS-1$
+        propertyChangeSupport.firePropertyChange("name", this.name, this.name = name); // NOSONAR //$NON-NLS-1$
     }
 
     public void setSource(String source)

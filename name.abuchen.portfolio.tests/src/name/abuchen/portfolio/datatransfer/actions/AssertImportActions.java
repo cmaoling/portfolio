@@ -58,16 +58,25 @@ public class AssertImportActions
     }
 
     private static final ImportAction[] actions = new ImportAction[] { //
-                    new CheckValidTypesAction(), new CheckSecurityRelatedValuesAction(), new CheckCurrenciesAction() };
+                    new CheckValidTypesAction(), new CheckSecurityRelatedValuesAction(), new CheckCurrenciesAction(),
+                    new CheckForexGrossValueAction() };
 
     private void check(List<Extractor.Item> items, ImportAction.Context context)
     {
         for (Extractor.Item item : items)
         {
+            // TODO: CMAOLING edition checkout #3119 and consider incorporation: 
+            //    https://github.com/portfolio-performance/portfolio/commit/f368c39cf03aab390cbd9b925a01d46c559050c1            
+            //// do not apply further checks if the item is a (permanent) failure
+            //// as the transactions most likely has further errors
+            //if (item.isFailure())
+            //    continue;
+
             for (ImportAction action : actions)
             {
                 ImportAction.Status status = item.apply(action, context);
-                assertThat(status.getMessage(), status.getCode(), is(ImportAction.Status.Code.OK));
+                assertThat(status.getMessage() + "\n Item: " + item, //$NON-NLS-1$
+                                status.getCode(), is(ImportAction.Status.Code.OK));
             }
         }
     }

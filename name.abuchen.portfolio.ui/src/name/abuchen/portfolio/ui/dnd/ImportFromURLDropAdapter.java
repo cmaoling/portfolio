@@ -20,7 +20,7 @@ import org.eclipse.swt.dnd.URLTransfer;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
-import com.ibm.icu.text.MessageFormat;
+import java.text.MessageFormat;
 
 import name.abuchen.portfolio.model.Exchange;
 import name.abuchen.portfolio.model.Security;

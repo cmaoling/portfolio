@@ -12,9 +12,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.eclipse.core.databinding.beans.typed.BeanProperties;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
@@ -230,9 +230,6 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         int widest = widest(securities != null ? securities.label : null, accounts.label, dateTime.label, shares.label,
                         taxes.label, fees.label, total.label, lblNote, fxGrossAmount.label);
 
-        int amountWidth = amountWidth(grossAmount.value);
-        int currencyWidth = currencyWidth(fxGrossAmount.currency);
-
         FormDataFactory forms;
         if (securities != null)
         {
@@ -243,7 +240,12 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         else
         {
             forms = startingWith(accounts.value.getControl(), accounts.label).suffix(accounts.currency);
+            startingWith(accounts.label).width(widest);
         }
+
+        int amountWidth = amountWidth(grossAmount.value);
+        int currencyWidth = currencyWidth(fxGrossAmount.currency);
+
         if (peers != null)
         {
             forms = forms.thenBelow(peers.valuePartner).width(amountWidth*2).label(peers.lblPartner);
@@ -511,9 +513,13 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         model().setSource(account, transaction);
     }
 
+    public void presetTransaction(Account account, AccountTransaction transaction)
+    {
+        model().presetFromSource(account, transaction);
+    }
+
     public void setEvent(SecurityEvent event)
     {
         model().setEvent(event);
     }
-
 }

@@ -2,12 +2,14 @@ package name.abuchen.portfolio.ui.addons;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -34,7 +36,7 @@ import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
 import name.abuchen.portfolio.ui.UIConstants;
 import name.abuchen.portfolio.ui.log.LogEntryCache;
-import name.abuchen.portfolio.ui.update.UpdateHelper;
+//CMAOLING: import name.abuchen.portfolio.ui.update.UpdateHelper;
 import name.abuchen.portfolio.ui.util.ProgressMonitorFactory;
 import name.abuchen.portfolio.ui.util.RecentFilesCache;
 import name.abuchen.portfolio.ui.util.swt.ActiveShell;
@@ -68,7 +70,21 @@ public class StartupAddon
 
             updateOnline(monitor);
 
-            schedule(1000L * 60 * 60 * 12); // every 12 hours
+            // schedule to run at 17 CET because the reference rates are
+            // "usually updated at around 16:00 CET every working day"
+            // or within in 6 hours in case that is sooner
+
+            ZonedDateTime nowInTimeZone = ZonedDateTime.now();
+            ZoneId cet = ZoneId.of("CET"); //$NON-NLS-1$
+            ZonedDateTime nowInCET = nowInTimeZone.withZoneSameInstant(cet);
+            ZonedDateTime nextCET17 = nowInCET.toLocalDate().atTime(17, 0).atZone(cet);
+            if (nowInCET.isAfter(nextCET17))
+                nextCET17 = nextCET17.plusDays(1);
+
+            long millisUntilNextCET17 = ChronoUnit.MILLIS.between(nowInCET, nextCET17);
+            var sixHours = 1000L * 60 * 60 * 6;
+
+            schedule(millisUntilNextCET17 > 0 && millisUntilNextCET17 < sixHours ? millisUntilNextCET17 : sixHours);
 
             return Status.OK_STATUS;
         }
@@ -132,31 +148,32 @@ public class StartupAddon
     public void checkForUpdates(@UIEventTopic(UIEvents.UILifeCycle.APP_STARTUP_COMPLETE) Event event, // NOSONAR
                     @Preference(value = UIConstants.Preferences.AUTO_UPDATE) boolean autoUpdate)
     {
-        if (autoUpdate)
-        {
-            Job job = new Job(Messages.JobMsgCheckingForUpdates)
-            {
-
-                @Override
-                protected IStatus run(IProgressMonitor monitor)
-                {
-                    try
-                    {
-                        monitor.beginTask(Messages.JobMsgCheckingForUpdates, 200);
-                        UpdateHelper updateHelper = new UpdateHelper();
-                        updateHelper.runUpdate(monitor, true);
-                    }
-                    catch (CoreException e) // NOSONAR
-                    {
-                        PortfolioPlugin.log(e.getStatus());
-                    }
-                    return Status.OK_STATUS;
-                }
-
-            };
-            job.setSystem(true);
-            job.schedule(3000);
-        }
+// CMAOLING:
+//        if (autoUpdate && UpdateHelper.isInAppUpdateEnabled())
+//        {
+//            Job job = new Job(Messages.JobMsgCheckingForUpdates)
+//            {
+//
+//                @Override
+//                protected IStatus run(IProgressMonitor monitor)
+//                {
+//                    try
+//                    {
+//                        monitor.beginTask(Messages.JobMsgCheckingForUpdates, 200);
+//                        UpdateHelper updateHelper = new UpdateHelper();
+//                        updateHelper.runUpdate(monitor, true);
+//                    }
+//                    catch (CoreException e) // NOSONAR
+//                    {
+//                        PortfolioPlugin.log(e.getStatus());
+//                    }
+//                    return Status.OK_STATUS;
+//                }
+//
+//            };
+//            job.setSystem(true);
+//            job.schedule(3000);
+//        }
     }
 
     @PostConstruct

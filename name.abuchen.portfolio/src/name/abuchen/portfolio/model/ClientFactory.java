@@ -14,6 +14,8 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
@@ -22,6 +24,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.text.MessageFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,7 +34,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -48,8 +56,10 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import com.google.common.base.Strings;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.XStreamException;
+import com.thoughtworks.xstream.converters.collections.MapConverter;
 import com.thoughtworks.xstream.converters.reflection.ReflectionConverter;
 import com.thoughtworks.xstream.converters.reflection.ReflectionProvider;
 import com.thoughtworks.xstream.mapper.Mapper;
@@ -58,11 +68,15 @@ import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.model.AttributeType.ImageConverter;
 import name.abuchen.portfolio.model.Classification.Assignment;
 import name.abuchen.portfolio.model.PortfolioTransaction.Type;
+import name.abuchen.portfolio.model.Transaction.Unit;
 import name.abuchen.portfolio.money.CurrencyUnit;
 import name.abuchen.portfolio.money.Money;
 import name.abuchen.portfolio.money.Values;
 import name.abuchen.portfolio.online.impl.YahooFinanceQuoteFeed;
 import name.abuchen.portfolio.util.ProgressMonitorInputStream;
+import name.abuchen.portfolio.util.TextUtil;
+import name.abuchen.portfolio.util.XStreamArrayListConverter;
+import name.abuchen.portfolio.util.XStreamInstantConverter;
 import name.abuchen.portfolio.util.XStreamLocalDateConverter;
 import name.abuchen.portfolio.util.XStreamLocalDateTimeConverter;
 import name.abuchen.portfolio.util.XStreamSecurityPriceConverter;
@@ -93,7 +107,7 @@ public class ClientFactory
 
     }
 
-    private static class XmlSerialization
+    /* package */ static class XmlSerialization
     {
         public Client load(Reader input) throws IOException
         {
@@ -544,7 +558,7 @@ public class ClientFactory
                 // added currency support --> designate a default currency (user
                 // will get a dialog to change)
                 setAllCurrencies(client, CurrencyUnit.EUR);
-                bumpUpCPIMonthValue(client);
+                // bumpUpCPIMonthValue --> CPI removed anyways
                 convertFeesAndTaxesToTransactionUnits(client);
             case 29: // NOSONAR
                 // added decimal places to stock quotes
@@ -589,28 +603,53 @@ public class ClientFactory
                 // added data map to classification and assignment
             case 43:
                 // added LimitPrice as attribute type
-            case 44:
+            case 44: // NOSONAR
                 // added weights to dashboard columns
                 fixDashboardColumnWeights(client);
             case 45:
                 // added custom security type NOTE
-            case 46:
+            case 46: // NOSONAR
                 // added dividend payment security event
                 addDefaultLogoAttributes(client);
             case 47:
                 // added fees to dividend transactions
-            case 48:
+            case 48: // NOSONAR
                 incrementSharesPrecisionFromSixToEightDigitsAfterDecimalSign(client);
                 // add 4 more decimal places to the quote to make it 8
                 addDecimalPlacesToQuotes(client);
                 addDecimalPlacesToQuotes(client);
-            case 49:
+            case 49: // NOSONAR
                 fixLimitQuotesWith4AdditionalDecimalPlaces(client);
+            case 50: // NOSONAR
+                assignTxUUIDsAndUpdateAtInstants(client);
+            case 51: // NOSONAR
+                permanentelyRemoveCPIData(client);
+                fixDimensionsList(client);
+            case 52:
+                // added properties to attribute types
+            case 53: // NOSONAR
+                fixSourceAttributeOfTransactions(client);
+            case 54: // NOSONAR
+                addKeyToTaxonomyClassifications(client);
+            case 55: // NOSONAR
+                fixGrossValueUnits(client);
+            case 56: // NOSONAR
+                // migrate client filters into model (done when setting the
+                // client input as we do not have access to the preferences
+                // here)
+
+                // remove obsolete MARKET properties
+                removeMarketSecurityProperty(client);
+            case 57: // NOSONAR
+                // remove securities in watchlists which are not present in "all
+                // securities", see #3452
+                removeWronglyAddedSecurities(client);
+            case 58:
+                fixDataSeriesLabelForAccumulatedTaxes(client);
 
                 client.setVersion(Client.CURRENT_VERSION);
                 break;
             case Client.CURRENT_VERSION:
-                // 
                 break;
             default:
                 break;
@@ -754,6 +793,7 @@ public class ClientFactory
 
         Taxonomy taxonomy = new Taxonomy("assetallocation", Messages.LabelAssetAllocation); //$NON-NLS-1$
         Classification root = new Classification(category.getUUID(), Messages.LabelAssetAllocation);
+        root.setKey(taxonomy.getId());
         taxonomy.setRootNode(root);
 
         buildTree(root, category);
@@ -779,7 +819,7 @@ public class ClientFactory
 
         for (Object element : category.getElements())
         {
-            Assignment assignment = element instanceof Account ? new Assignment((Account) element)
+            Assignment assignment = element instanceof Account account ? new Assignment(account)
                             : new Assignment((Security) element);
             assignment.setRank(rank++);
 
@@ -959,16 +999,6 @@ public class ClientFactory
     }
 
     /**
-     * Previously, January had the index 0 (in line with java.util.Date). Bump
-     * it up by one since we are using new Java 8 Time API.
-     */
-    private static void bumpUpCPIMonthValue(Client client)
-    {
-        for (ConsumerPriceIndex i : client.getConsumerPriceIndices())
-            i.setMonth(i.getMonth() + 1);
-    }
-
-    /**
      * Sets all currency codes of accounts, securities, and transactions to the
      * given currency code.
      */
@@ -1022,8 +1052,8 @@ public class ClientFactory
                     l.setHigh(l.getHigh() * decimalPlacesAdded);
                 if (l.getLow() != -1)
                     l.setLow(l.getLow() * decimalPlacesAdded);
-                if (l.getPreviousClose() != -1)
-                    l.setPreviousClose(l.getPreviousClose() * decimalPlacesAdded);
+                if (l.getPreviousClose() != -1) // NOSONAR
+                    l.setPreviousClose(l.getPreviousClose() * decimalPlacesAdded); // NOSONAR
             }
         }
 
@@ -1035,8 +1065,8 @@ public class ClientFactory
             for (AttributeType t : typesWithQuotes)
             {
                 Object value = attributes.get(t);
-                if (value instanceof Long)
-                    attributes.put(t, ((Long) value).longValue() * decimalPlacesAdded);
+                if (value instanceof Long l)
+                    attributes.put(t, l.longValue() * decimalPlacesAdded);
             }
         });
     }
@@ -1187,13 +1217,205 @@ public class ClientFactory
             for (AttributeType t : typesWithLimit)
             {
                 Object value = attributes.get(t);
-                if (value instanceof LimitPrice)
+                if (value instanceof LimitPrice lp)
                 {
-                    LimitPrice lp = (LimitPrice) value;
                     attributes.put(t, new LimitPrice(lp.getRelationalOperator(), lp.getValue() * 10000));
                 }
             }
         });
+    }
+
+    private static void assignTxUUIDsAndUpdateAtInstants(Client client)
+    {
+        for (Account a : client.getAccounts())
+        {
+            a.setUpdatedAt(Instant.now());
+            for (Transaction t : a.getTransactions())
+            {
+                t.setUpdatedAt(Instant.now());
+                t.generateUUID();
+            }
+        }
+
+        for (Portfolio p : client.getPortfolios())
+        {
+            p.setUpdatedAt(Instant.now());
+            for (Transaction t : p.getTransactions())
+            {
+                t.setUpdatedAt(Instant.now());
+                t.generateUUID();
+            }
+        }
+
+        for (Security s : client.getSecurities())
+        {
+            s.setUpdatedAt(Instant.now());
+        }
+    }
+
+    private static void permanentelyRemoveCPIData(Client client)
+    {
+        client.voidConsumerPriceIndeces();
+    }
+
+    private static void fixDimensionsList(Client client)
+    {
+        client.getTaxonomies().forEach(t -> {
+            if (t.getDimensions() != null)
+                t.setDimensions(new ArrayList<>(t.getDimensions()));
+        });
+    }
+
+    private static void fixSourceAttributeOfTransactions(Client client)
+    {
+        List<Transaction> allTransactions = new ArrayList<>();
+        client.getAccounts().forEach(a -> allTransactions.addAll(a.getTransactions()));
+        client.getPortfolios().forEach(p -> allTransactions.addAll(p.getTransactions()));
+
+        Pattern pattern = Pattern.compile("^((?<note>.*) \\| )?(?<file>[^ ]*\\.(pdf|csv))$", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+
+        for (Transaction tx : allTransactions)
+        {
+            String note = TextUtil.trim(tx.getNote());
+            if (note == null || note.length() == 0)
+                continue;
+
+            Matcher m = pattern.matcher(note);
+            if (m.matches())
+            {
+                tx.setNote(TextUtil.trim(m.group("note"))); //$NON-NLS-1$
+                tx.setSource(TextUtil.trim(m.group("file"))); //$NON-NLS-1$
+            }
+        }
+    }
+
+    private static void addKeyToTaxonomyClassifications(Client client)
+    {
+        List<TaxonomyTemplate> taxonomyTemplates = TaxonomyTemplate.list();
+        for (Taxonomy taxonomy : client.getTaxonomies())
+        {
+            if (Strings.isNullOrEmpty(taxonomy.getRoot().getKey()))
+            {
+                taxonomyTemplates.stream().filter(tt -> tt.getName().equals(taxonomy.getName())).findAny()
+                                .ifPresent(template -> {
+                                    copyClassificationKeys(template.build().getRoot(), taxonomy.getRoot());
+                                });
+            }
+        }
+    }
+
+    private static void copyClassificationKeys(Classification from, Classification to)
+    {
+        to.setKey(from.getKey());
+
+        Map<String, Classification> fromChildren = from.getChildren().stream()
+                        .collect(Collectors.toMap(Classification::getName, Function.identity(), (r, l) -> null));
+
+        Map<String, Classification> toChildren = to.getChildren().stream()
+                        .collect(Collectors.toMap(Classification::getName, Function.identity(), (r, l) -> null));
+
+        for (Map.Entry<String, Classification> entry : fromChildren.entrySet())
+        {
+            String key = entry.getKey();
+            Classification fromChild = entry.getValue();
+            if (toChildren.containsKey(key))
+            {
+                copyClassificationKeys(fromChild, toChildren.get(key));
+            }
+        }
+    }
+
+    private static void fixGrossValueUnits(Client client)
+    {
+        for (Portfolio portfolio : client.getPortfolios())
+            for (PortfolioTransaction tx : portfolio.getTransactions())
+                fixGrossValueUnit(tx);
+
+        for (Account account : client.getAccounts())
+            for (AccountTransaction tx : account.getTransactions())
+                fixGrossValueUnit(tx);
+    }
+
+    private static void fixGrossValueUnit(Transaction tx)
+    {
+        Optional<Unit> unit = tx.getUnit(Unit.Type.GROSS_VALUE);
+
+        if (unit.isEmpty())
+            return;
+
+        Unit grossValueUnit = unit.get();
+        Money calculatedGrossValue = tx.getGrossValue();
+
+        if (grossValueUnit.getAmount().equals(calculatedGrossValue))
+            return;
+
+        // check if it a rounding difference that is acceptable
+        try
+        {
+            Unit u = new Unit(Unit.Type.GROSS_VALUE, calculatedGrossValue, grossValueUnit.getForex(),
+                            grossValueUnit.getExchangeRate());
+
+            tx.removeUnit(grossValueUnit);
+            tx.addUnit(u);
+            return;
+        }
+        catch (IllegalArgumentException ignore)
+        {
+            // recalculate the unit to fix the gross value
+        }
+
+        try
+        {
+            Money updatedGrossValue = Money.of(grossValueUnit.getForex().getCurrencyCode(),
+                            BigDecimal.valueOf(calculatedGrossValue.getAmount())
+                                            .divide(grossValueUnit.getExchangeRate(), Values.MC)
+                                            .setScale(0, RoundingMode.HALF_EVEN).longValue());
+
+            tx.removeUnit(grossValueUnit);
+            tx.addUnit(new Unit(Unit.Type.GROSS_VALUE, calculatedGrossValue, updatedGrossValue,
+                            grossValueUnit.getExchangeRate()));
+        }
+        catch (IllegalArgumentException e)
+        {
+            // ignore in case we are still running into rounding differences
+            // (for example: 4,33 EUR / 131,53 = 0,03 JPY but 0,03 JPY * 131,53
+            // = 3,95 EUR) because otherwise the user cannot open the file at
+            // all (and manually fix the issue)
+        }
+    }
+
+    private static void removeMarketSecurityProperty(Client client)
+    {
+        for (Security security : client.getSecurities())
+            security.removePropertyIf(p -> p == null || p.getType() == SecurityProperty.Type.MARKET);
+    }
+
+    private static void removeWronglyAddedSecurities(Client client)
+    {
+        client.getWatchlists() //
+                        .forEach(w -> new ArrayList<>(w.getSecurities()) //
+                                        .forEach(s -> {
+                                            if (!client.getSecurities().contains(s))
+                                            {
+                                                if (s.getTransactions(client).isEmpty())
+                                                    w.getSecurities().remove(s);
+                                                else
+                                                    client.addSecurity(s);
+                                            }
+                                        }));
+    }
+
+    private static void fixDataSeriesLabelForAccumulatedTaxes(Client client)
+    {
+        if (!client.getSettings().hasConfigurationSet("StatementOfAssetsHistoryView-PICKER")) //$NON-NLS-1$
+            return;
+
+        var configSet = client.getSettings().getConfigurationSet("StatementOfAssetsHistoryView-PICKER"); //$NON-NLS-1$
+
+        configSet.getConfigurations() //
+                        .filter(config -> config.getData() != null) //
+                        .forEach(config -> config.setData(config.getData() //
+                                        .replace("Client-taxes;", "Client-taxes_accumulated;"))); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @SuppressWarnings("nls")
@@ -1203,13 +1425,25 @@ public class ClientFactory
         {
             xstream = new XStream();
 
+            xstream.allowTypesByWildcard(new String[] { "name.abuchen.portfolio.model.**" });
+
             xstream.setClassLoader(ClientFactory.class.getClassLoader());
+
+            // because we introduced LocalDate and LocalDateTime before Xstream
+            // was supporting it, we must declare it referenceable for backward
+            // compatibility reasons
+            xstream.addImmutableType(LocalDate.class, true);
+            xstream.addImmutableType(LocalDateTime.class, true);
 
             xstream.registerConverter(new XStreamLocalDateConverter());
             xstream.registerConverter(new XStreamLocalDateTimeConverter());
+            xstream.registerConverter(new XStreamInstantConverter());
             xstream.registerConverter(new XStreamSecurityPriceConverter());
             xstream.registerConverter(
                             new PortfolioTransactionConverter(xstream.getMapper(), xstream.getReflectionProvider()));
+
+            xstream.registerConverter(new MapConverter(xstream.getMapper(), TypedMap.class));
+            xstream.registerConverter(new XStreamArrayListConverter(xstream.getMapper()));
 
             xstream.useAttributeFor(Money.class, "amount");
             xstream.useAttributeFor(Money.class, "currencyCode");
@@ -1244,13 +1478,13 @@ public class ClientFactory
 
             xstream.alias("limitPrice", LimitPrice.class);
 
-            xstream.alias("cpi", ConsumerPriceIndex.class);
-            xstream.useAttributeFor(ConsumerPriceIndex.class, "year");
-            xstream.aliasField("y", ConsumerPriceIndex.class, "year");
-            xstream.useAttributeFor(ConsumerPriceIndex.class, "month");
-            xstream.aliasField("m", ConsumerPriceIndex.class, "month");
-            xstream.useAttributeFor(ConsumerPriceIndex.class, "index");
-            xstream.aliasField("i", ConsumerPriceIndex.class, "index");
+            xstream.alias("cpi", ConsumerPriceIndex.class); // NOSONAR
+            xstream.useAttributeFor(ConsumerPriceIndex.class, "year"); // NOSONAR
+            xstream.aliasField("y", ConsumerPriceIndex.class, "year"); // NOSONAR
+            xstream.useAttributeFor(ConsumerPriceIndex.class, "month"); // NOSONAR
+            xstream.aliasField("m", ConsumerPriceIndex.class, "month"); // NOSONAR
+            xstream.useAttributeFor(ConsumerPriceIndex.class, "index"); // NOSONAR
+            xstream.aliasField("i", ConsumerPriceIndex.class, "index"); // NOSONAR
 
             xstream.alias("buysell", BuySellEntry.class);
             xstream.alias("account-transfer", AccountTransferEntry.class);

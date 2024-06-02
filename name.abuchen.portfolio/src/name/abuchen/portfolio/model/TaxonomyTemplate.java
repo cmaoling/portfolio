@@ -1,5 +1,6 @@
 package name.abuchen.portfolio.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -105,11 +106,14 @@ public final class TaxonomyTemplate
         taxonomy.setSource(getString(bundle, "source")); //$NON-NLS-1$
 
         Classification root = new Classification(id, name);
+        root.setKey(id);
         taxonomy.setRootNode(root);
         String labels = getString(bundle, "labels"); //$NON-NLS-1$
         if (labels == null)
             throw new IllegalArgumentException();
-        taxonomy.setDimensions(Arrays.asList(labels.split(","))); //$NON-NLS-1$
+
+        // Arrays.asList is not serialized niceyl with XStream
+        taxonomy.setDimensions(new ArrayList<>(Arrays.asList(labels.split(",")))); //$NON-NLS-1$
 
         readClassification(bundle, root);
 
@@ -138,6 +142,7 @@ public final class TaxonomyTemplate
             String color = getString(bundle, childId + ".color"); //$NON-NLS-1$
 
             Classification child = new Classification(parent, childId, label, color);
+            child.setKey(childId);
 
             int weight = getInt(bundle, childId + ".weight"); //$NON-NLS-1$
             if (weight >= 0)

@@ -15,7 +15,7 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.widgets.Display;
 
 import com.google.common.base.Strings;
-import com.ibm.icu.text.MessageFormat;
+import java.text.MessageFormat;
 
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;

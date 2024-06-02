@@ -85,6 +85,7 @@ public class InsertAction implements ImportAction
                             transaction.getCurrencyCode(), transaction.getAmount(), null,
                             AccountTransaction.Type.REMOVAL);
             removal.setNote(transaction.getNote());
+            removal.setSource(transaction.getSource());
             account.addTransaction(removal);
         }
 
@@ -130,6 +131,7 @@ public class InsertAction implements ImportAction
                 {
                     existingTransaction.setDateTime(t.getDateTime());
                     existingTransaction.setNote(t.getNote());
+                    existingTransaction.setSource(t.getSource());
                     existingTransaction.setShares(t.getShares());
                     existingTransaction.setAmount(t.getAmount());
                     existingTransaction.clearUnits();
@@ -142,6 +144,7 @@ public class InsertAction implements ImportAction
                         crossTransaction.setDateTime(t.getDateTime());
                         crossTransaction.setAmount(t.getAmount());
                         crossTransaction.setNote(t.getNote());
+                        crossTransaction.setSource(t.getSource());
                     }
                     return Status.OK_STATUS;
                 }
@@ -160,6 +163,7 @@ public class InsertAction implements ImportAction
             delivery.setSecurity(t.getSecurity());
             delivery.setMonetaryAmount(t.getMonetaryAmount());
             delivery.setNote(t.getNote());
+            delivery.setSource(t.getSource());
             delivery.setShares(t.getShares());
             delivery.addUnits(t.getUnits());
 

@@ -25,6 +25,7 @@ public class Watchlist
 
     public void addSecurity(Security security)
     {
-        securities.add(security);
+        if (!securities.contains(security))
+            securities.add(security);
     }
 }

@@ -12,7 +12,7 @@ import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.eclipse.e4.core.di.extensions.Preference;
 import org.eclipse.jface.action.Action;

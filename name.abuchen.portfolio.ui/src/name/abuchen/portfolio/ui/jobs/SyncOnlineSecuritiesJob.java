@@ -9,7 +9,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
-import com.ibm.icu.text.MessageFormat;
+import java.text.MessageFormat;
 
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Security;
@@ -63,6 +63,16 @@ public final class SyncOnlineSecuritiesJob extends AbstractClientJob
             catch (IOException e)
             {
                 PortfolioPlugin.log(e);
+            }
+
+            try
+            {
+                // poor man's throttling to help out portfolio-report
+                Thread.sleep(1000);
+            }
+            catch (InterruptedException e)
+            {
+                Thread.currentThread().interrupt();
             }
         }
 

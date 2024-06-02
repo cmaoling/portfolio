@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import name.abuchen.portfolio.model.Account;
 import name.abuchen.portfolio.model.Classification;

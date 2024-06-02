@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.StringJoiner;
 
 import name.abuchen.portfolio.Messages;
@@ -28,6 +29,7 @@ import name.abuchen.portfolio.model.PortfolioTransaction;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.model.Transaction.Unit;
 import name.abuchen.portfolio.money.Money;
+import name.abuchen.portfolio.util.Iban;
 
 /* package */ public class CSVAccountTransactionExtractor extends BaseCSVExtractor
 {
@@ -69,6 +71,9 @@ import name.abuchen.portfolio.money.Money;
         fields.add(new Field(Messages.CSVColumn_AccountName2nd).setOptional(true));
         fields.add(new Field(Messages.CSVColumn_PortfolioName).setOptional(true));
 
+        fields.add(new AmountField(Messages.CSVColumn_GrossAmount).setOptional(true));
+        fields.add(new Field(Messages.CSVColumn_CurrencyGrossAmount).setOptional(true));
+        fields.add(new AmountField(Messages.CSVColumn_ExchangeRate).setOptional(true));
         return fields;
     }
 
@@ -94,6 +99,8 @@ import name.abuchen.portfolio.money.Money;
         Long taxes = getAmount(Messages.CSVColumn_Taxes, rawValues, field2column);
         Long fees = getAmount(Messages.CSVColumn_Fees, rawValues, field2column);
 
+        Optional<Unit> grossAmount = extractGrossAmount(rawValues, field2column, amount);
+
         Account account = getAccount(getClient(), rawValues, field2column);
         Account account2nd = getAccount(getClient(), rawValues, field2column, true);
         Portfolio portfolio = getPortfolio(getClient(), rawValues, field2column);
@@ -101,6 +108,7 @@ import name.abuchen.portfolio.money.Money;
         Extractor.Item item = null;
 
         Peer peer = getPeer(rawValues, field2column, p -> {});
+        // DEBUG: System.err.println("CSVAccountTransactionExtratctor:extract peer: " + (peer != null?peer.toString():"")); //$NON-NLS-1$  //$NON-NLS-2$
         if (peer != null && peer.links2Account())
         {
             if (type == Type.DEPOSIT)
@@ -197,14 +205,20 @@ import name.abuchen.portfolio.money.Money;
                 if (dividendType || type == Type.TAXES || type == Type.TAX_REFUND || type == Type.FEES || type == Type.FEES_REFUND)
                     t.setSecurity(security);
                 t.setDateTime(date.withHour(0).withMinute(0));
-                String extNote = getText(Messages.CSVColumn_ISIN, rawValues, field2column);
-                if (extNote != null && security.getIsin().equals("")) //$NON-NLS-1$
+                String isinNote = getText(Messages.CSVColumn_ISIN, rawValues, field2column);
+                if (isinNote != null && security.getIsin().equals("")) //$NON-NLS-1$
                 {
                     if (note == null)
                         note = Messages.LabelNothing;
                     else if (!note.equals("")) //$NON-NLS-1$
                         note += " - "; //$NON-NLS-1$
-                    note += extNote;
+                    note += isinNote;
+                }
+                String ibanNote = getText(Messages.CSVColumn_IBAN, rawValues, field2column);
+                // DEBUG: System.err.println("CSVAccountTransactionExtratctor:extract ibanNote: " + (ibanNote != null?ibanNote:"")); //$NON-NLS-1$  //$NON-NLS-2$
+                if (!(ibanNote == null || Iban.isValid(ibanNote)))
+                {
+                    note = ibanNote + (note != null?" - "+note:"") ; //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 if (dividendType)
                 {
@@ -214,9 +228,26 @@ import name.abuchen.portfolio.money.Money;
                 if (dividendType && taxes != null && taxes.longValue() != 0)
                     t.addUnit(new Unit(Unit.Type.TAX, Money.of(t.getCurrencyCode(), Math.abs(taxes))));
 
+                if (dividendType && fees != null && fees.longValue() != 0)
+                    t.addUnit(new Unit(Unit.Type.FEE, Money.of(t.getCurrencyCode(), Math.abs(fees))));
+
                 t.setNote(note);
                 if ((type == Type.DEPOSIT || type == Type.REMOVAL) && peer != null)
                     t.setPeer(peer);
+
+                if (type == Type.INTEREST)
+                {
+                    if (taxes != null && taxes.longValue() != 0)
+                        t.addUnit(new Unit(Unit.Type.TAX, Money.of(t.getCurrencyCode(), Math.abs(taxes))));
+                }
+
+                if (security != null && grossAmount.isPresent())
+                {
+                    // gross amount can only be relevant if a transaction is
+                    // linked to a security (dividend, taxes, fees, and refunds)
+
+                    t.addUnit(grossAmount.get());
+                }
 
                 item = new TransactionItem(t);
                 break;

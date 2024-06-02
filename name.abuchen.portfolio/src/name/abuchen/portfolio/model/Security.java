@@ -1,6 +1,7 @@
 package name.abuchen.portfolio.model;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,11 +15,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
 import name.abuchen.portfolio.Messages;
 import name.abuchen.portfolio.money.CurrencyUnit;
 import name.abuchen.portfolio.util.Pair;
+import name.abuchen.portfolio.util.TextUtil;
 
 /**
  * A <code>Security</code> is used for assets that have historical prices
@@ -38,7 +41,7 @@ public final class Security implements Attributable, InvestmentVehicle
         {
             if (s1 == null)
                 return s2 == null ? 0 : -1;
-            return s1.name.compareToIgnoreCase(s2.name);
+            return TextUtil.compare(s1.name, s2.name);
         }
     }
 
@@ -80,12 +83,15 @@ public final class Security implements Attributable, InvestmentVehicle
 
     private boolean isRetired = false;
 
+    private Instant updatedAt;
+
     @Deprecated
     private String type;
 
     @Deprecated
     private String industryClassification;
 
+    @VisibleForTesting
     public Security()
     {
         this.uuid = UUID.randomUUID().toString();
@@ -138,6 +144,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setOnlineId(String onlineId)
     {
         this.onlineId = onlineId;
+        this.updatedAt = Instant.now();
     }
 
     @Override
@@ -162,6 +169,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setCurrencyCode(String currencyCode)
     {
         this.currencyCode = currencyCode;
+        this.updatedAt = Instant.now();
     }
 
     /**
@@ -185,6 +193,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setTargetCurrencyCode(String targetCurrencyCode)
     {
         this.targetCurrencyCode = targetCurrencyCode;
+        this.updatedAt = Instant.now();
     }
 
     @Override
@@ -197,6 +206,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setNote(String note)
     {
         this.note = note;
+        this.updatedAt = Instant.now();
     }
 
     public String getIsin()
@@ -217,6 +227,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setIsin(String isin)
     {
         this.isin = isin;
+        this.updatedAt = Instant.now();
     }
 
     public String getTickerSymbol()
@@ -227,6 +238,24 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setTickerSymbol(String tickerSymbol)
     {
         this.tickerSymbol = tickerSymbol;
+        this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Returns the ticker symbol (if available) without the stock market
+     * extension.
+     * </p>
+     * In some countries there is no ISIN or WKN, only the ticker symbol. If
+     * historical prices are retrieved from the stock exchange, the ticker
+     * symbol is expanded. (UMAX --> UMAX.AX)
+     */
+    public String getTickerSymbolWithoutStockMarket()
+    {
+        if (tickerSymbol == null)
+            return null;
+
+        int p = tickerSymbol.indexOf('.');
+        return p >= 0 ? tickerSymbol.substring(0, p) : tickerSymbol;
     }
 
     public String getWkn()
@@ -237,6 +266,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setWkn(String wkn)
     {
         this.wkn = wkn;
+        this.updatedAt = Instant.now();
     }
 
     public int getDelayedDividend()
@@ -257,6 +287,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setCalendar(String calendar)
     {
         this.calendar = calendar;
+        this.updatedAt = Instant.now();
     }
 
     /**
@@ -277,7 +308,7 @@ public final class Security implements Attributable, InvestmentVehicle
         if (isin != null && isin.length() > 0)
             return isin;
         else if (tickerSymbol != null && tickerSymbol.length() > 0)
-            return tickerSymbol;
+            return getTickerSymbolWithoutStockMarket();
         else if (wkn != null && wkn.length() > 0)
             return wkn;
         else
@@ -316,6 +347,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setFeed(String feed)
     {
         this.feed = feed;
+        this.updatedAt = Instant.now();
     }
 
     public String getFeedURL()
@@ -326,6 +358,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setFeedURL(String feedURL)
     {
         this.feedURL = feedURL;
+        this.updatedAt = Instant.now();
     }
 
     public List<SecurityPrice> getPrices()
@@ -519,6 +552,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setLatestFeed(String latestFeed)
     {
         this.latestFeed = latestFeed;
+        this.updatedAt = Instant.now();
     }
 
     public String getLatestFeedURL()
@@ -529,6 +563,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setLatestFeedURL(String latestFeedURL)
     {
         this.latestFeedURL = latestFeedURL;
+        this.updatedAt = Instant.now();
     }
 
     public LatestSecurityPrice getLatest()
@@ -584,6 +619,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setRetired(boolean isRetired)
     {
         this.isRetired = isRetired;
+        this.updatedAt = Instant.now();
     }
 
     public String getEventFeed()
@@ -670,16 +706,18 @@ public final class Security implements Attributable, InvestmentVehicle
         return add;
     }
 
-    public void removeAllEvents()
-    {
-        events.clear();
-    }
-
     public void removeEvent(SecurityEvent event)
     {
         if (this.events == null)
             this.events = new ArrayList<>();
         this.events.remove(event);
+    }
+
+    public boolean removeAllEvents()
+    {
+        boolean removed = this.events != null && !this.events.isEmpty();
+        this.events = null;
+        return removed;
     }
 
     public boolean removeEventIf(Predicate<SecurityEvent> filter)
@@ -782,6 +820,7 @@ public final class Security implements Attributable, InvestmentVehicle
     public void setAttributes(Attributes attributes)
     {
         this.attributes = attributes;
+        this.updatedAt = Instant.now();
     }
 
     /**
@@ -882,6 +921,16 @@ public final class Security implements Attributable, InvestmentVehicle
         return false;
     }
 
+    public Instant getUpdatedAt()
+    {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt)
+    {
+        this.updatedAt = updatedAt;
+    }
+
     public Security deepCopy()
     {
         Security answer = new Security();
@@ -915,6 +964,8 @@ public final class Security implements Attributable, InvestmentVehicle
             answer.properties = new ArrayList<>(properties);
 
         answer.isRetired = isRetired;
+
+        answer.updatedAt = updatedAt;
 
         return answer;
     }

@@ -27,7 +27,7 @@ public abstract class PeerListContentProposalProvider implements IContentProposa
         public String getContent()
         {
             // TODO: still needed for debug? System.err.println(">>>> PeerListContentProvider::IbanProposal::getContent "  + peer.toString());
-            return peer.getIban();
+            return (peer.getIban()!=null?peer.getIban():""); //$NON-NLS-1$
         }
 
         @Override
@@ -58,7 +58,7 @@ public abstract class PeerListContentProposalProvider implements IContentProposa
         @Override
         public int getCursorPosition()
         {
-            // TODO: still needed for debug? System.err.println(">>>> PeerListContentProposal::IbanProposal::getCursorPosition "  + peer.toString());
+            // TODO: still needed for debug? System.err.println(">>>> PeerListContentProposal::PartnerProposal::getCursorPosition "  + peer.toString());
             if (peer.getName() != null)
                 return peer.getName().length();
            else

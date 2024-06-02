@@ -53,6 +53,7 @@ import name.abuchen.portfolio.datatransfer.Extractor;
 import name.abuchen.portfolio.datatransfer.ImportAction;
 import name.abuchen.portfolio.datatransfer.ImportAction.Status.Code;
 import name.abuchen.portfolio.datatransfer.actions.CheckCurrenciesAction;
+import name.abuchen.portfolio.datatransfer.actions.CheckForexGrossValueAction;
 import name.abuchen.portfolio.datatransfer.actions.CheckSecurityRelatedValuesAction;
 import name.abuchen.portfolio.datatransfer.actions.CheckValidTypesAction;
 import name.abuchen.portfolio.datatransfer.actions.DetectDuplicatesAction;
@@ -786,6 +787,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
 
         allEntries.addAll(entries);
         tableViewer.setInput(allEntries);
+        extractionErrors.clear();
         extractionErrors.addAll(errors);
         errorTableViewer.setInput(extractionErrors);
 
@@ -817,6 +819,7 @@ public class ReviewExtractedItemsPage extends AbstractWizardPage implements Impo
         actions.add(new CheckSecurityRelatedValuesAction());
         actions.add(new DetectDuplicatesAction(client));
         actions.add(new CheckCurrenciesAction());
+        actions.add(new CheckForexGrossValueAction());
         actions.add(new MarkNonImportableAction());
 
         List<Exception> allErrors = new ArrayList<>(extractionErrors);

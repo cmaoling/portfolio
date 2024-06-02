@@ -944,6 +944,13 @@ public final class SecuritiesTable implements ModificationListener
         manager.add(new Separator());
 
         manager.add(new HideSecurityAction(selection));
+        
+//        manager.add(new ConfirmActionWithSelection(Messages.SecurityMenuSetSecurityInactive,
+//                            MessageFormat.format(Messages.SecurityMenuSetSingleSecurityInactiveConfirm,
+//                                            selection.getFirstElement()),
+//                            Messages.SecurityMenuSetMultipleSecurityInactiveConfirm, selection,
+//                            (s, a) -> retireSecurity(selection)));
+
         if (watchlist == null)
         {
             manager.add(new ConfirmActionWithSelection(Messages.SecurityMenuDeleteSecurity,
@@ -1052,7 +1059,17 @@ public final class SecuritiesTable implements ModificationListener
 
         manager.add(new Separator());
     }
-
+    
+    private void retireSecurity(IStructuredSelection selection)
+    {
+        for (Object obj : selection.toArray())
+        {
+            Security security = (Security) obj;
+            security.setRetired(true);
+            securities.refresh();
+        }
+    }
+    
     private void deleteSecurity(IStructuredSelection selection)
     {
         boolean isDirty = false;
@@ -1169,7 +1186,8 @@ public final class SecuritiesTable implements ModificationListener
 
         abstract Dialog createDialog(Security security);
     }
-
+    
+    
     private final class EditSecurityAction extends AbstractDialogAction
     {
         private EditSecurityAction()

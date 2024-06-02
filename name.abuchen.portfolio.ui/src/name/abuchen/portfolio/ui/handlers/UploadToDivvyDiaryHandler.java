@@ -2,7 +2,7 @@ package name.abuchen.portfolio.ui.handlers;
 
 import java.io.IOException;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;

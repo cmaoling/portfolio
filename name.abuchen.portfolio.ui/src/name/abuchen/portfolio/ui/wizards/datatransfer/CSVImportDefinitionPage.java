@@ -73,7 +73,7 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumMapFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.FieldFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
-import name.abuchen.portfolio.datatransfer.pdf.AbstractPDFConverter;
+// CMAOLING <PDFConverter> import name.abuchen.portfolio.datatransfer.pdf.AbstractPDFConverter;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Header;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.HeaderSet;
 import name.abuchen.portfolio.model.Account;
@@ -306,11 +306,13 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         {
             @Override
             public void mouseUp(MouseEvent e) // NOSONAR
-            {}
+            {
+            }
 
             @Override
             public void mouseDown(MouseEvent e) // NOSONAR
-            {}
+            {
+            }
 
             @Override
             public void mouseDoubleClick(MouseEvent e)
@@ -400,7 +402,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
     private void onSkipLinesChanged(int linesToSkip)
     {
         importer.setSkipLines(linesToSkip);
-        doProcessFile();
+        doProcessFile(false);
     }
 
     private void onColumnSelected(int columnIndex)
@@ -665,6 +667,10 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
             List<Field> fields = new ArrayList<Field>();
             fields.add(EMPTY);
             fields.addAll(definition.getFields());
+//            List<Field> fields = new ArrayList<>();
+//            fields.addAll(importer.getExtractor().getFields());
+            Collections.sort(fields, (r, l) -> r.getName().compareTo(l.getName()));
+  //          fields.add(0, EMPTY);
             mappedTo.setInput(fields);
 
             final Composite details = new Composite(composite, SWT.NONE);
@@ -705,7 +711,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
 
             TableViewerColumn col = new TableViewerColumn(tableViewer, SWT.NONE);
             col.getColumn().setText(Messages.CSVImportLabelExpectedValue);
-            col.getColumn().setWidth(100);
+            col.getColumn().setWidth(Dimensions.CSVImportTypeNameWidth);
             col.setLabelProvider(new ColumnLabelProvider()
             {
                 @Override
@@ -717,7 +723,7 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
 
             col = new TableViewerColumn(tableViewer, SWT.NONE);
             col.getColumn().setText(Messages.CSVImportLabelProvidedValue);
-            col.getColumn().setWidth(100);
+            col.getColumn().setWidth(Dimensions.CSVImportTypePatternWidth);
             col.setLabelProvider(new ColumnLabelProvider()
             {
                 @Override
@@ -882,15 +888,15 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         CSVExtractor e = null;
         if (account == null)
         {
-            AbstractPDFConverter c = importer.getConverter();
-            if (c != null)
-                e = importer.setExtractor(c.getDefaultExtractorName());
-            else
-            {
+         // CMAOLING <PDFConverter>             AbstractPDFConverter c = importer.getConverter();
+         // CMAOLING <PDFConverter>    if (c != null)
+         // CMAOLING <PDFConverter>        e = importer.setExtractor(c.getDefaultExtractorName());
+         // CMAOLING <PDFConverter>    else
+         // CMAOLING <PDFConverter>    {
                 for (CSVExtractor extractor : importer.getExtractors())
                    if (extractor.knownFilename(importer.getInputFile().getName()))
                        e = extractor;
-            }
+         // CMAOLING <PDFConverter>    }
         }
         else
             e = importer.setExtractor(account.getExtractor());

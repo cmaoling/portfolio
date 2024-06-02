@@ -17,6 +17,8 @@ public class LatestSecurityPrice extends SecurityPrice
     // cmaoling: combine ExtractedPrice from name.abuchen.portfolio.online.impl/HTMLTableQuoteFeed.java into LatestSecurityPrice
     private LocalTime time;
 
+    public static final long NOT_AVAILABLE = -1L;
+
     public LatestSecurityPrice()
     {
     }
@@ -102,7 +104,7 @@ public class LatestSecurityPrice extends SecurityPrice
         if (getClass() != obj.getClass())
             return false;
         LatestSecurityPrice other = (LatestSecurityPrice) obj;
-        return high == other.high && low == other.low && previousClose == other.previousClose && volume == other.volume && time == other.time;
+        return super.equals(other) && high == other.high && low == other.low && previousClose == other.previousClose && volume == other.volume && time == other.time;
     }
 
     @Override

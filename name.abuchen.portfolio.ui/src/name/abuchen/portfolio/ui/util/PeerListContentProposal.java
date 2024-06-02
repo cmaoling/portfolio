@@ -38,7 +38,8 @@ public class PeerListContentProposal implements IContentProposal
     @Override
     public String getLabel()
     {
-       return peer.getName() + (peer.getIban().length() > 0 ? " (" + peer.getIban() + ")" : Messages.LabelNothing); //$NON-NLS-1$ //$NON-NLS-2$
+        // Wenn die IBAN nicht existiert darf nur der Name zurückgegeben werden, sonst gibt es eine NULL exception
+        return peer.getName() + (peer.getIban() != null && peer.getIban().length() > 0 ? " (" + peer.getIban() + ")" : Messages.LabelNothing); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Override

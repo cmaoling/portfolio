@@ -135,6 +135,9 @@ public class HTMLTableQuoteFeed implements QuoteFeed
 //                            new DateTimeFormatterBuilder().appendPattern("d.M.")
 //                                            .appendValueReduced(ChronoField.YEAR, 2, 2, Year.now().getValue() - 80)
 //                                            .toFormatter(),
+//                            new DateTimeFormatterBuilder().appendPattern("M/d/")
+//                                            .appendValueReduced(ChronoField.YEAR, 2, 2, Year.now().getValue() - 80)
+//                                            .toFormatter(),
 //                            DateTimeFormatter.ofPattern("d.M.yy"), //$NON-NLS-1$
 //                            DateTimeFormatter.ofPattern("d.M.y"), //$NON-NLS-1$
 //                            DateTimeFormatter.ofPattern("d. MMM y"), //$NON-NLS-1$
@@ -563,7 +566,7 @@ public class HTMLTableQuoteFeed implements QuoteFeed
 //        // if no quotes could be extract, log HTML for further analysis
 //        if (prices.isEmpty())
 //            data.addError(new IOException(MessageFormat.format(Messages.MsgNoQuotesFoundInHTML, url,
-//                            Jsoup.clean(document.html(), Whitelist.relaxed()))));
+//                            Jsoup.clean(document.html(), Safelist.relaxed()))));
 //
 //        return prices;
 //    }

@@ -31,8 +31,15 @@ public class Client implements Attributable
 {
     /* package */static final int MAJOR_VERSION = 1;
 
-    public static final int CURRENT_VERSION = 50;
+     public interface Properties // NOSONAR
+    {
+        String TAXONOMIES = "taxonomies"; //$NON-NLS-1$
+        String WATCHLISTS = "watchlists"; //$NON-NLS-1$
+    }
+
+    public static final int CURRENT_VERSION = 59;
     public static final int VERSION_WITH_CURRENCY_SUPPORT = 29;
+    public static final int VERSION_WITH_UNIQUE_FILTER_KEY = 57;
 
     private transient PropertyChangeSupport propertyChangeSupport; // NOSONAR
 
@@ -192,6 +199,11 @@ public class Client implements Attributable
     void setFileVersionAfterRead(int fileVersionAfterRead)
     {
         this.fileVersionAfterRead = fileVersionAfterRead;
+    }
+
+    public boolean shouldDoFilterMigration()
+    {
+        return getFileVersionAfterRead() < Client.VERSION_WITH_UNIQUE_FILTER_KEY;
     }
 
     public String getBaseCurrency()
@@ -542,6 +554,7 @@ public class Client implements Attributable
     public void addTaxonomy(Taxonomy taxonomy)
     {
         taxonomies.add(taxonomy);
+        propertyChangeSupport.firePropertyChange(Properties.TAXONOMIES, null, taxonomy);
     }
 
     public void addTaxonomy(int index, Taxonomy taxonomy)
@@ -549,9 +562,19 @@ public class Client implements Attributable
         taxonomies.add(index, taxonomy);
     }
 
+    public void swapTaxonomy(Taxonomy first, Taxonomy second)
+    {
+        int p1 = taxonomies.indexOf(first);
+        int p2 = taxonomies.indexOf(second);
+
+        if (p1 >= 0 && p2 >= 0)
+            Collections.swap(taxonomies, p1, p2);
+    }
+
     public void removeTaxonomy(Taxonomy taxonomy)
     {
-        taxonomies.remove(taxonomy);
+        if (taxonomies.remove(taxonomy))
+            propertyChangeSupport.firePropertyChange(Properties.TAXONOMIES, taxonomy, null);
     }
 
     public Taxonomy getTaxonomy(String id)
@@ -604,6 +627,11 @@ public class Client implements Attributable
         return properties.get(key);
     }
 
+    public void voidConsumerPriceIndeces()
+    {
+       consumerPriceIndeces = null; //NOSONAR
+    }
+
     /**
      * Returns the current value of the integer-valued state with the given
      * name. Returns the value <code>0</code> if there is no value with the
@@ -620,6 +648,11 @@ public class Client implements Attributable
         {
             return 0;
         }
+    }
+
+    /* package */Map<String, String> getProperties()
+    {
+        return properties;
     }
 
     /* package */void clearProperties()
@@ -652,14 +685,12 @@ public class Client implements Attributable
         return transactions;
     }
 
-    /* package */
-    SecretKey getSecret()
+    /* package */ SecretKey getSecret()
     {
         return secret;
     }
 
-    /* package */
-    void setSecret(SecretKey secret)
+    /* package */ void setSecret(SecretKey secret)
     {
         this.secret = secret;
     }
