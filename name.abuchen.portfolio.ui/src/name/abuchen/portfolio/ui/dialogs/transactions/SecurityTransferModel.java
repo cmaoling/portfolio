@@ -1,6 +1,7 @@
 package name.abuchen.portfolio.ui.dialogs.transactions;
 
 import java.math.BigDecimal;
+import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -9,8 +10,6 @@ import java.util.List;
 
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.runtime.IStatus;
-
-import java.text.MessageFormat;
 
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.Portfolio;
@@ -81,7 +80,7 @@ public class SecurityTransferModel extends AbstractModel
     private Portfolio sourcePortfolio;
     private Portfolio targetPortfolio;
     private LocalDate date = LocalDate.now();
-    private LocalTime time = LocalTime.MIDNIGHT;
+    private LocalTime time = PresetValues.getTime();
 
     private long shares;
     private BigDecimal quote = BigDecimal.ONE;
@@ -161,6 +160,7 @@ public class SecurityTransferModel extends AbstractModel
         setShares(0);
         setAmount(0);
         setNote(null);
+        setTime(PresetValues.getTime());
         triggerQuoteSuggestion(quoteSuggestionList.stream()
                         .filter(suggestion -> Suggestion.goodwill.equals(suggestion.getSuggestion()))
                         .findAny()
@@ -280,6 +280,11 @@ public class SecurityTransferModel extends AbstractModel
     public void setSource(PortfolioTransferEntry entry)
     {
         this.source = entry;
+        presetFromSource(entry);
+    }
+
+        public void presetFromSource(PortfolioTransferEntry entry)
+    {
         this.sourcePortfolio = (Portfolio) entry.getOwner(entry.getSourceTransaction());
         this.targetPortfolio = (Portfolio) entry.getOwner(entry.getTargetTransaction());
 

@@ -230,9 +230,6 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
         int widest = widest(securities != null ? securities.label : null, accounts.label, dateTime.label, shares.label,
                         taxes.label, fees.label, total.label, lblNote, fxGrossAmount.label);
 
-        int amountWidth = amountWidth(grossAmount.value);
-        int currencyWidth = currencyWidth(fxGrossAmount.currency);
-
         FormDataFactory forms;
         if (securities != null)
         {
@@ -245,6 +242,10 @@ public class AccountTransactionDialog extends AbstractTransactionDialog // NOSON
             forms = startingWith(accounts.value.getControl(), accounts.label).suffix(accounts.currency);
             startingWith(accounts.label).width(widest);
         }
+
+        int amountWidth = amountWidth(grossAmount.value);
+        int currencyWidth = currencyWidth(fxGrossAmount.currency);
+
         if (peers != null)
         {
             forms = forms.thenBelow(peers.valuePartner).width(amountWidth*2).label(peers.lblPartner);

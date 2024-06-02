@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
 import name.abuchen.portfolio.ui.UIConstants;
-import name.abuchen.portfolio.ui.update.UpdateHelper;
+//CMAOLING: import name.abuchen.portfolio.ui.update.UpdateHelper;
 
 public class OSXStartupAddon
 {
@@ -45,19 +45,19 @@ public class OSXStartupAddon
             {
                 int prefsIndex = systemMenu.indexOf(getItem(systemMenu, SWT.ID_PREFERENCES));
 
-                if (UpdateHelper.isInAppUpdateEnabled())
-                {
-                    MenuItem updatesMenuItem = new MenuItem(systemMenu, SWT.CASCADE, ++prefsIndex);
-                    updatesMenuItem.setText(Messages.SystemMenuCheckForUpdates);
-                    updatesMenuItem.addSelectionListener(new SelectionAdapter()
-                    {
-                        @Override
-                        public void widgetSelected(SelectionEvent event)
-                        {
-                            executeCommand("name.abuchen.portfolio.ui.command.updateproduct"); //$NON-NLS-1$
-                        }
-                    });
-                }
+//                if (UpdateHelper.isInAppUpdateEnabled())
+//                {
+//                    MenuItem updatesMenuItem = new MenuItem(systemMenu, SWT.CASCADE, ++prefsIndex);
+//                    updatesMenuItem.setText(Messages.SystemMenuCheckForUpdates);
+//                    updatesMenuItem.addSelectionListener(new SelectionAdapter()
+//                    {
+//                        @Override
+//                        public void widgetSelected(SelectionEvent event)
+//                        {
+//                            executeCommand("name.abuchen.portfolio.ui.command.updateproduct"); //$NON-NLS-1$
+//                        }
+//                    });
+//                }
 
                 MenuItem noteworthyMenuItem = new MenuItem(systemMenu, SWT.CASCADE, ++prefsIndex);
                 noteworthyMenuItem.setText(Messages.SystemMenuNewAndNoteworthy);

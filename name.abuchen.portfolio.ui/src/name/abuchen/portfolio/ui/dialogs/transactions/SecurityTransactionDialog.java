@@ -101,9 +101,9 @@ public class SecurityTransactionDialog extends AbstractTransactionDialog // NOSO
         portfolio.bindValue(Properties.portfolio.name(), Messages.MsgMissingPortfolio);
 
         ComboInput comboInput = new ComboInput(editArea, null);
-        if (model() instanceof BuySellModel)
+        if (model() instanceof BuySellModel buySellModel)
         {
-            comboInput.value.setInput(including(client.getActiveAccounts(), ((BuySellModel) model()).getAccount()));
+            comboInput.value.setInput(including(client.getActiveAccounts(), buySellModel.getAccount()));
             comboInput.bindValue(Properties.account.name(), Messages.MsgMissingAccount);
         }
         else
@@ -333,10 +333,24 @@ public class SecurityTransactionDialog extends AbstractTransactionDialog // NOSO
         model().setSource(entry);
     }
 
+    public void presetBuySellEntry(BuySellEntry entry)
+    {
+        if (!model().accepts(entry.getPortfolioTransaction().getType()))
+            throw new IllegalArgumentException();
+        model().presetFromSource(entry);
+    }
+
     public void setDeliveryTransaction(TransactionPair<PortfolioTransaction> pair)
     {
         if (!model().accepts(pair.getTransaction().getType()))
             throw new IllegalArgumentException();
         model().setSource(pair);
+    }
+
+    public void presetDeliveryTransaction(TransactionPair<PortfolioTransaction> pair)
+    {
+        if (!model().accepts(pair.getTransaction().getType()))
+            throw new IllegalArgumentException();
+        model().presetFromSource(pair);
     }
 }

@@ -149,7 +149,7 @@ public class SecurityListView extends AbstractListView implements ModificationLi
                                 newSecurity.setCurrencyCode(null);
                                 newSecurity.setTickerSymbol(region.getId());
                                 newSecurity.setName(region.getName() + Messages.LabelSuffix_HICP);
-                                newSecurity.setCalendar(TradeCalendar.EMPTY_CODE);
+                                newSecurity.setCalendar("empty");
                                 openEditDialog(newSecurity);
                             })));
 

@@ -32,7 +32,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
-import name.abuchen.portfolio.online.QuoteFeedData.RawResponse;
+import name.abuchen.portfolio.online.FeedData.RawResponse;
 import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.util.FormDataFactory;
 import name.abuchen.portfolio.ui.util.SWTHelper;

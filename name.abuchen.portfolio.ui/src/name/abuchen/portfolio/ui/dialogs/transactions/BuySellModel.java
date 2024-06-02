@@ -36,11 +36,19 @@ import name.abuchen.portfolio.ui.Messages;
     {
         this.source = (BuySellEntry) entry;
 
-        this.type = source.getPortfolioTransaction().getType();
-        this.portfolio = (Portfolio) source.getOwner(source.getPortfolioTransaction());
-        this.account = (Account) source.getOwner(source.getAccountTransaction());
-        fillFromTransaction(source.getPortfolioTransaction());
+        presetFromSource(entry);
     }
+    
+    @Override
+    public void presetFromSource(Object entry)
+    {
+        var e = (BuySellEntry) entry;
+        
+        this.type = e.getPortfolioTransaction().getType();
+        this.portfolio = (Portfolio) e.getOwner(e.getPortfolioTransaction());
+        this.account = (Account) e.getOwner(e.getAccountTransaction());
+        fillFromTransaction(e.getPortfolioTransaction());
+    }    
     
     @Override
     public boolean hasSource()

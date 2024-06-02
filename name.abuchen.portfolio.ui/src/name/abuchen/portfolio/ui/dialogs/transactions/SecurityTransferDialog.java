@@ -69,6 +69,7 @@ public class SecurityTransferDialog extends AbstractTransactionDialog
     {
         super(parentShell);
         this.client = client;
+
         SecurityTransferModel m = new SecurityTransferModel(client);
         m.setExchangeRateProviderFactory(factory);
         setModel(m);

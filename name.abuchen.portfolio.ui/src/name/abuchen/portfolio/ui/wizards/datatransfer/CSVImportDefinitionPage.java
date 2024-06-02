@@ -73,7 +73,7 @@ import name.abuchen.portfolio.datatransfer.csv.CSVImporter.EnumMapFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Field;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.FieldFormat;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.ISINField;
-import name.abuchen.portfolio.datatransfer.pdf.AbstractPDFConverter;
+// CMAOLING <PDFConverter> import name.abuchen.portfolio.datatransfer.pdf.AbstractPDFConverter;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.Header;
 import name.abuchen.portfolio.datatransfer.csv.CSVImporter.HeaderSet;
 import name.abuchen.portfolio.model.Account;
@@ -306,11 +306,13 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         {
             @Override
             public void mouseUp(MouseEvent e) // NOSONAR
-            {}
+            {
+            }
 
             @Override
             public void mouseDown(MouseEvent e) // NOSONAR
-            {}
+            {
+            }
 
             @Override
             public void mouseDoubleClick(MouseEvent e)
@@ -886,15 +888,15 @@ public class CSVImportDefinitionPage extends AbstractWizardPage implements ISele
         CSVExtractor e = null;
         if (account == null)
         {
-            AbstractPDFConverter c = importer.getConverter();
-            if (c != null)
-                e = importer.setExtractor(c.getDefaultExtractorName());
-            else
-            {
+         // CMAOLING <PDFConverter>             AbstractPDFConverter c = importer.getConverter();
+         // CMAOLING <PDFConverter>    if (c != null)
+         // CMAOLING <PDFConverter>        e = importer.setExtractor(c.getDefaultExtractorName());
+         // CMAOLING <PDFConverter>    else
+         // CMAOLING <PDFConverter>    {
                 for (CSVExtractor extractor : importer.getExtractors())
                    if (extractor.knownFilename(importer.getInputFile().getName()))
                        e = extractor;
-            }
+         // CMAOLING <PDFConverter>    }
         }
         else
             e = importer.setExtractor(account.getExtractor());
