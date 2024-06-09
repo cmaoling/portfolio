@@ -152,24 +152,27 @@ public abstract class AbstractFinanceView
         title.setForeground(Colors.SIDEBAR_TEXT);
         title.setBackground(header.getBackground());
 
+        System.err.println(">>>> AbstractFinanceView: " + titleText); //TODO //$NON-NLS-1$
+
         Composite wrapper = new Composite(header, SWT.NONE);
         wrapper.setBackground(header.getBackground());
 
         viewToolBar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
-        addViewButtons(viewToolBar);
+        addViewButtons(viewToolBar); // CMAOLING
         ToolBar tb1 = viewToolBar.createControl(wrapper);
         tb1.setBackground(header.getBackground());
-        // add buttons only after (!) creation of tool bar to avoid flickering
-        addViewButtons(viewToolBar);
+        // CMAOLING: // add buttons only after (!) creation of tool bar to avoid flickering
+        // CMAOLING: addViewButtons(viewToolBar);
 
         // create layout *after* the toolbar to keep the tab order right
-        wrapper.setLayout(new ToolBarPlusChevronLayout(wrapper, SWT.RIGHT));
+        wrapper.setLayout(new ToolBarPlusChevronLayout(wrapper, SWT.LEFT));
 
         actionToolBar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
+        addButtons(actionToolBar); // CMAOLING
         ToolBar tb2 = actionToolBar.createControl(header);
         tb2.setBackground(header.getBackground());
-        // add buttons only after (!) creation of tool bar to avoid flickering
-        addButtons(actionToolBar);
+        // CMAOLING: // add buttons only after (!) creation of tool bar to avoid flickering
+        // CMAOLING: addButtons(actionToolBar);
 
         // layout
         GridLayoutFactory.fillDefaults().numColumns(3).margins(5, 5).applyTo(header);
