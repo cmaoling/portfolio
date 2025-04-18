@@ -6,6 +6,7 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -46,6 +47,7 @@ import org.eclipse.swt.widgets.Text;
 
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.ClientFactory;
+import name.abuchen.portfolio.model.SaveFlag;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.snapshot.ReportingPeriod;
 import name.abuchen.portfolio.ui.Images;
@@ -409,9 +411,14 @@ public class PortfolioPart implements ClientInputListener
         this.clientInput.save(shell);
     }
 
-    public void doSaveAs(Shell shell, String extension, String encryptionMethod)
+    public void doSaveAs(Shell shell, String extension, Set<SaveFlag> flags)
     {
-        this.clientInput.doSaveAs(shell, extension, encryptionMethod);
+        this.clientInput.doSaveAs(shell, extension, flags);
+    }
+
+    public void doExportAs(Shell shell, String extension, Set<SaveFlag> flags)
+    {
+        this.clientInput.doExportAs(shell, extension, flags);
     }
 
     public ClientInput getClientInput()
@@ -477,7 +484,8 @@ public class PortfolioPart implements ClientInputListener
 
     /* package */ void markDirty()
     {
-        clientInput.markDirty();
+        if (clientInput != null)
+            clientInput.markDirty();
     }
 
     public void activateView(Class<? extends AbstractFinanceView> view, Object parameter)

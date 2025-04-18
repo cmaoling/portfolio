@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -33,6 +34,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferenceStore;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.widgets.Display;
@@ -41,6 +43,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.ClientFactory;
+import name.abuchen.portfolio.model.SaveFlag;
 import name.abuchen.portfolio.model.Security;
 import name.abuchen.portfolio.money.ExchangeRateProviderFactory;
 import name.abuchen.portfolio.snapshot.ReportingPeriod;
@@ -49,6 +52,7 @@ import name.abuchen.portfolio.ui.Messages;
 import name.abuchen.portfolio.ui.PortfolioPlugin;
 import name.abuchen.portfolio.ui.UIConstants;
 import name.abuchen.portfolio.ui.dialogs.PasswordDialog;
+import name.abuchen.portfolio.ui.dialogs.PickFileFormatDialog;
 import name.abuchen.portfolio.ui.jobs.AutoSaveJob;
 import name.abuchen.portfolio.ui.jobs.CreateInvestmentPlanTxJob;
 import name.abuchen.portfolio.ui.jobs.SyncOnlineSecuritiesJob;
@@ -202,7 +206,15 @@ public class ClientInput
     {
         if (clientFile == null)
         {
-            doSaveAs(shell, null, null);
+            PickFileFormatDialog dialog = new PickFileFormatDialog(shell);
+            ContextInjectionFactory.inject(dialog, context);
+
+            if (dialog.open() != Window.OK)
+                return;
+
+            var type = dialog.getSelectedType();
+
+            doSaveAs(shell, type.getExtension(), type.getFlags());
             return;
         }
 
@@ -212,7 +224,7 @@ public class ClientInput
                 if (preferences.getBoolean(UIConstants.Preferences.CREATE_BACKUP_BEFORE_SAVING, true))
                     createBackup(clientFile, "backup"); //$NON-NLS-1$
 
-                ClientFactory.save(client, clientFile, null, null);
+                ClientFactory.save(client, clientFile);
                 storePreferences(false);
 
                 broker.post(UIConstants.Event.File.SAVED, clientFile.getAbsolutePath());
@@ -227,14 +239,93 @@ public class ClientInput
         });
     }
 
-    public void doSaveAs(Shell shell, String extension, String encryptionMethod) // NOSONAR
+    public void doSaveAs(Shell shell, String extension, Set<SaveFlag> flags) // NOSONAR
+    {
+        String fileNameProposal = clientFile != null ? clientFile.getName() : getLabel();
+        File localFile = pickFile(shell, extension, fileNameProposal);
+        if (localFile == null)
+            return;
+
+        char[] password = null;
+
+        if (flags.contains(SaveFlag.ENCRYPTED))
+        {
+            PasswordDialog pwdDialog = new PasswordDialog(shell);
+            if (pwdDialog.open() != PasswordDialog.OK)
+                return;
+            password = pwdDialog.getPassword().toCharArray();
+        }
+
+        //CMAOLING:
+        if (clientFile == null || Paths.get(clientFile.toURI()).getParent().equals(client.getBackupDirectory()))
+            client.setBackupDirectory(Paths.get(localFile.toURI()).getParent());
+        clientFile = localFile;
+        
+        label = localFile.getName();
+        char[] pwd = password;
+
+        BusyIndicator.showWhile(shell.getDisplay(), () -> {
+            try
+            {
+                ClientFactory.saveAs(client, clientFile, pwd, flags);
+                storePreferences(true);
+
+                broker.post(UIConstants.Event.File.SAVED, clientFile.getAbsolutePath());
+                setDirty(false, false);
+                listeners.forEach(ClientInputListener::onSaved);
+            }
+            catch (IOException e)
+            {
+                PortfolioPlugin.log(e);
+                ErrorDialog.openError(shell, Messages.LabelError, e.getMessage(),
+                                new Status(Status.ERROR, PortfolioPlugin.PLUGIN_ID, e.getMessage(), e));
+            }
+        });
+    }
+
+    /**
+     * Exports the current data into a new file without changing any of the
+     * editor settings.
+     */
+    public void doExportAs(Shell shell, String extension, Set<SaveFlag> flags)
+    {
+        if (flags.contains(SaveFlag.ENCRYPTED))
+            throw new IllegalArgumentException("encrypted not supported"); //$NON-NLS-1$
+
+        String fileNameProposal = clientFile != null ? clientFile.getName() : getLabel();
+        if (!fileNameProposal.endsWith('.' + extension))
+            fileNameProposal += '.' + extension;
+        File localFile = pickFile(shell, extension, fileNameProposal);
+        if (localFile == null)
+            return;
+
+        BusyIndicator.showWhile(shell.getDisplay(), () -> {
+            try
+            {
+                ClientFactory.exportAs(client, localFile, null, flags);
+            }
+            catch (IOException e)
+            {
+                PortfolioPlugin.log(e);
+                ErrorDialog.openError(shell, Messages.LabelError, e.getMessage(),
+                                new Status(Status.ERROR, PortfolioPlugin.PLUGIN_ID, e.getMessage(), e));
+            }
+        });
+    }
+
+ 
+    private File pickFile(Shell shell, String extension, String fileNameProposal)
     {
         FileDialog dialog = new FileDialog(shell, SWT.SAVE);
         dialog.setOverwrite(true);
 
+        // set filter names and extension to make sure the file name keeps the
+        // right extension.
+        dialog.setFilterNames(new String[] { Messages.LabelPortfolioPerformanceFile });
+        dialog.setFilterExtensions(new String[] { "*." + extension }); //$NON-NLS-1$
+
         // if an extension is given, make sure the file name proposal has the
         // right extension in the save as dialog
-        String fileNameProposal = clientFile != null ? clientFile.getName() : getLabel();
         if (extension != null && !fileNameProposal.endsWith('.' + extension))
         {
             int p = fileNameProposal.lastIndexOf('.');
@@ -256,47 +347,14 @@ public class ClientInput
 
         String path = dialog.open();
         if (path == null)
-            return;
+            return null;
 
         // again make sure the extension is correct as the user might have
         // changed it in the save dialog
         if (extension != null && !path.endsWith('.' + extension))
             path += '.' + extension;
 
-        File localFile = new File(path);
-        char[] password = null;
-
-        if (ClientFactory.isEncrypted(localFile))
-        {
-            PasswordDialog pwdDialog = new PasswordDialog(shell);
-            if (pwdDialog.open() != PasswordDialog.OK)
-                return;
-            password = pwdDialog.getPassword().toCharArray();
-        }
-
-        if (clientFile == null || Paths.get(clientFile.toURI()).getParent().equals(client.getBackupDirectory()))
-            client.setBackupDirectory(Paths.get(localFile.toURI()).getParent());
-        clientFile = localFile;
-        label = localFile.getName();
-        char[] pwd = password;
-
-        BusyIndicator.showWhile(shell.getDisplay(), () -> {
-            try
-            {
-                ClientFactory.save(client, clientFile, encryptionMethod, pwd);
-                storePreferences(true);
-
-                broker.post(UIConstants.Event.File.SAVED, clientFile.getAbsolutePath());
-                setDirty(false, false);
-                listeners.forEach(ClientInputListener::onSaved);
-            }
-            catch (IOException e)
-            {
-                PortfolioPlugin.log(e);
-                ErrorDialog.openError(shell, Messages.LabelError, e.getMessage(),
-                                new Status(Status.ERROR, PortfolioPlugin.PLUGIN_ID, e.getMessage(), e));
-            }
-        });
+        return new File(path);
     }
 
     /**
@@ -326,7 +384,7 @@ public class ClientInput
 
             try
             {
-                ClientFactory.save(client, autosaveFile, null, null);
+                ClientFactory.save(client, autosaveFile);
             }
             catch (IOException e)
             {

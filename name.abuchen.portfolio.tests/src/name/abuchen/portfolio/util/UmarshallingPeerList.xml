@@ -1,5 +1,5 @@
 <client>
-  <version>56</version>
+  <version>59</version>
   <baseCurrency>EUR</baseCurrency>
   <securities/>
   <watchlists/>
@@ -24,35 +24,23 @@
     </portfolio>
   </portfolios>
   <plans/>
-  <taxonomies>
-    <taxonomy>
-      <id>f68bd17a-c0dc-4168-bcae-79b6b8d5e3c8</id>
-      <name>Regionen (MSCI)</name>
-      <dimensions class="java.util.Arrays$ArrayList">
-        <a class="string-array">
-          <string>Markt</string>
-          <string>Region</string>
-          <string>Land</string>
-        </a>
-      </dimensions>
-      <root>
-        <id>4d48f519-72ad-4c8e-a029-a67c4b54a572</id>
-        <name>Regionen (MSCI)</name>
-        <color>#b9a3c6</color>
-        <children/>
-        <assignments/>
-        <weight>10000</weight>
-        <rank>0</rank>
-        <data>
-          <entry>
-            <string>portfolioClassificationKey</string>
-            <string>regions-msci</string>
-          </entry>
-        </data>
-      </root>
-    </taxonomy>
-  </taxonomies>
+  <taxonomies/>
   <dashboards/>
+  <peers>
+    <peer name="Vereinigte Volksbank eG" IBAN="DE41603900000599015004"/>
+    <peer name="CHR BRAUN, WEIL I.S." IBAN="DE10300500000001777614"/>
+    <peer name="John Doe" IBAN="DE89370400440532013000"/>
+    <peer name="Jane Smith" IBAN="GB29NWBK60161331926819"/>
+    <peer>
+      <name>John Doe</name>
+      <note>Example note</note>
+      <IBAN>DE89370400440532013000</IBAN>
+      <account>
+        <accountNumber>12345678</accountNumber>
+      </account>
+    </peer>
+    <peer reference="../../../some/other/peer/reference"/>
+  </peers>
   <properties/>
   <settings/>
 </client>

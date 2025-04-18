@@ -1,4 +1,4 @@
-package issues;
+package name.abuchen.portfolio.util;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -12,21 +12,22 @@ import org.junit.Test;
 
 import name.abuchen.portfolio.model.Client;
 import name.abuchen.portfolio.model.ClientFactory;
-import name.abuchen.portfolio.model.Taxonomy;
+import name.abuchen.portfolio.model.PeerList;
 
-public class IssueUmarshallingArraysArrayListTest
+public class UmarshallingPeerListTest
 {
     @Test
     public void testMigrationOfClassificationKeys() throws IOException
     {
-        Client client = ClientFactory.load(IssueUmarshallingArraysArrayListTest.class
-                        .getResourceAsStream("IssueUmarshallingArraysArrayList.xml")); //$NON-NLS-1$
+        Client client = ClientFactory.load(UmarshallingPeerListTest.class
+                        .getResourceAsStream("UmarshallingPeerList.xml")); //$NON-NLS-1$
 
-        Taxonomy taxonomy = client.getTaxonomies().get(0);
+        PeerList peers = client.getPeers();
 
-        assertThat(taxonomy.getDimensions(), instanceOf(ArrayList.class));
-        assertThat(taxonomy.getDimensions().size(), is(3));
+        assertThat(peers, instanceOf(PeerList.class));
+        assertThat(peers.size(), is(3));
 
-        assertThat(taxonomy.getDimensions(), is(Arrays.asList("Markt", "Region", "Land"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertThat(peers.findPeer("John Doe", true).toString(), is(Arrays.asList("Markt", "Region", "Land"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertThat(peers.findPeer("Heidrun", false).toString(), is(Arrays.asList("Markt", "Region", "Land"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 }

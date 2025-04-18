@@ -340,7 +340,7 @@ public class Messages extends NLS
     public static String MsgNoResults;
     public static String MsgNotANumber;
     public static String MsgNotAComparator;
-    public static String MsgNotAPortflioFile;
+    public static String MsgNotAPortfolioFile;
     public static String MsgParsingFailedWithHTML;
     public static String MsgPasswordMissing;
     public static String MsgQuotesReceived;

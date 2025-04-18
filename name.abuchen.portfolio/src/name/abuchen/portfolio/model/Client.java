@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,7 +71,7 @@ public class Client implements Attributable
     private List<InvestmentPlan> plans;
     private List<Taxonomy> taxonomies;
     private List<Dashboard> dashboards;
-    private PeerList peers = new PeerList();
+    private PeerList peers;
 
     private Map<String, String> properties;
     private ClientSettings settings;
@@ -86,6 +87,7 @@ public class Client implements Attributable
     private Category rootCategory;
 
     private transient SecretKey secret; // NOSONAR
+    private transient Set<SaveFlag> saveFlags = EnumSet.noneOf(SaveFlag.class); // NOSONAR
 
     public Client()
     {
@@ -693,6 +695,13 @@ public class Client implements Attributable
     /* package */ void setSecret(SecretKey secret)
     {
         this.secret = secret;
+    }
+
+    /* package */ Set<SaveFlag> getSaveFlags()
+    {
+        if (this.saveFlags == null)
+            this.saveFlags = EnumSet.noneOf(SaveFlag.class);
+        return this.saveFlags;
     }
 
     /**
